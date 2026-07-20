@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import {
   Building2, Hash, Globe, Gift, Lock, AlertTriangle, Save, Loader2,
   Instagram, Facebook, ExternalLink, MapPin, Check, Trophy,
-  Upload, User, Trash2, Image,
+  Upload, User, Trash2, Image, Linkedin, Twitter, MessageCircle
 } from 'lucide-react';
 import {
   fetchSettingsAction,
@@ -49,7 +49,9 @@ export default function SettingsPage() {
   const [instagramUrl, setInstagramUrl] = useState('');
   const [facebookUrl, setFacebookUrl] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
-  const [googlePlaceId, setGooglePlaceId] = useState('');
+  const [linkedinUrl, setLinkedinUrl] = useState('');
+  const [xUrl, setXUrl] = useState('');
+  const [whatsappUrl, setWhatsappUrl] = useState('');
 
   const [rewardTriggers, setRewardTriggers] = useState({ feedback: true, bill_created: false, appointment_completed: false });
   const [rewardType, setRewardType] = useState('percent_discount');
@@ -99,8 +101,11 @@ export default function SettingsPage() {
         setInstagramUrl(s.instagramUrl);
         setFacebookUrl(s.facebookUrl);
         setWebsiteUrl(s.websiteUrl);
-        setGooglePlaceId(s.googlePlaceId);
-        if (s.rewardSettings) {
+        setLinkedinUrl(s.linkedinUrl || '');
+        setXUrl(s.xUrl || '');
+        setWhatsappUrl(s.whatsappUrl || '');
+      }
+      if (s.rewardSettings) {
           setRewardTriggers(s.rewardSettings.triggers || rewardTriggers);
           setRewardType(s.rewardSettings.reward_type || 'percent_discount');
           setRewardValue(s.rewardSettings.reward_value ?? 10);
@@ -141,8 +146,10 @@ export default function SettingsPage() {
   }
 
   async function handleSaveSocials() {
-    setSaving(true); setError('');
-    const result = await updateSocialsAction({ instagramUrl, facebookUrl, websiteUrl, googlePlaceId });
+    setSaving(true); setError(''); setSaved(false);
+    const result = await updateSocialsAction({
+      instagramUrl, facebookUrl, websiteUrl, linkedinUrl, xUrl, whatsappUrl
+    });
     if (result.error) setError(result.error); else flash();
     setSaving(false);
   }
@@ -354,13 +361,22 @@ export default function SettingsPage() {
           </div>
           <div className="settings-row">
             <div className="input-group">
+              <label className="input-label"><Linkedin size={14} style={{ verticalAlign: -2 }} /> LinkedIn</label>
+              <input className="input-field" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/company/..." />
+            </div>
+            <div className="input-group">
+              <label className="input-label"><Twitter size={14} style={{ verticalAlign: -2 }} /> X (Twitter)</label>
+              <input className="input-field" value={xUrl} onChange={(e) => setXUrl(e.target.value)} placeholder="https://x.com/yourbusiness" />
+            </div>
+          </div>
+          <div className="settings-row">
+            <div className="input-group">
               <label className="input-label"><ExternalLink size={14} style={{ verticalAlign: -2 }} /> Website</label>
               <input className="input-field" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://yourbusiness.com" />
             </div>
             <div className="input-group">
-              <label className="input-label"><MapPin size={14} style={{ verticalAlign: -2 }} /> Google Place ID</label>
-              <input className="input-field" value={googlePlaceId} onChange={(e) => setGooglePlaceId(e.target.value)} placeholder="ChIJ..." />
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>Used for Google review redirect in Review Flow</span>
+              <label className="input-label"><MessageCircle size={14} style={{ verticalAlign: -2 }} /> WhatsApp Link</label>
+              <input className="input-field" value={whatsappUrl} onChange={(e) => setWhatsappUrl(e.target.value)} placeholder="https://wa.me/91..." />
             </div>
           </div>
           <button className="btn btn-primary" onClick={handleSaveSocials} disabled={saving} style={{ marginTop: 'var(--space-3)' }}>

@@ -53,7 +53,9 @@ export async function fetchSettingsAction() {
       instagramUrl: client.instagram_url || '',
       facebookUrl: client.facebook_url || '',
       websiteUrl: client.website_url || '',
-      googlePlaceId: client.google_place_id || '',
+      linkedinUrl: client.linkedin_url || '',
+      xUrl: client.x_url || '',
+      whatsappUrl: client.whatsapp_url || '',
       rewardSettings: client.reward_settings || {
         triggers: { feedback: true, bill_created: false, appointment_completed: false },
         reward_type: 'percent_discount',
@@ -147,7 +149,7 @@ export async function updateGstAction(data: { hasGst: boolean; gstNumber: string
 // Update socials
 // ============================================================
 export async function updateSocialsAction(data: {
-  instagramUrl: string; facebookUrl: string; websiteUrl: string; googlePlaceId: string;
+  instagramUrl: string; facebookUrl: string; websiteUrl: string; linkedinUrl: string; xUrl: string; whatsappUrl: string;
 }) {
   const { supabase, user, error } = await getAuthenticatedClient();
   if (error || !user) return { error: error || 'Unauthorized.' };
@@ -155,10 +157,12 @@ export async function updateSocialsAction(data: {
   await supabase
     .from('clients')
     .update({
-      instagram_url: data.instagramUrl || null,
-      facebook_url: data.facebookUrl || null,
-      website_url: data.websiteUrl || null,
-      google_place_id: data.googlePlaceId || null,
+      instagram_url: data.instagramUrl,
+      facebook_url: data.facebookUrl,
+      website_url: data.websiteUrl,
+      linkedin_url: data.linkedinUrl,
+      x_url: data.xUrl,
+      whatsapp_url: data.whatsappUrl,
     })
     .eq('id', user.id);
 

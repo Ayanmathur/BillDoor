@@ -20,7 +20,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Printer, Download, Check, Loader2, Instagram, Facebook, Globe,
-  ExternalLink,
+  ExternalLink, Linkedin, Twitter, MessageCircle
 } from 'lucide-react';
 import { submitInlineReviewAction } from './actions';
 import { generateAiReviewAction } from '../../review/[slug]/actions';
@@ -379,6 +379,21 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
             {client.website_url && (
               <a href={client.website_url} target="_blank" rel="noopener noreferrer" className="bill-social-icon website" title="Website">
                 <Globe size={18} />
+              </a>
+            )}
+            {client.linkedin_url && (
+              <a href={client.linkedin_url} target="_blank" rel="noopener noreferrer" className="bill-social-icon linkedin" title="LinkedIn">
+                <Linkedin size={18} />
+              </a>
+            )}
+            {client.x_url && (
+              <a href={client.x_url} target="_blank" rel="noopener noreferrer" className="bill-social-icon twitter" title="X (Twitter)">
+                <Twitter size={18} />
+              </a>
+            )}
+            {client.whatsapp_url && (
+              <a href={client.whatsapp_url} target="_blank" rel="noopener noreferrer" className="bill-social-icon whatsapp" title="WhatsApp">
+                <MessageCircle size={18} />
               </a>
             )}
           </div>
