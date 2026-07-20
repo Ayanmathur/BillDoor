@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Barcode, Save, Loader2, Check, Link as LinkIcon, MessageSquare, Copy, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Barcode, Save, Loader2, Check, Link as LinkIcon, MessageSquare, Copy, ExternalLink, Percent, Tag } from 'lucide-react';
 import {
   fetchBillitSettingsAction,
   updateBillitSettingsAction,
@@ -23,6 +23,10 @@ export default function BillitSettingsPage() {
   const [error, setError] = useState('');
 
   const [barcodeEnabled, setBarcodeEnabled] = useState(false);
+  const [defaultGst, setDefaultGst] = useState(0);
+  const [defaultDiscountType, setDefaultDiscountType] = useState('₹');
+  const [defaultDiscountValue, setDefaultDiscountValue] = useState(0);
+
   const [slug, setSlug] = useState('');
   const [catalogViewerEnabled, setCatalogViewerEnabled] = useState(false);
   const [catalogTemplate, setCatalogTemplate] = useState('');
@@ -35,6 +39,9 @@ export default function BillitSettingsPage() {
       const result = await fetchBillitSettingsAction();
       if (result.settings) {
         setBarcodeEnabled(result.settings.barcode_enabled ?? false);
+        setDefaultGst(result.settings.bill_settings?.default_gst ?? 0);
+        setDefaultDiscountType(result.settings.bill_settings?.default_discount_type ?? '₹');
+        setDefaultDiscountValue(result.settings.bill_settings?.default_discount_value ?? 0);
         setSlug(result.settings.slug || '');
         setCatalogTemplate(result.settings.whatsapp_catalog_template || "Hi! I'm interested in {item_name}. Is it available?");
         setCatalogViewerEnabled(result.settings.modules_enabled?.quick_tools?.catalog_viewer === true);
@@ -52,7 +59,12 @@ export default function BillitSettingsPage() {
   async function handleSave() {
     setSaving(true);
     setError('');
-    const result = await updateBillitSettingsAction({ barcodeEnabled });
+    const result = await updateBillitSettingsAction({ 
+      barcodeEnabled,
+      defaultGst,
+      defaultDiscountType,
+      defaultDiscountValue
+    });
     if (result.error) setError(result.error);
     else flash();
     setSaving(false);
@@ -176,6 +188,48 @@ export default function BillitSettingsPage() {
             scanner input appears in Bill Creation.
           </div>
         )}
+
+        <div style={{ marginTop: 'var(--space-6)' }}>
+          <h4 style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', marginBottom: 'var(--space-3)' }}>
+            <Tag size={16} style={{ display: 'inline', verticalAlign: -3, marginRight: 4 }} /> Default Pricing & Taxes
+          </h4>
+          <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
+            <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
+              <label className="input-label">Default GST (%)</label>
+              <input 
+                className="input-field" 
+                type="number" 
+                min={0} 
+                max={100} 
+                value={defaultGst} 
+                onChange={(e) => setDefaultGst(Number(e.target.value))} 
+                placeholder="e.g. 18" 
+              />
+            </div>
+            <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
+              <label className="input-label">Default Discount Type</label>
+              <select 
+                className="input-field" 
+                value={defaultDiscountType} 
+                onChange={(e) => setDefaultDiscountType(e.target.value)}
+              >
+                <option value="₹">Flat ₹ Off</option>
+                <option value="%">% Off</option>
+              </select>
+            </div>
+            <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
+              <label className="input-label">Default Discount Value</label>
+              <input 
+                className="input-field" 
+                type="number" 
+                min={0} 
+                value={defaultDiscountValue} 
+                onChange={(e) => setDefaultDiscountValue(Number(e.target.value))} 
+                placeholder="e.g. 50" 
+              />
+            </div>
+          </div>
+        </div>
 
         <button
           className="btn btn-primary"

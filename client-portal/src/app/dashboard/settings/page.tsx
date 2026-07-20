@@ -53,6 +53,7 @@ export default function SettingsPage() {
   const [xUrl, setXUrl] = useState('');
   const [whatsappUrl, setWhatsappUrl] = useState('');
 
+  const [rewardsEnabled, setRewardsEnabled] = useState(false);
   const [rewardTriggers, setRewardTriggers] = useState({ feedback: true, bill_created: false, appointment_completed: false });
   const [rewardType, setRewardType] = useState('percent_discount');
   const [rewardValue, setRewardValue] = useState(10);
@@ -106,6 +107,7 @@ export default function SettingsPage() {
         setWhatsappUrl(s.whatsappUrl || '');
 
         if (s.rewardSettings) {
+          setRewardsEnabled(s.rewardSettings.enabled ?? false);
           setRewardTriggers(s.rewardSettings.triggers || rewardTriggers);
           setRewardType(s.rewardSettings.reward_type || 'percent_discount');
           setRewardValue(s.rewardSettings.reward_value ?? 10);
@@ -158,7 +160,7 @@ export default function SettingsPage() {
   async function handleSaveRewards() {
     setSaving(true); setError('');
     const result = await updateRewardSettingsAction({
-      triggers: rewardTriggers, rewardType, rewardValue, reviewRewardMode, maxPerCustomerPerDay: maxPerDay,
+      enabled: rewardsEnabled, triggers: rewardTriggers, rewardType, rewardValue, reviewRewardMode, maxPerCustomerPerDay: maxPerDay,
     });
     if (result.error) setError(result.error); else flash();
     setSaving(false);
@@ -394,10 +396,23 @@ export default function SettingsPage() {
             Configure automatic reward codes issued to customers. Spans Review Flow, Billit, and Appointer.
           </p>
 
-          <h4 style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', marginBottom: 'var(--space-2)' }}>Triggers</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
-            {(['feedback', 'bill_created', 'appointment_completed'] as const).map((key) => (
-              <div className="toggle-field" key={key}>
+          <div className="toggle-field" style={{ marginBottom: 'var(--space-6)', padding: 'var(--space-3)', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+            <div>
+              <div className="toggle-field-label">Enable Rewards System</div>
+              <div className="toggle-field-desc">Master switch to turn all reward programs ON or OFF globally.</div>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={rewardsEnabled} onChange={(e) => setRewardsEnabled(e.target.checked)} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
+          {rewardsEnabled && (
+            <>
+              <h4 style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', marginBottom: 'var(--space-2)' }}>Triggers</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
+                {(['feedback', 'bill_created', 'appointment_completed'] as const).map((key) => (
+                  <div className="toggle-field" key={key}>
                 <div className="toggle-field-label">
                   {key === 'feedback' ? 'After giving feedback (Review Flow)' : key === 'bill_created' ? 'After bill payment (Billit)' : 'After appointment (Appointer)'}
                 </div>
@@ -441,10 +456,12 @@ export default function SettingsPage() {
               Reward positive reviews only (4-5★)
             </label>
           </div>
-          {reviewRewardMode === 'positive_only' && (
-            <div className="risk-note">
-              <AlertTriangle size={14} style={{ verticalAlign: -2 }} /> <strong>Policy Risk:</strong> Rewarding only positive reviews may violate Google&apos;s review policies and could lead to review removal or penalties. &quot;Reward all feedback&quot; is the safer default.
-            </div>
+              {reviewRewardMode === 'positive_only' && (
+                <div className="risk-note">
+                  <AlertTriangle size={14} style={{ verticalAlign: -2 }} /> <strong>Policy Risk:</strong> Rewarding only positive reviews may violate Google&apos;s review policies and could lead to review removal or penalties. &quot;Reward all feedback&quot; is the safer default.
+                </div>
+              )}
+            </>
           )}
 
           <button className="btn btn-primary" onClick={handleSaveRewards} disabled={saving} style={{ marginTop: 'var(--space-4)' }}>

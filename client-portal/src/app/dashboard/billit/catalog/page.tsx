@@ -27,6 +27,8 @@ interface CatalogItem {
   price: number;
   unit: string | null;
   gst_percent: number;
+  discount_type: string;
+  discount_value: number;
   description: string | null;
   barcode_value: string | null;
   barcode_auto_generated: boolean;
@@ -48,6 +50,9 @@ export default function CatalogPage() {
   const [formPrice, setFormPrice] = useState('');
   const [formUnit, setFormUnit] = useState('');
   const [formGst, setFormGst] = useState('0');
+  const [formDiscountType, setFormDiscountType] = useState('₹');
+  const [formDiscountValue, setFormDiscountValue] = useState('0');
+  const [formFinalPrice, setFormFinalPrice] = useState('');
   const [formDesc, setFormDesc] = useState('');
   const [formBarcode, setFormBarcode] = useState('');
   const [formBuffer, setFormBuffer] = useState('0');
@@ -62,7 +67,8 @@ export default function CatalogPage() {
 
   function resetForm() {
     setFormName(''); setFormType('product'); setFormPrice(''); setFormUnit('');
-    setFormGst('0'); setFormDesc(''); setFormBarcode(''); setFormBuffer('0'); setEditingId(null);
+    setFormGst('0'); setFormDiscountType('₹'); setFormDiscountValue('0'); setFormFinalPrice('');
+    setFormDesc(''); setFormBarcode(''); setFormBuffer('0'); setEditingId(null);
     setShowForm(false); setError('');
   }
 
@@ -73,10 +79,46 @@ export default function CatalogPage() {
     setFormPrice(String(item.price));
     setFormUnit(item.unit || '');
     setFormGst(String(item.gst_percent));
+    setFormDiscountType(item.discount_type || '₹');
+    setFormDiscountValue(String(item.discount_value || 0));
     setFormDesc(item.description || '');
     setFormBarcode(item.barcode_value || '');
     setFormBuffer(String(item.buffer_after_min || 0));
     setShowForm(true);
+    
+    // Calc initial final price
+    const base = Number(item.price) || 0;
+    const gPct = Number(item.gst_percent) || 0;
+    const dVal = Number(item.discount_value) || 0;
+    let afterD = base;
+    if (item.discount_type === '₹') afterD = base - dVal;
+    else if (item.discount_type === '%') afterD = base * (1 - dVal / 100);
+    setFormFinalPrice((afterD * (1 + gPct / 100)).toFixed(2));
+  }
+
+  function handleBaseParamsChange(p: string, dT: string, dV: string, g: string) {
+    const base = Number(p) || 0;
+    const gPct = Number(g) || 0;
+    const dVal = Number(dV) || 0;
+    let afterD = base;
+    if (dT === '₹') afterD = base - dVal;
+    else if (dT === '%') afterD = base * (1 - dVal / 100);
+    setFormFinalPrice((afterD * (1 + gPct / 100)).toFixed(2));
+  }
+
+  function handleFinalPriceChange(val: string) {
+    setFormFinalPrice(val);
+    const finalP = Number(val) || 0;
+    const gPct = Number(formGst) || 0;
+    const dVal = Number(formDiscountValue) || 0;
+    const dT = formDiscountType;
+    
+    const afterD = finalP / (1 + gPct / 100);
+    let base = afterD;
+    if (dT === '₹') base = afterD + dVal;
+    else if (dT === '%') base = afterD / (1 - dVal / 100);
+    
+    setFormPrice(base.toFixed(2));
   }
 
   async function handleSave() {
@@ -87,6 +129,8 @@ export default function CatalogPage() {
       price: Number(formPrice) || 0,
       unit: formUnit || undefined,
       gstPercent: Number(formGst) || 0,
+      discountType: formDiscountType as '₹' | '%',
+      discountValue: Number(formDiscountValue) || 0,
       description: formDesc || undefined,
       barcodeValue: formBarcode || undefined,
       bufferAfterMin: Number(formBuffer) || 0,
@@ -202,8 +246,45 @@ export default function CatalogPage() {
           </div>
           <div className="settings-row">
             <div className="input-group">
-              <label className="input-label">Price (₹) *</label>
-              <input className="input-field" type="number" min="0" step="0.01" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} placeholder="0.00" />
+              <label className="input-label">Base Price (₹) *</label>
+              <input className="input-field" type="number" min="0" step="0.01" value={formPrice} 
+                onChange={(e) => {
+                  setFormPrice(e.target.value);
+                  handleBaseParamsChange(e.target.value, formDiscountType, formDiscountValue, formGst);
+                }} placeholder="0.00" />
+            </div>
+            <div className="input-group" style={{ maxWidth: 100 }}>
+              <label className="input-label">Disc. Type</label>
+              <select className="input-field" value={formDiscountType} onChange={(e) => {
+                setFormDiscountType(e.target.value);
+                handleBaseParamsChange(formPrice, e.target.value, formDiscountValue, formGst);
+              }}>
+                <option value="₹">₹ Off</option>
+                <option value="%">% Off</option>
+              </select>
+            </div>
+            <div className="input-group">
+              <label className="input-label">Discount Value</label>
+              <input className="input-field" type="number" min="0" value={formDiscountValue} 
+                onChange={(e) => {
+                  setFormDiscountValue(e.target.value);
+                  handleBaseParamsChange(formPrice, formDiscountType, e.target.value, formGst);
+                }} placeholder="0" />
+            </div>
+            <div className="input-group">
+              <label className="input-label">GST %</label>
+              <input className="input-field" type="number" min="0" max="100" value={formGst} 
+                onChange={(e) => {
+                  setFormGst(e.target.value);
+                  handleBaseParamsChange(formPrice, formDiscountType, formDiscountValue, e.target.value);
+                }} />
+            </div>
+          </div>
+          <div className="settings-row" style={{ background: 'var(--color-bg-secondary)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)' }}>
+            <div className="input-group">
+              <label className="input-label" style={{ color: 'var(--color-text)' }}>Final Selling Price (₹) <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'normal' }}>(Base - Disc + GST)</span></label>
+              <input className="input-field" type="number" min="0" step="0.01" value={formFinalPrice} 
+                onChange={(e) => handleFinalPriceChange(e.target.value)} placeholder="0.00" style={{ fontWeight: 'bold' }} />
             </div>
             <div className="input-group">
               <label className="input-label">Unit</label>
@@ -211,10 +292,6 @@ export default function CatalogPage() {
             </div>
           </div>
           <div className="settings-row">
-            <div className="input-group">
-              <label className="input-label">GST %</label>
-              <input className="input-field" type="number" min="0" max="100" value={formGst} onChange={(e) => setFormGst(e.target.value)} />
-            </div>
             <div className="input-group">
               <label className="input-label"><Barcode size={14} style={{ verticalAlign: -2 }} /> Barcode</label>
               <input className="input-field" value={formBarcode} onChange={(e) => setFormBarcode(e.target.value)} placeholder="Auto-generated if empty" />

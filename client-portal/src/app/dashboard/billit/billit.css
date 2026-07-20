@@ -161,3 +161,50 @@
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.15);
 }
+
+/* 7. Copy/Open Link Buttons (vinodjangid07 style) */
+.copy-open-btn {
+  width: 100px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border: none;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.164);
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+}
+
+.copy-open-btn .text {
+  width: 65%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background-color: rgb(2, 153, 153);
+  font-size: var(--text-sm);
+  transition: background-color 0.2s;
+}
+
+.copy-open-btn .svgIcon {
+  width: 35%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background-color: teal;
+  transition: background-color 0.2s;
+}
+
+.copy-open-btn:hover .text {
+  background-color: rgb(0, 133, 133);
+}
+
+.copy-open-btn:hover .svgIcon {
+  background-color: rgb(0, 105, 105);
+}

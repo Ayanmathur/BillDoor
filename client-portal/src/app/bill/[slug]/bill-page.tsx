@@ -20,7 +20,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Printer, Download, Check, Loader2, Instagram, Facebook, Globe,
-  ExternalLink, Linkedin, Twitter, MessageCircle
+  ExternalLink, Linkedin, Twitter, MessageCircle, Gift
 } from 'lucide-react';
 import { submitInlineReviewAction } from './actions';
 import { generateAiReviewAction } from '../../review/[slug]/actions';
@@ -310,20 +310,21 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
         </div>
 
         {/* Offer / Discount Reveal (if enabled) */}
-        {(client?.reward_settings?.digital_bill_offer_enabled !== false) && (
+        {client?.reward_settings?.enabled === true && (
           <div style={{ display: 'flex', justifyContent: 'center', margin: 'var(--space-4) 0' }}>
-            <div className={`btn-container ${offerRevealed ? 'revealed' : ''}`} onClick={() => setOfferRevealed(true)}>
-              <div className="btn-drawer transition-top">
-                {offerRevealed ? (client?.reward_settings?.offer_code || 'SAVE20') : 'your reward for trusting us.'}
+            {offerRevealed ? (
+              <div style={{ padding: 'var(--space-3) var(--space-4)', background: 'var(--color-success-subtle)', color: 'var(--color-success)', border: '1px dashed var(--color-success)', borderRadius: 'var(--radius-md)', fontWeight: 600, textAlign: 'center' }}>
+                Reward Code: {client?.reward_settings?.offer_code || 'SAVE20'}
               </div>
-              <button className="btn-offer-reveal">
-                <span className="btn-text">Unlock Now</span>
-                <svg className="btn-corner" viewBox="0 0 32 32"><polyline points="0,32 0,0 32,0" /></svg>
-                <svg className="btn-corner" viewBox="0 0 32 32"><polyline points="0,32 0,0 32,0" /></svg>
-                <svg className="btn-corner" viewBox="0 0 32 32"><polyline points="0,32 0,0 32,0" /></svg>
-                <svg className="btn-corner" viewBox="0 0 32 32"><polyline points="0,32 0,0 32,0" /></svg>
+            ) : (
+              <button 
+                className="review-btn" 
+                onClick={() => setOfferRevealed(true)}
+                style={{ background: 'var(--color-accent)', color: 'white' }}
+              >
+                <Gift size={16} /> Get Reward
               </button>
-            </div>
+            )}
           </div>
         )}
 
@@ -339,12 +340,11 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
                 return (
                   <div style={{ animation: 'slideUp 0.3s ease-out' }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-success)', marginBottom: 8 }}>Reward Unlocked!</div>
-                    <div className="btn-pop-container">
-                      <button className="btn-pop" style={{ '--btn-pop-color': '#d8ff7c' } as any}>
-                        <div className="btn-pop-drawer transition-top">Claim on next visit</div>
-                        <span className="btn-pop-text">{loyaltyProgress.last_reward_code_id || 'REWARD'}</span>
-                        <div className="btn-pop-drawer transition-bottom">Show at counter</div>
-                      </button>
+                    <div style={{ marginTop: 'var(--space-2)' }}>
+                      <div style={{ padding: 'var(--space-3)', background: 'var(--color-success-subtle)', color: 'var(--color-success)', border: '1px dashed var(--color-success)', borderRadius: 'var(--radius-md)', fontWeight: 600, textAlign: 'center' }}>
+                        {loyaltyProgress.last_reward_code_id || 'REWARD'}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#666', marginTop: 'var(--space-1)' }}>Claim on next visit / Show at counter</div>
                     </div>
                   </div>
                 );

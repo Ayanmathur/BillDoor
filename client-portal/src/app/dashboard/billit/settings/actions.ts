@@ -8,7 +8,7 @@ export async function fetchBillitSettingsAction() {
 
   const { data } = await supabase
     .from('clients')
-    .select('barcode_enabled, barcode_settings, slug, whatsapp_catalog_template, modules_enabled')
+    .select('barcode_enabled, barcode_settings, slug, whatsapp_catalog_template, modules_enabled, bill_settings')
     .eq('id', user.id)
     .single();
 
@@ -17,6 +17,9 @@ export async function fetchBillitSettingsAction() {
 
 export async function updateBillitSettingsAction(data: {
   barcodeEnabled: boolean;
+  defaultGst: number;
+  defaultDiscountType: string;
+  defaultDiscountValue: number;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,7 +27,14 @@ export async function updateBillitSettingsAction(data: {
 
   const { error } = await supabase
     .from('clients')
-    .update({ barcode_enabled: data.barcodeEnabled })
+    .update({ 
+      barcode_enabled: data.barcodeEnabled,
+      bill_settings: {
+        default_gst: data.defaultGst,
+        default_discount_type: data.defaultDiscountType,
+        default_discount_value: data.defaultDiscountValue
+      }
+    })
     .eq('id', user.id);
 
   if (error) return { error: 'Failed to save settings.' };

@@ -173,6 +173,7 @@ export async function updateSocialsAction(data: {
 // Update reward settings
 // ============================================================
 export async function updateRewardSettingsAction(data: {
+  enabled: boolean;
   triggers: { feedback: boolean; bill_created: boolean; appointment_completed: boolean };
   rewardType: string;
   rewardValue: number;
@@ -186,6 +187,7 @@ export async function updateRewardSettingsAction(data: {
     .from('clients')
     .update({
       reward_settings: {
+        enabled: data.enabled,
         triggers: data.triggers,
         reward_type: data.rewardType,
         reward_value: data.rewardValue,
