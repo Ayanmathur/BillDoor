@@ -7,7 +7,7 @@
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { loginSchema } from '@/shared/schemas';
 import { checkRateLimit, AUTH_RATE_LIMIT, getClientIp } from '@/shared/rate-limit';
 import { logAuditEvent, AUDIT_ACTIONS } from '@/shared/audit';
@@ -52,8 +52,9 @@ export async function adminLoginAction(data: { username: string; password: strin
   }
 
   // Create/sign-in Supabase Auth session for admin
+  const authClient = await createClient();
   const authEmail = `admin_${username}@billdoor.local`;
-  const { error: signInErr } = await supabase.auth.signInWithPassword({ email: authEmail, password });
+  const { error: signInErr } = await authClient.auth.signInWithPassword({ email: authEmail, password });
 
   if (signInErr) {
     // First login — create auth user
@@ -64,7 +65,7 @@ export async function adminLoginAction(data: { username: string; password: strin
     });
     if (createErr) return { error: 'Authentication failed.' };
 
-    const { error: retryErr } = await supabase.auth.signInWithPassword({ email: authEmail, password });
+    const { error: retryErr } = await authClient.auth.signInWithPassword({ email: authEmail, password });
     if (retryErr) return { error: 'Authentication failed.' };
   }
 
