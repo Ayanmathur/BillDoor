@@ -73,7 +73,7 @@ const uuidSchema = z.string().uuid('Invalid ID format');
 // ============================================================
 
 export const loginSchema = z.object({
-  username: usernameSchema,
+  username: z.string().trim().min(1, 'Username is required').max(30),
   password: z.string().min(1, 'Password is required').max(128),
 });
 
