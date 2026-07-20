@@ -16,6 +16,7 @@ interface ClientRecord {
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<ClientRecord[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [resetModalClient, setResetModalClient] = useState<ClientRecord | null>(null);
   const [newPassword, setNewPassword] = useState('');
@@ -29,6 +30,11 @@ export default function ClientsPage() {
     }
     load();
   }, []);
+
+  const filteredClients = clients.filter(c => 
+    c.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    c.business_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   async function handleResetSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,7 +56,16 @@ export default function ClientsPage() {
   return (
     <div className="clients-page">
       <div className="dash-card">
-        <h2 className="dash-card-title">Manage Clients</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2 className="dash-card-title" style={{ margin: 0 }}>Manage Clients</h2>
+          <input
+            type="text"
+            placeholder="Search clients..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', minWidth: 200 }}
+          />
+        </div>
         
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center' }}>
@@ -68,7 +83,7 @@ export default function ClientsPage() {
                 </tr>
               </thead>
               <tbody>
-                {clients.map(client => (
+                {filteredClients.map(client => (
                   <tr key={client.id}>
                     <td>
                       <strong>{client.username}</strong>
@@ -91,7 +106,7 @@ export default function ClientsPage() {
                     </td>
                   </tr>
                 ))}
-                {clients.length === 0 && (
+                {filteredClients.length === 0 && (
                   <tr>
                     <td colSpan={4} style={{ textAlign: 'center', padding: '24px' }}>No clients found.</td>
                   </tr>

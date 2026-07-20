@@ -101,25 +101,35 @@ export async function loginAction(data: {
   });
 
   if (signInError) {
-    // If the user doesn't exist in Supabase Auth yet (first login after migration),
-    // create them
     if (signInError.message.includes('Invalid login credentials')) {
-      const { error: signUpError } = await supabase.auth.admin.createUser({
-        email: authEmail,
-        password: password,
-        email_confirm: true,
-        user_metadata: {
-          client_id: client.id,
-          username: client.username,
-          role: 'client',
-        },
-      });
+      // The bcrypt hash matched, but Supabase Auth rejected it.
+      // This means the user's password was reset in the DB (via admin), 
+      // but Supabase Auth didn't get the updated password.
+      // We will sync it now.
+      const { error: updateAuthError } = await supabase.auth.admin.updateUserById(
+        client.id,
+        { password: password }
+      );
 
-      if (signUpError) {
+      if (updateAuthError && updateAuthError.message.includes('User not found')) {
+        // User doesn't exist in Auth at all (legacy or deleted), recreate them
+        const { error: signUpError } = await supabase.auth.admin.createUser({
+          id: client.id,
+          email: authEmail,
+          password: password,
+          email_confirm: true,
+          user_metadata: {
+            client_id: client.id,
+            username: client.username,
+            role: 'client',
+          },
+        });
+        if (signUpError) return { error: 'Authentication failed. Please try again.' };
+      } else if (updateAuthError) {
         return { error: 'Authentication failed. Please try again.' };
       }
 
-      // Retry sign in with regular client
+      // Retry sign in after syncing/creating
       const { error: retryError } = await authClient.auth.signInWithPassword({
         email: authEmail,
         password: password,
