@@ -116,12 +116,8 @@ export default function LoginPage() {
       if (result.error) {
         setInquiryError(result.error);
       } else if (result.whatsappUrl) {
-        // Open WhatsApp with pre-filled message
-        window.open(result.whatsappUrl, '_blank');
-        // Reset and close
-        setShowInquiry(false);
-        setInquiryName('');
-        setInquiryPhone('');
+        // Redirect to WhatsApp (window.location avoids popup blockers)
+        window.location.href = result.whatsappUrl;
       }
     } catch {
       setInquiryError('Something went wrong. Please try again.');
@@ -263,14 +259,14 @@ export default function LoginPage() {
             <a href="/activate" className="login-link">
               Have a license key? <strong>Create your account</strong>
             </a>
-            <a
-              href="https://wa.me/919422880355?text=Hello%20Orbitex%2C%20I%20am%20interested%20in%20BillDoor.%20Please%20share%20a%20license%20key."
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => setShowInquiry(true)}
               className="login-link"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }}
             >
               Need a license key? <strong>Get one</strong>
-            </a>
+            </button>
           </div>
         )}
       </div>
