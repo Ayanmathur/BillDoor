@@ -57,6 +57,7 @@ export async function adminLoginAction(data: { username: string; password: strin
   if (signInErr) {
     // First login — create auth user
     const { error: createErr } = await supabase.auth.admin.createUser({
+      id: admin.id,
       email: authEmail, password, email_confirm: true,
       user_metadata: { admin_id: admin.id, username: admin.username, role: 'admin' },
     });
