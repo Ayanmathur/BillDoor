@@ -252,7 +252,7 @@ export default function LoginPage() {
             </a>
             <button
               type="button"
-              onClick={() => window.location.href = 'https://wa.me/919179507946?text=Hi%2C%20I%20forgot%20my%20BillDoor%20password%2E%20Can%20you%20please%20reset%20it%3F'}
+              onClick={() => window.location.href = 'https://wa.me/919422880355?text=Hi%2C%20I%20forgot%20my%20BillDoor%20password%2E%20Can%20you%20please%20reset%20it%3F'}
               className="login-link"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }}
             >

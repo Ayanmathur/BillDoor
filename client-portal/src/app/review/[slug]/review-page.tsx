@@ -74,16 +74,16 @@ export default function ReviewPage({
     countdownRef.current = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
-          clearInterval(countdownRef.current!);
-          // Redirect to Google
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          // Redirect to Google in the same tab to avoid popup blockers
           logGoogleReviewClickAction({ sessionId: sessionId || '', event: 'redirected' });
-          window.open(googleReviewUrl, '_blank');
+          window.location.href = googleReviewUrl;
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-  }, [googleReviewUrl]);
+  }, [googleReviewUrl, sessionId]);
 
   const pauseCountdown = useCallback(() => {
     if (countdownRef.current) {
@@ -190,11 +190,13 @@ export default function ReviewPage({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
 
-    // Redirect immediately after copy
+    // Redirect immediately after copy (same tab to avoid popup blocker)
     pauseCountdown();
     if (googleReviewUrl) {
       logGoogleReviewClickAction({ sessionId: sessionId || '', event: 'copied' });
-      setTimeout(() => window.open(googleReviewUrl, '_blank'), 500);
+      setTimeout(() => {
+        window.location.href = googleReviewUrl;
+      }, 500);
     }
   }
 

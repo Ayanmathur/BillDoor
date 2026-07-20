@@ -34,10 +34,10 @@
   --color-bg-inverse: #111111;
 
   /* ---- Sidebar (Clean White Theme) ---- */
-  --color-sidebar-bg: #FFFFFF;
+  --color-sidebar-bg: #F4F5F7;
   --color-sidebar-text: #6B6B6F;
   --color-sidebar-text-active: #111111;
-  --color-sidebar-item-hover: #FAFAFA;
+  --color-sidebar-item-hover: #EAEAEA;
   --color-sidebar-item-active: #E6F3F5;
   --color-sidebar-accent: #088395;
   --color-sidebar-divider: #EAEAEA;
@@ -157,7 +157,7 @@
   --color-bg-elevated: #141414;
   --color-bg-inverse: #FFFFFF;
 
-  --color-sidebar-bg: #0A0A0A;
+  --color-sidebar-bg: #1A1A1A;
   --color-sidebar-text: #888888;
   --color-sidebar-text-active: #FFFFFF;
   --color-sidebar-item-hover: #141414;
