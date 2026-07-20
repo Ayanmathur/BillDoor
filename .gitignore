@@ -39,6 +39,5 @@ next-env.d.ts
 # Misc
 coverage/
 .turbo/
-*.png
-*.webp
+/download*
 .agents/

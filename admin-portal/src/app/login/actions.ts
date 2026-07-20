@@ -6,6 +6,7 @@
  */
 
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/server';
 import { loginSchema } from '@/shared/schemas';
 import { checkRateLimit, AUTH_RATE_LIMIT, getClientIp } from '@/shared/rate-limit';
@@ -74,4 +75,10 @@ export async function adminLoginAction(data: { username: string; password: strin
   });
 
   return {};
+}
+
+export async function adminLogoutAction() {
+  const supabase = await createAdminClient();
+  await supabase.auth.signOut();
+  redirect('/login');
 }

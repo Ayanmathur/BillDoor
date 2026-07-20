@@ -123,11 +123,12 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
     <div className={`app-shell ${collapsed ? 'collapsed' : ''}`}>
       {/* Sidebar */}
       <nav className="sidebar" role="navigation" aria-label="Main navigation">
-        <Link href="/dashboard" className="sidebar-brand">
-          <div className="sidebar-brand-icon">
-            <DoorOpen size={24} strokeWidth={1.5} />
-          </div>
-          <span className="sidebar-brand-text">BillDoor</span>
+        <Link href="/dashboard" className="sidebar-brand" style={{ padding: collapsed ? 'var(--space-4) 0' : 'var(--space-4)', display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start' }}>
+          {collapsed ? (
+            <img src="/logo-icon.png" alt="BillDoor Logo" style={{ height: '32px', width: 'auto' }} />
+          ) : (
+            <img src="/logo-dark.png" alt="BillDoor Logo" style={{ height: '28px', width: 'auto' }} />
+          )}
         </Link>
 
         <div className="sidebar-divider" />
@@ -170,31 +171,9 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
           </button>
 
           {/* Theme Toggle */}
-          <label className="theme-switch" title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-            <input type="checkbox" className="theme-input" checked={theme === 'dark'} onChange={toggleTheme} />
-            <div className="theme-slider theme-round">
-              <div className="sun-moon">
-                <svg id="moon-dot-1" className="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
-                <svg id="moon-dot-2" className="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
-                <svg id="moon-dot-3" className="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
-                <svg id="light-ray-1" className="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
-                <svg id="light-ray-2" className="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
-                <svg id="light-ray-3" className="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
-              </div>
-              <div className="theme-stars">
-                <svg id="star-1" className="theme-star" viewBox="0 0 20 20"><path d="M10 0L13.09 6.26L20 7.27L15 12.14L16.18 19.02L10 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L10 0Z"/></svg>
-                <svg id="star-2" className="theme-star" viewBox="0 0 20 20"><path d="M10 0L13.09 6.26L20 7.27L15 12.14L16.18 19.02L10 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L10 0Z"/></svg>
-                <svg id="star-3" className="theme-star" viewBox="0 0 20 20"><path d="M10 0L13.09 6.26L20 7.27L15 12.14L16.18 19.02L10 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L10 0Z"/></svg>
-                <svg id="star-4" className="theme-star" viewBox="0 0 20 20"><path d="M10 0L13.09 6.26L20 7.27L15 12.14L16.18 19.02L10 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L10 0Z"/></svg>
-              </div>
-              <svg id="cloud-1" className="cloud-light" viewBox="0 0 100 50"><circle cx="25" cy="25" r="25"/><circle cx="50" cy="15" r="15"/><circle cx="75" cy="25" r="25"/></svg>
-              <svg id="cloud-2" className="cloud-dark" viewBox="0 0 100 50"><circle cx="25" cy="25" r="25"/><circle cx="50" cy="15" r="15"/><circle cx="75" cy="25" r="25"/></svg>
-              <svg id="cloud-3" className="cloud-light" viewBox="0 0 100 50"><circle cx="25" cy="25" r="25"/><circle cx="50" cy="15" r="15"/><circle cx="75" cy="25" r="25"/></svg>
-              <svg id="cloud-4" className="cloud-dark" viewBox="0 0 100 50"><circle cx="25" cy="25" r="25"/><circle cx="50" cy="15" r="15"/><circle cx="75" cy="25" r="25"/></svg>
-              <svg id="cloud-5" className="cloud-light" viewBox="0 0 100 50"><circle cx="25" cy="25" r="25"/><circle cx="50" cy="15" r="15"/><circle cx="75" cy="25" r="25"/></svg>
-              <svg id="cloud-6" className="cloud-dark" viewBox="0 0 100 50"><circle cx="25" cy="25" r="25"/><circle cx="50" cy="15" r="15"/><circle cx="75" cy="25" r="25"/></svg>
-            </div>
-          </label>
+          <button className="topbar-btn" title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} onClick={toggleTheme}>
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
 
           {/* Logout */}
           <button className="topbar-btn" title="Logout" onClick={handleLogout}>

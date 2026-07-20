@@ -19,10 +19,11 @@ import { loginAction } from './actions';
 import { submitInquiryAction } from './inquiry-action';
 import './login.css';
 
-// Helper component for floating label
-function FloatingInput({ id, type, label, value, onChange, placeholder, disabled, autoFocus, autoComplete, error, children }: any) {
+// Helper component for static label input
+function StaticInput({ id, type, label, value, onChange, placeholder, disabled, autoFocus, autoComplete, error, children }: any) {
   return (
     <div className="form-control" style={{ marginBottom: error ? 5 : 20 }}>
+      <label htmlFor={id}>{label}</label>
       <div style={{ position: 'relative' }}>
         <input
           id={id}
@@ -33,17 +34,9 @@ function FloatingInput({ id, type, label, value, onChange, placeholder, disabled
           autoFocus={autoFocus}
           autoComplete={autoComplete}
           required
-          data-has-value={value.length > 0}
           className={error ? 'error' : ''}
           style={{ paddingRight: children ? 'var(--space-10)' : 0 }}
         />
-        <label htmlFor={id}>
-          {label.split('').map((char: string, i: number) => (
-            <span key={i} style={{ transitionDelay: `${i * 30}ms` }}>
-              {char === ' ' ? '\u00A0' : char}
-            </span>
-          ))}
-        </label>
         {children}
       </div>
       {error && <span className="input-error-text">{error}</span>}
@@ -131,9 +124,7 @@ export default function LoginPage() {
       <div className="login-container">
         {/* Header */}
         <div className="login-header">
-          <div className="login-logo">
-            <DoorOpen size={56} strokeWidth={1.5} color="var(--color-accent)" />
-          </div>
+          <img src="/logo-icon.png" alt="BillDoor Logo" className="login-logo" style={{ objectFit: 'contain' }} />
           <h1 className="login-brand">BillDoor</h1>
           <p className="login-subtitle">Smart billing & reviews for your business</p>
         </div>
@@ -164,7 +155,7 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <FloatingInput
+              <StaticInput
                 id="inquiry-name"
                 type="text"
                 label="Your Name"
@@ -173,7 +164,7 @@ export default function LoginPage() {
                 autoFocus
               />
 
-              <FloatingInput
+              <StaticInput
                 id="inquiry-phone"
                 type="tel"
                 label="Your Phone Number"
@@ -200,7 +191,7 @@ export default function LoginPage() {
               )}
 
               {/* Username */}
-              <FloatingInput
+              <StaticInput
                 id="login-username"
                 type="text"
                 label="Username"
@@ -212,7 +203,7 @@ export default function LoginPage() {
               />
 
               {/* Password */}
-              <FloatingInput
+              <StaticInput
                 id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 label="Password"

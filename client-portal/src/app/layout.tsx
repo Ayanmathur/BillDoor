@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description:
     'BillDoor by Orbitex: digital billing, appointment scheduling, review collection, and WhatsApp automation for Indian businesses.',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.png',
   },
 };
 

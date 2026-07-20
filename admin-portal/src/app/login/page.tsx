@@ -32,9 +32,14 @@ export default function AdminLoginPage() {
     <div className="admin-login-page">
       <div className="admin-login-container">
         <div className="admin-login-header">
-          <Shield size={48} strokeWidth={1.5} color="var(--color-accent)" />
-          <h1 className="admin-login-brand">BillDoor</h1>
-          <span className="admin-login-badge">Admin Panel</span>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
+            <img src="/logo-light.png" alt="BillDoor Logo" width="180" style={{ objectFit: 'contain' }} className="admin-login-main-logo" />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)' }}>
+            <Shield size={20} strokeWidth={1.5} color="var(--color-text-tertiary)" />
+            <h1 className="admin-login-brand" style={{ fontSize: 'var(--text-lg)', marginBottom: 0 }}>BillDoor</h1>
+            <span className="admin-login-badge" style={{ marginTop: 0 }}>Admin Panel</span>
+          </div>
         </div>
         <div className="admin-login-card">
           <form className="admin-login-form" onSubmit={handleSubmit}>

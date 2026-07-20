@@ -121,58 +121,37 @@
   to { transform: rotate(360deg); }
 }
 
-/* Floating Label Form Control */
+/* Static Label Form Control */
 .form-control {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   width: 100%;
-}
-
-.form-control input {
-  background-color: transparent;
-  border: 0;
-  border-bottom: 2px solid var(--color-border);
-  display: block;
-  width: 100%;
-  padding: 15px 0 5px 0;
-  font-size: var(--text-md);
-  color: var(--color-text-primary);
-  transition: 0.2s ease;
-}
-
-.form-control input:focus,
-.form-control input:valid,
-.form-control input[data-has-value="true"] {
-  outline: 0;
-  border-bottom-color: var(--color-accent);
-}
-
-.form-control input.error {
-  border-bottom-color: var(--color-error);
 }
 
 .form-control label {
-  position: absolute;
-  top: 15px;
-  left: 0;
-  pointer-events: none;
-  display: flex;
-}
-
-.form-control label span {
-  display: inline-block;
-  font-size: var(--text-md);
-  min-width: 3px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
   color: var(--color-text-secondary);
-  transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-.form-control input:focus + label span,
-.form-control input:valid + label span,
-.form-control input[data-has-value="true"] + label span {
-  color: var(--color-accent);
-  transform: translateY(-20px) scale(0.85);
+.form-control input {
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: block;
+  width: 100%;
+  padding: var(--space-3);
+  font-size: var(--text-md);
+  color: var(--color-text-primary);
+  transition: border-color var(--duration-fast) var(--ease-default);
 }
 
-.form-control input.error + label span {
-  color: var(--color-error);
+.form-control input:focus {
+  outline: 0;
+  border-color: var(--color-accent);
+}
+
+.form-control input.error {
+  border-color: var(--color-error);
 }
