@@ -9,7 +9,7 @@
  */
 
 import { headers } from 'next/headers';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { loginSchema } from '@/shared/schemas';
 import {
   checkRateLimit,
@@ -91,11 +91,11 @@ export async function loginAction(data: {
   }
 
   // 5. Create Supabase Auth session
-  // We use Supabase Auth with the client's email or a generated email
-  // For username/password clients without email, we use username@billdoor.local
+  // Use the regular client (anon key) so the session cookie is set properly
+  const authClient = await createClient();
   const authEmail = `${username}@billdoor.local`;
 
-  const { error: signInError } = await supabase.auth.signInWithPassword({
+  const { error: signInError } = await authClient.auth.signInWithPassword({
     email: authEmail,
     password: password,
   });
@@ -119,8 +119,8 @@ export async function loginAction(data: {
         return { error: 'Authentication failed. Please try again.' };
       }
 
-      // Retry sign in
-      const { error: retryError } = await supabase.auth.signInWithPassword({
+      // Retry sign in with regular client
+      const { error: retryError } = await authClient.auth.signInWithPassword({
         email: authEmail,
         password: password,
       });
