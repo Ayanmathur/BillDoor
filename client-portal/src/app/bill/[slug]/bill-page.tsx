@@ -18,6 +18,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Printer, Download, Check, Loader2, Instagram, Facebook, Globe,
   ExternalLink, Linkedin, Twitter, MessageCircle, Gift
@@ -40,6 +41,7 @@ interface BillPageClientProps {
 const EMOJIS = ['😠', '😞', '😐', '🙂', '🤩'];
 
 export default function BillPageClient({ bill, client, customer, loyaltyConfig, loyaltyProgress, status, voidReason, hasGst, gstNumber }: BillPageClientProps) {
+  const searchParams = useSearchParams();
   const [selectedRating, setSelectedRating] = useState(0);
   const [reviewed, setReviewed] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
@@ -75,6 +77,15 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
   useEffect(() => {
     return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
   }, []);
+
+  // Auto-trigger print dialog when opened with ?print=1
+  useEffect(() => {
+    if (searchParams.get('print') === '1') {
+      // Small delay to let the page render fully
+      const timer = setTimeout(() => window.print(), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   const initials = client.business_name?.split(' ').slice(0, 2).map((w: string) => w[0]).join('').toUpperCase() || 'BD';
 
@@ -420,9 +431,13 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
           )}
         </div>
 
-        {/* Print/Download */}
+        {/* Print/Download — opens in new tab so WhatsApp send is not interrupted */}
         <div className="bill-actions">
-          <button className="review-btn" onClick={() => window.print()} style={{ fontSize: 12 }}>
+          <button className="review-btn" onClick={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('print', '1');
+            window.open(url.toString(), '_blank');
+          }} style={{ fontSize: 12 }}>
             <Printer size={14} /> Print / Save PDF
           </button>
         </div>

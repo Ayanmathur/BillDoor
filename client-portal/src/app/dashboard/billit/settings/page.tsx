@@ -8,11 +8,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Barcode, Save, Loader2, Check, Link as LinkIcon, MessageSquare, Copy, ExternalLink, Percent, Tag } from 'lucide-react';
+import { ArrowLeft, Barcode, Save, Loader2, Check, Link as LinkIcon, MessageSquare, Copy, ExternalLink, Percent, Tag, Send } from 'lucide-react';
 import {
   fetchBillitSettingsAction,
   updateBillitSettingsAction,
-  updateCatalogTemplateAction
+  updateCatalogTemplateAction,
+  fetchBillWhatsAppTemplateAction,
+  updateBillWhatsAppTemplateAction
 } from './actions';
 
 export default function BillitSettingsPage() {
@@ -34,6 +36,11 @@ export default function BillitSettingsPage() {
   const [templateError, setTemplateError] = useState('');
   const [copied, setCopied] = useState(false);
 
+  // Bill WhatsApp template
+  const [billTemplate, setBillTemplate] = useState('Dear {customer_name}, thanks for shopping at {shop_name}! Your digital bill: {bill_link}');
+  const [savingBillTemplate, setSavingBillTemplate] = useState(false);
+  const [billTemplateError, setBillTemplateError] = useState('');
+
   useEffect(() => {
     async function load() {
       const result = await fetchBillitSettingsAction();
@@ -48,7 +55,12 @@ export default function BillitSettingsPage() {
       }
       setLoading(false);
     }
+    async function loadBillTemplate() {
+      const res = await fetchBillWhatsAppTemplateAction();
+      if (res.template?.content) setBillTemplate(res.template.content);
+    }
     load();
+    loadBillTemplate();
   }, []);
 
   function flash() {
@@ -238,6 +250,58 @@ export default function BillitSettingsPage() {
           style={{ marginTop: 'var(--space-4)' }}
         >
           {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Settings
+        </button>
+      </div>
+
+      {/* Bill WhatsApp Template Section */}
+      <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
+        <h3 className="settings-section-title">
+          <Send size={18} /> Bill WhatsApp Template
+        </h3>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-3)' }}>
+          This message is sent when you click &quot;Send on WhatsApp&quot; after creating a bill.
+        </p>
+
+        {billTemplateError && (
+          <div style={{ padding: 'var(--space-3)', background: 'var(--color-error-subtle)', color: 'var(--color-error)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-3)' }} role="alert">
+            {billTemplateError}
+          </div>
+        )}
+
+        <div style={{ marginBottom: 'var(--space-3)' }}>
+          <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: 'var(--space-2)' }}>Message Template</label>
+          <textarea
+            value={billTemplate}
+            onChange={e => setBillTemplate(e.target.value)}
+            placeholder="Dear {customer_name}, thanks for shopping at {shop_name}! Your digital bill: {bill_link}"
+            style={{ width: '100%', minHeight: 100, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', resize: 'vertical', boxSizing: 'border-box' }}
+          />
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-1)', display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+            <span>Available: </span>
+            <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 4px', borderRadius: '4px' }}>{'{customer_name}'}</code>
+            <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 4px', borderRadius: '4px' }}>{'{shop_name}'}</code>
+            <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 4px', borderRadius: '4px' }}>{'{bill_link}'}</code>
+            <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 4px', borderRadius: '4px' }}>{'{review_link}'}</code>
+          </div>
+        </div>
+
+        <button
+          className="btn btn-primary"
+          onClick={async () => {
+            if (!billTemplate.includes('{bill_link}')) {
+              setBillTemplateError('Template must contain {bill_link}');
+              return;
+            }
+            setSavingBillTemplate(true);
+            setBillTemplateError('');
+            const res = await updateBillWhatsAppTemplateAction(billTemplate);
+            if (res.error) setBillTemplateError(res.error);
+            else flash();
+            setSavingBillTemplate(false);
+          }}
+          disabled={savingBillTemplate}
+        >
+          {savingBillTemplate ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Template
         </button>
       </div>
 

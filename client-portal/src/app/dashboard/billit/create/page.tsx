@@ -55,6 +55,7 @@ export default function CreateBillPage() {
   const [businessName, setBusinessName] = useState('');
   const [clientSlug, setClientSlug] = useState('');
   const [hasGst, setHasGst] = useState(false);
+  const [billWhatsAppTemplate, setBillWhatsAppTemplate] = useState('');
 
   // Customer
   const [phone, setPhone] = useState('');
@@ -99,6 +100,7 @@ export default function CreateBillPage() {
         setBusinessName(result.settings.business_name || '');
         setClientSlug(result.settings.slug || '');
         setHasGst(result.settings.has_gst || false);
+        setBillWhatsAppTemplate(result.settings.bill_whatsapp_template || '');
         if (result.settings.reward_settings && result.settings.reward_settings.enabled === false) {
           setRewardEnabled(false);
         }
@@ -170,7 +172,7 @@ export default function CreateBillPage() {
         case 'p':
           if (billResult) {
             e.preventDefault();
-            window.print();
+            window.open(`${billResult.billUrl}?print=1`, '_blank');
           }
           break;
       }
@@ -352,14 +354,27 @@ export default function CreateBillPage() {
     setSaving(false);
   }
 
-  // WhatsApp send — starter template with bill + review link
+  // WhatsApp send — use saved template or fall back to default
   function handleWhatsAppSend() {
     if (!billResult) return;
     const appUrl = billResult.billUrl.split('/bill/')[0];
     const reviewLink = clientSlug ? `${appUrl}/review/${clientSlug}` : '';
-    const template = `Dear ${billResult.customerName}, thank you for choosing ${businessName}.\n\nYour digital bill: ${billResult.billUrl}${reviewLink ? `\n\nPlease review us: ${reviewLink}` : ''}\n\nWe value your feedback.`;
+
+    let message: string;
+    if (billWhatsAppTemplate) {
+      // Use saved template with placeholder replacement
+      message = billWhatsAppTemplate
+        .replace(/\{customer_name\}/g, billResult.customerName)
+        .replace(/\{shop_name\}/g, businessName)
+        .replace(/\{bill_link\}/g, billResult.billUrl)
+        .replace(/\{review_link\}/g, reviewLink);
+    } else {
+      // Default fallback
+      message = `Dear ${billResult.customerName}, thank you for choosing ${businessName}.\n\nYour digital bill: ${billResult.billUrl}${reviewLink ? `\n\nPlease review us: ${reviewLink}` : ''}\n\nWe value your feedback.`;
+    }
+
     const cleanPhone = billResult.customerPhone.replace(/\D/g, '');
-    const waUrl = `https://wa.me/91${cleanPhone.replace(/^91/, '')}?text=${encodeURIComponent(template)}`;
+    const waUrl = `https://wa.me/91${cleanPhone.replace(/^91/, '')}?text=${encodeURIComponent(message)}`;
     window.location.href = waUrl;
     logWhatsAppSendAction(billResult.id, billResult.customerPhone);
   }
@@ -391,7 +406,7 @@ export default function CreateBillPage() {
             <a href={billResult.billUrl} target="_blank" rel="noopener noreferrer" className="quick-action-btn" style={{ textDecoration: 'none' }}>
               View Bill
             </a>
-            <button className="quick-action-btn" onClick={() => window.print()}>
+            <button className="quick-action-btn" onClick={() => window.open(`${billResult.billUrl}?print=1`, '_blank')}>
               <Printer size={14} /> Print <kbd className="shortcut-hint">Alt+P</kbd>
             </button>
             <button className="quick-action-btn" onClick={handleClear}>

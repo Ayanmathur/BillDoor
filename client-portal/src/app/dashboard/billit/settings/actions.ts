@@ -54,3 +54,58 @@ export async function updateCatalogTemplateAction(template: string) {
   if (error) return { error: 'Failed to save template.' };
   return {};
 }
+
+// ============================================================
+// Fetch Bill WhatsApp template from whatsapp_templates table
+// ============================================================
+export async function fetchBillWhatsAppTemplateAction() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized.', template: null };
+
+  const { data } = await supabase
+    .from('whatsapp_templates')
+    .select('id, content')
+    .eq('client_id', user.id)
+    .eq('type', 'billit')
+    .eq('is_active', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .single();
+
+  return { template: data };
+}
+
+// ============================================================
+// Update (or insert) Bill WhatsApp template
+// ============================================================
+export async function updateBillWhatsAppTemplateAction(content: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized.' };
+
+  // Check if one already exists
+  const { data: existing } = await supabase
+    .from('whatsapp_templates')
+    .select('id')
+    .eq('client_id', user.id)
+    .eq('type', 'billit')
+    .eq('is_active', true)
+    .limit(1)
+    .single();
+
+  if (existing) {
+    const { error } = await supabase
+      .from('whatsapp_templates')
+      .update({ content })
+      .eq('id', existing.id);
+    if (error) return { error: 'Failed to save template.' };
+  } else {
+    const { error } = await supabase
+      .from('whatsapp_templates')
+      .insert({ client_id: user.id, type: 'billit', name: 'Default Bill', content });
+    if (error) return { error: 'Failed to create template.' };
+  }
+
+  return {};
+}
