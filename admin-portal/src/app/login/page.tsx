@@ -76,7 +76,7 @@ export default function AdminLoginPage() {
             <div className="input-group">
               <label htmlFor="admin-username" className="input-label">Username</label>
               <input id="admin-username" type="text" className="input-field" value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase())} placeholder="Admin username" autoComplete="username" autoFocus />
+                onChange={(e) => setUsername(e.target.value)} placeholder="Admin username" autoComplete="username" autoFocus />
             </div>
             <div className="input-group">
               <label htmlFor="admin-password" className="input-label">Password</label>
