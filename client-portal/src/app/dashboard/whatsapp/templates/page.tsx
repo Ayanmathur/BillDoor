@@ -32,7 +32,7 @@ interface Template {
 
 const AVAILABLE_VARS = [
   { key: '{customer_name}', desc: 'Recipient\'s name' },
-  { key: '{shop_name}', desc: 'Your business name' },
+  { key: '{business_name}', desc: 'Your business name' },
 ];
 
 export default function WhatsAppTemplatesPage() {
@@ -178,7 +178,7 @@ export default function WhatsAppTemplatesPage() {
               className="input-field"
               value={formContent}
               onChange={(e) => setFormContent(e.target.value)}
-              placeholder="Hey {customer_name}! Visit {shop_name} this week for..."
+              placeholder="Hey {customer_name}! Visit {business_name} this week for..."
               rows={5}
               style={{ resize: 'vertical', fontFamily: 'inherit', width: '100%' }}
             />
@@ -211,7 +211,7 @@ export default function WhatsAppTemplatesPage() {
               <div className="wa-template-preview">
                 {formContent
                   .replace(/\{customer_name\}/g, 'Priya')
-                  .replace(/\{shop_name\}/g, 'Your Business')}
+                  .replace(/\{business_name\}/g, 'Your Business')}
               </div>
             </div>
           )}

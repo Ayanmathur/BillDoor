@@ -365,7 +365,7 @@ export default function CreateBillPage() {
       // Use saved template with placeholder replacement
       message = billWhatsAppTemplate
         .replace(/\{customer_name\}/g, billResult.customerName)
-        .replace(/\{shop_name\}/g, businessName)
+        .replace(/\{business_name\}/g, businessName)
         .replace(/\{bill_link\}/g, billResult.billUrl)
         .replace(/\{bill_number\}/g, billResult.billNumber || '')
         .replace(/\{grand_total\}/g, Number(billResult.grandTotal).toLocaleString('en-IN'))

@@ -74,10 +74,10 @@ export default function BillsPage() {
       const templateRes = await fetchBillWhatsAppTemplateAction();
       const billUrl = `${window.location.origin}/bill/${bill.billSlug}`;
       const rawTemplate = templateRes.template?.content as string | undefined;
-      let message = rawTemplate || `Hi {customer_name}, here is your bill from {shop_name}: {bill_link}`;
+      let message = rawTemplate || `Hi {customer_name}, here is your bill from {business_name}: {bill_link}`;
       message = message
         .replace(/\{customer_name\}/g, bill.customerName || 'Customer')
-        .replace(/\{shop_name\}/g, 'our store')
+        .replace(/\{business_name\}/g, 'our store')
         .replace(/\{bill_link\}/g, billUrl)
         .replace(/\{bill_number\}/g, bill.billNumber || '')
         .replace(/\{grand_total\}/g, Number(bill.grandTotal || 0).toLocaleString('en-IN'))

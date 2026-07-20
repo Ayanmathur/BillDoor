@@ -37,7 +37,7 @@ export default function BillitSettingsPage() {
   const [copied, setCopied] = useState(false);
 
   // Bill WhatsApp template
-  const [billTemplate, setBillTemplate] = useState('Dear {customer_name}, thanks for shopping at {shop_name}! Your digital bill: {bill_link}');
+  const [billTemplate, setBillTemplate] = useState('Dear {customer_name}, thanks for shopping at {business_name}! Your digital bill: {bill_link}');
   const [savingBillTemplate, setSavingBillTemplate] = useState(false);
   const [billTemplateError, setBillTemplateError] = useState('');
 
@@ -273,14 +273,14 @@ export default function BillitSettingsPage() {
           <textarea
             value={billTemplate}
             onChange={e => setBillTemplate(e.target.value)}
-            placeholder="Dear {customer_name}, thanks for shopping at {shop_name}! Your digital bill: {bill_link}"
+            placeholder="Dear {customer_name}, thanks for shopping at {business_name}! Your digital bill: {bill_link}"
             style={{ width: '100%', minHeight: 100, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', resize: 'vertical', boxSizing: 'border-box' }}
           />
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-1)' }}>
             <p style={{ marginBottom: 4 }}>Use these exact placeholders (single braces only):</p>
             <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{customer_name}'}</code>
-              <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{shop_name}'}</code>
+              <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{business_name}'}</code>
               <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{bill_link}'}</code>
               <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{bill_number}'}</code>
               <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{grand_total}'}</code>
@@ -326,11 +326,11 @@ export default function BillitSettingsPage() {
                   readOnly 
                   style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }} 
                 />
-                <button className="btn btn-primary" onClick={copyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+                <button className="btn" onClick={copyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: '#0d9488', color: 'white', border: 'none' }}>
                   {copied ? <Check size={16} /> : <Copy size={16} />}
                   {copied ? 'Copied!' : 'Copy'}
                 </button>
-                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none' }}>
+                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: '#0d9488', color: 'white', border: 'none' }}>
                   <ExternalLink size={16} />
                   Open
                 </a>

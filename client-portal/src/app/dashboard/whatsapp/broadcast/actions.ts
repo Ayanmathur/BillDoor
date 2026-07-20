@@ -208,7 +208,7 @@ export async function sendBroadcastAction(input: {
   // - Decrypt credentials: decryptCredential(config.api_credentials_encrypted)
   // - Parse { phoneNumberId, accessToken }
   // - For each recipient, POST to https://graph.facebook.com/v21.0/{phoneNumberId}/messages
-  //   with the template content (variable-substituted: {customer_name} -> c.name, {shop_name} -> shopName)
+  //   with the template content (variable-substituted: {customer_name} -> c.name, {business_name} -> shopName)
   // - Update each broadcast_recipients row with status = 'sent' or 'failed'
   //
   // For now, mark all as "sent" (stub)

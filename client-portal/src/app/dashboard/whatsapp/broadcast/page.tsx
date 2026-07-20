@@ -430,7 +430,7 @@ export default function BroadcastPage() {
             <div className="wa-template-preview">
               {(selectedTemplate?.content || '')
                 .replace(/\{customer_name\}/g, 'Priya')
-                .replace(/\{shop_name\}/g, 'Your Business')}
+                .replace(/\{business_name\}/g, 'Your Business')}
             </div>
           </div>
 
