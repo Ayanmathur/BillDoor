@@ -1,0 +1,5 @@
+@import url('../shared/design-tokens.css');
+
+body {
+  height: 100dvh;
+}

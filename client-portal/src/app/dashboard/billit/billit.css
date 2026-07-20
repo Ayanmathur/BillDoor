@@ -1,0 +1,182 @@
+/* Billit UI Polish Styles */
+
+/* 1. Catalog Add Button */
+.btn-add-item {
+  position: relative;
+  width: 150px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-success);
+  background-color: var(--color-success);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  color: white;
+  text-decoration: none;
+}
+
+.btn-add-item, .btn-add-icon, .btn-add-text {
+  transition: all 0.3s;
+}
+
+.btn-add-text {
+  transform: translateX(30px);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.btn-add-icon {
+  position: absolute;
+  transform: translateX(109px);
+  height: 100%;
+  width: 39px;
+  background-color: rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-add-item:hover {
+  background-color: var(--color-success);
+}
+
+.btn-add-item:hover .btn-add-text {
+  color: transparent;
+}
+
+.btn-add-item:hover .btn-add-icon {
+  width: 148px;
+  transform: translateX(0);
+  background-color: transparent;
+}
+
+.btn-add-item:active {
+  border: 1px solid var(--color-success);
+}
+
+/* 2. Billit Input Box (Rounded Box + Animated Float) */
+.billit-input-group {
+  background-color: var(--color-bg-elevated);
+  padding: var(--space-4) var(--space-4) var(--space-2);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  max-width: 350px;
+  margin-bottom: var(--space-4);
+}
+
+.billit-input-wrapper {
+  position: relative;
+  width: 100%;
+  margin-top: 15px; /* space for the floating label */
+  display: flex;
+  align-items: center;
+}
+
+.billit-input-prefix {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 24px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--color-border);
+  padding-right: 8px;
+  z-index: 1;
+}
+
+.billit-input-prefix select {
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 4px;
+}
+
+.billit-input-field {
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid var(--color-border);
+  padding: 8px 0;
+  font-size: var(--text-md);
+  color: var(--color-text-primary);
+  background-color: transparent;
+  outline: none;
+}
+
+.billit-input-wrapper.has-prefix .billit-input-field {
+  padding-left: 4.5rem;
+}
+
+.billit-input-label {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-md);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.billit-input-wrapper.has-prefix .billit-input-label {
+  left: 4.5rem;
+}
+
+.billit-input-field:focus ~ .billit-input-label,
+.billit-input-field:valid ~ .billit-input-label,
+.billit-input-field[data-has-value="true"] ~ .billit-input-label {
+  top: -20px;
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+}
+
+.billit-input-underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background-color: var(--color-accent);
+  transform: scaleX(0);
+  transition: all 0.3s ease;
+}
+
+.billit-input-field:focus ~ .billit-input-underline,
+.billit-input-field:valid ~ .billit-input-underline,
+.billit-input-field[data-has-value="true"] ~ .billit-input-underline {
+  transform: scaleX(1);
+}
+
+/* Keyboard shortcut hints on buttons */
+.shortcut-hint {
+  display: inline-block;
+  font-family: var(--font-body, sans-serif);
+  font-size: 10px;
+  font-weight: var(--weight-medium, 500);
+  line-height: 1;
+  padding: 2px 5px;
+  margin-left: 6px;
+  border-radius: var(--radius-sm, 4px);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: inherit;
+  opacity: 0.7;
+  vertical-align: middle;
+  pointer-events: none;
+}
+
+.quick-action-btn .shortcut-hint {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .quick-action-btn .shortcut-hint {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}

@@ -1,0 +1,17 @@
+/*
+ * BillDoor Client Portal — Global Styles
+ * Imports the shared design system tokens.
+ * No Tailwind. Vanilla CSS only.
+ */
+
+@import url('../shared/design-tokens.css');
+
+/* ============================================================
+   Client Portal specific overrides (if any)
+   ============================================================ */
+
+/* Root-level app styles */
+#__next,
+body {
+  height: 100dvh;
+}

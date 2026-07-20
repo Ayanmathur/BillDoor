@@ -1,0 +1,244 @@
+/* d:\Projects\BillDoor\client-portal\src\app\dashboard\billit\gst-calculator.css */
+
+.calc-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--color-indigo-600, #4f46e5);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  z-index: 40;
+  border: none;
+}
+
+.calc-fab:hover {
+  transform: scale(1.1);
+  background-color: var(--color-indigo-700, #4338ca);
+}
+
+.calc-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 50;
+  transition: opacity 0.25s ease;
+}
+
+.calc-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  background-color: white;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+  z-index: 51;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease;
+  overflow-y: auto;
+}
+
+.calc-panel.open {
+  transform: translateX(0);
+}
+
+.calc-panel.closed {
+  transform: translateX(100%);
+}
+
+.calc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.calc-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.calc-close-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.calc-close-btn:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.calc-field {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.calc-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.calc-field input,
+.calc-field select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #111827;
+  background-color: white;
+  box-sizing: border-box;
+}
+
+.calc-field input:focus,
+.calc-field select:focus {
+  outline: none;
+  border-color: var(--color-indigo-500, #6366f1);
+  box-shadow: 0 0 0 1px var(--color-indigo-500, #6366f1);
+}
+
+.calc-toggle-group {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.calc-toggle {
+  flex: 1;
+  padding: 8px;
+  background: white;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.calc-toggle.active {
+  background-color: var(--color-indigo-50, #eef2ff);
+  color: var(--color-indigo-700, #4338ca);
+  font-weight: 600;
+}
+
+.calc-toggle:not(:last-child) {
+  border-right: 1px solid #d1d5db;
+}
+
+.calc-discount-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.calc-discount-row .calc-field {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.calc-discount-type {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 40px;
+}
+
+.calc-discount-type button {
+  padding: 0 12px;
+  background: white;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.calc-discount-type button.active {
+  background-color: var(--color-indigo-50, #eef2ff);
+  color: var(--color-indigo-700, #4338ca);
+}
+
+.calc-discount-type button:not(:last-child) {
+  border-right: 1px solid #d1d5db;
+}
+
+.calc-result {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: auto;
+  margin-bottom: 16px;
+}
+
+.calc-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #4b5563;
+  margin-bottom: 8px;
+}
+
+.calc-result-row:last-of-type {
+  margin-bottom: 0;
+}
+
+.calc-result-row.total {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-indigo-700, #4338ca);
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.calc-use-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--color-indigo-600, #4f46e5);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.calc-use-btn:hover {
+  background-color: var(--color-indigo-700, #4338ca);
+}
+

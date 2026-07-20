@@ -1,0 +1,332 @@
+.audit-container {
+  padding: var(--space-6, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6, 24px);
+  background-color: var(--color-bg-primary, #111827);
+  color: var(--color-text-primary, #f9fafb);
+  min-height: 100vh;
+}
+
+.audit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--space-4, 16px);
+  border-bottom: 1px solid var(--color-border-subtle, #374151);
+}
+
+.audit-header-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  font-size: var(--font-size-xl, 24px);
+  font-weight: var(--weight-bold, 600);
+}
+
+.audit-export-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  background-color: var(--color-bg-secondary, #1f2937);
+  color: var(--color-text-primary, #f9fafb);
+  border: 1px solid var(--color-border-default, #4b5563);
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  border-radius: var(--radius-md, 6px);
+  font-size: var(--font-size-sm, 14px);
+  font-weight: var(--weight-medium, 500);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.audit-export-btn:hover {
+  background-color: var(--color-bg-elevated, #374151);
+}
+
+.audit-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4, 16px);
+  background-color: var(--color-bg-elevated, #1f2937);
+  padding: var(--space-4, 16px);
+  border-radius: var(--radius-lg, 8px);
+  border: 1px solid var(--color-border-subtle, #374151);
+  align-items: flex-end;
+}
+
+.audit-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+  min-width: 150px;
+  flex: 1;
+}
+
+.audit-filter-group label {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--color-text-secondary, #9ca3af);
+  font-weight: var(--weight-medium, 500);
+}
+
+.audit-filter-group select,
+.audit-filter-group input {
+  background-color: var(--color-bg-primary, #111827);
+  color: var(--color-text-primary, #f9fafb);
+  border: 1px solid var(--color-border-default, #4b5563);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-md, 6px);
+  font-size: var(--font-size-sm, 14px);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.audit-filter-group select:focus,
+.audit-filter-group input:focus {
+  border-color: var(--color-primary, #3b82f6);
+}
+
+.audit-filter-actions {
+  display: flex;
+  gap: var(--space-2, 8px);
+  align-items: center;
+}
+
+.audit-filter-actions button {
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  border-radius: var(--radius-md, 6px);
+  font-size: var(--font-size-sm, 14px);
+  font-weight: var(--weight-medium, 500);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  transition: all 0.2s ease;
+}
+
+.audit-apply-btn {
+  background-color: var(--color-primary, #3b82f6);
+  color: #ffffff;
+  border: none;
+}
+
+.audit-apply-btn:hover {
+  background-color: var(--color-primary-hover, #2563eb);
+}
+
+.audit-clear-btn {
+  background-color: transparent;
+  color: var(--color-text-secondary, #9ca3af);
+  border: 1px solid var(--color-border-default, #4b5563);
+}
+
+.audit-clear-btn:hover {
+  background-color: var(--color-bg-secondary, #374151);
+  color: var(--color-text-primary, #f9fafb);
+}
+
+.audit-table-container {
+  overflow-x: auto;
+  background-color: var(--color-bg-elevated, #1f2937);
+  border-radius: var(--radius-lg, 8px);
+  border: 1px solid var(--color-border-subtle, #374151);
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.audit-table thead th {
+  position: sticky;
+  top: 0;
+  background-color: var(--color-bg-secondary, #374151);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  font-size: var(--font-size-xs, 12px);
+  font-weight: var(--weight-semibold, 600);
+  color: var(--color-text-secondary, #9ca3af);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border-default, #4b5563);
+}
+
+.audit-table tbody tr {
+  border-bottom: 1px solid var(--color-border-subtle, #374151);
+  transition: background-color 0.15s ease;
+}
+
+.audit-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.audit-table tbody tr:hover {
+  background-color: var(--color-bg-secondary, #374151);
+}
+
+.audit-table td {
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  font-size: var(--font-size-sm, 14px);
+  vertical-align: middle;
+}
+
+.audit-actor-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1, 2px) var(--space-2, 8px);
+  border-radius: var(--radius-full, 9999px);
+  font-size: var(--font-size-xs, 12px);
+  font-weight: var(--weight-medium, 500);
+}
+
+.audit-actor-badge.admin {
+  background-color: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.audit-actor-badge.client {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.audit-actor-badge.system {
+  background-color: rgba(156, 163, 175, 0.15);
+  color: #9ca3af;
+  border: 1px solid rgba(156, 163, 175, 0.3);
+}
+
+.audit-action-cell {
+  font-weight: var(--weight-medium, 500);
+}
+
+.audit-expand-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary, #9ca3af);
+  cursor: pointer;
+  padding: var(--space-1, 4px);
+  border-radius: var(--radius-sm, 4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.audit-expand-btn:hover {
+  background-color: var(--color-bg-primary, #111827);
+  color: var(--color-text-primary, #f9fafb);
+}
+
+.audit-metadata-row {
+  background-color: var(--color-bg-primary, #111827) !important;
+}
+
+.audit-metadata-container {
+  padding: var(--space-4, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+.audit-metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4, 16px);
+}
+
+.audit-metadata-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+}
+
+.audit-metadata-label {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--color-text-secondary, #9ca3af);
+  font-weight: var(--weight-medium, 500);
+}
+
+.audit-metadata-value {
+  font-size: var(--font-size-sm, 14px);
+  color: var(--color-text-primary, #f9fafb);
+  word-break: break-all;
+}
+
+.audit-metadata-json {
+  background-color: var(--color-bg-elevated, #1f2937);
+  padding: var(--space-3, 12px);
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid var(--color-border-subtle, #374151);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-xs, 12px);
+  color: var(--color-text-primary, #e5e7eb);
+  white-space: pre-wrap;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.audit-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-4, 16px);
+  border-top: 1px solid var(--color-border-subtle, #374151);
+}
+
+.audit-pagination-info {
+  font-size: var(--font-size-sm, 14px);
+  color: var(--color-text-secondary, #9ca3af);
+}
+
+.audit-pagination-controls {
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+
+.audit-pagination-btn {
+  background-color: var(--color-bg-secondary, #1f2937);
+  color: var(--color-text-primary, #f9fafb);
+  border: 1px solid var(--color-border-default, #4b5563);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-md, 6px);
+  font-size: var(--font-size-sm, 14px);
+  font-weight: var(--weight-medium, 500);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.audit-pagination-btn:hover:not(:disabled) {
+  background-color: var(--color-bg-elevated, #374151);
+}
+
+.audit-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.audit-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8, 48px) var(--space-4, 16px);
+  text-align: center;
+  color: var(--color-text-secondary, #9ca3af);
+}
+
+.audit-empty-icon {
+  margin-bottom: var(--space-3, 12px);
+  color: var(--color-text-tertiary, #6b7280);
+}
+
+.audit-empty h3 {
+  font-size: var(--font-size-lg, 18px);
+  font-weight: var(--weight-semibold, 600);
+  color: var(--color-text-primary, #f9fafb);
+  margin-bottom: var(--space-1, 4px);
+}
+
+.audit-empty p {
+  font-size: var(--font-size-sm, 14px);
+}
