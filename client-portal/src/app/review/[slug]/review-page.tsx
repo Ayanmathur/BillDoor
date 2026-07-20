@@ -132,12 +132,6 @@ export default function ReviewPage({
       }
       setAiLoading(false);
 
-      // Issue reward if enabled (4-5★ always qualifies in both modes)
-      const rewardsEnabled = rewardSettings?.triggers?.feedback;
-      if (rewardsEnabled) {
-        const rewardResult = await issueRewardAction({ clientId, reviewId: submitResult.reviewId, trigger: 'feedback' });
-        if (rewardResult.reward) setReward(rewardResult.reward as any);
-      }
     }
   }
 
@@ -147,13 +141,6 @@ export default function ReviewPage({
     const result = await submitReviewAction({ clientId, stars, feedbackText, sessionId: sessionId || undefined });
     if (result.sessionId) setSessionId(result.sessionId);
 
-    // Issue reward: only if mode is 'all_feedback' (1-3★ never rewarded in 'positive_only' mode)
-    const rewardsEnabled = rewardSettings?.triggers?.feedback;
-    const rewardMode = rewardSettings?.review_reward_mode || 'all_feedback';
-    if (rewardsEnabled && rewardMode === 'all_feedback') {
-      const rewardResult = await issueRewardAction({ clientId, reviewId: result.reviewId, trigger: 'feedback' });
-      if (rewardResult.reward) setReward(rewardResult.reward as any);
-    }
 
     setStage('thank_you');
     setLoading(false);
@@ -336,16 +323,6 @@ export default function ReviewPage({
                 </>
               ) : null}
 
-              {/* Reward Card */}
-              {reward && (
-                <div className="reward-card">
-                  <div className="reward-card-title">Thank You Reward</div>
-                  <div className="reward-code">{reward.code}</div>
-                  <div className="reward-value">
-                    {reward.type === 'percent_discount' ? `${reward.value}% off` : `₹${reward.value} off`} at {reward.businessName}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -360,16 +337,6 @@ export default function ReviewPage({
                 Your feedback has been shared with {businessName}. We appreciate you taking the time.
               </div>
 
-              {/* Reward Card */}
-              {reward && (
-                <div className="reward-card">
-                  <div className="reward-card-title">Here&apos;s a reward for your feedback</div>
-                  <div className="reward-code">{reward.code}</div>
-                  <div className="reward-value">
-                    {reward.type === 'percent_discount' ? `${reward.value}% off` : `₹${reward.value} off`} at {reward.businessName}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
