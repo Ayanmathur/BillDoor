@@ -47,12 +47,11 @@ function LoginBackground() {
   );
 }
 
-// Helper component for static label input
-function StaticInput({ id, type, label, value, onChange, placeholder, disabled, autoFocus, autoComplete, error, children }: any) {
+// Helper component for animated floating label input
+function StaticInput({ id, type, label, value, onChange, disabled, autoFocus, autoComplete, error, children }: any) {
   return (
-    <div className="form-control" style={{ marginBottom: error ? 5 : 20 }}>
-      <label htmlFor={id}>{label}</label>
-      <div style={{ position: 'relative' }}>
+    <div style={{ marginBottom: error ? 5 : 20 }}>
+      <div className="input-container" style={{ margin: 0 }}>
         <input
           id={id}
           type={type}
@@ -62,12 +61,15 @@ function StaticInput({ id, type, label, value, onChange, placeholder, disabled, 
           autoFocus={autoFocus}
           autoComplete={autoComplete}
           required
-          className={error ? 'error' : ''}
+          placeholder=" "
+          className={`input-field ${error ? 'error' : ''}`}
           style={{ paddingRight: children ? 'var(--space-10)' : 0 }}
         />
+        <label htmlFor={id} className="input-label">{label}</label>
+        <span className="input-highlight"></span>
         {children}
       </div>
-      {error && <span className="input-error-text">{error}</span>}
+      {error && <span className="input-error-text" style={{ marginTop: 4, display: 'block' }}>{error}</span>}
     </div>
   );
 }
