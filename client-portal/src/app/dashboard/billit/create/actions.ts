@@ -574,16 +574,16 @@ export async function fetchBillsAction(params?: {
   const { data, count, error } = await query;
   if (error) return { error: 'Failed to fetch bills.', bills: [], total: 0 };
 
-  // Fetch customer names
+  // Fetch customer names and phones
   const customerIds = [...new Set((data || []).map((b: any) => b.customer_id))];
-  let customerMap: Record<string, string> = {};
+  let customerMap: Record<string, { name: string; phone: string }> = {};
   if (customerIds.length > 0) {
     const { data: customers } = await supabase
       .from('customers')
       .select('id, name, phone')
       .in('id', customerIds);
     for (const c of (customers || [])) {
-      customerMap[c.id] = c.name;
+      customerMap[c.id] = { name: c.name, phone: c.phone || '' };
     }
   }
 
@@ -595,7 +595,8 @@ export async function fetchBillsAction(params?: {
       grandTotal: b.grand_total,
       status: b.status,
       voidReason: b.void_reason,
-      customerName: customerMap[b.customer_id] || 'Unknown',
+      customerName: customerMap[b.customer_id]?.name || 'Unknown',
+      customerPhone: customerMap[b.customer_id]?.phone || '',
       createdAt: b.created_at,
     })),
     total: count || 0,

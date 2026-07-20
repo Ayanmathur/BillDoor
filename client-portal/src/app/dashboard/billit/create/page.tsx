@@ -367,6 +367,8 @@ export default function CreateBillPage() {
         .replace(/\{customer_name\}/g, billResult.customerName)
         .replace(/\{shop_name\}/g, businessName)
         .replace(/\{bill_link\}/g, billResult.billUrl)
+        .replace(/\{bill_number\}/g, billResult.billNumber || '')
+        .replace(/\{grand_total\}/g, Number(billResult.grandTotal).toLocaleString('en-IN'))
         .replace(/\{review_link\}/g, reviewLink);
     } else {
       // Default fallback

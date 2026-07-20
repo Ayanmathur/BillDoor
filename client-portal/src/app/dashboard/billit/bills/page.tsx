@@ -80,13 +80,14 @@ export default function BillsPage() {
         .replace(/\{shop_name\}/g, 'our store')
         .replace(/\{bill_link\}/g, billUrl)
         .replace(/\{bill_number\}/g, bill.billNumber || '')
+        .replace(/\{grand_total\}/g, Number(bill.grandTotal || 0).toLocaleString('en-IN'))
         .replace(/\{review_link\}/g, billUrl);
       const encoded = encodeURIComponent(message);
       const phone = bill.customerPhone ? bill.customerPhone.replace(/\D/g, '') : '';
       if (phone) {
-        window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
+        window.location.href = `https://wa.me/91${phone.replace(/^91/, '')}?text=${encoded}`;
       } else {
-        window.open(`https://wa.me/?text=${encoded}`, '_blank');
+        window.location.href = `https://wa.me/?text=${encoded}`;
       }
     } catch {
       alert('Failed to load WhatsApp template.');
@@ -159,15 +160,12 @@ export default function BillsPage() {
                             </button>
                             {bill.billSlug && (
                               <>
-                                <button className="bills-action-btn" title="View Bill" onClick={() => window.open(`/bill/${bill.billSlug}`, '_blank')}>
+                                <a href={`/bill/${bill.billSlug}`} target="_blank" rel="noopener noreferrer" className="bills-action-btn" title="View Bill">
                                   <ExternalLink size={16} />
-                                </button>
-                                <button className="bills-action-btn" title="Print Bill" onClick={() => {
-                                  const w = window.open(`/bill/${bill.billSlug}?print=1`, '_blank');
-                                  if (!w) alert('Popup blocked! Please allow popups for this site to print bills.');
-                                }}>
+                                </a>
+                                <a href={`/bill/${bill.billSlug}?print=1`} target="_blank" rel="noopener noreferrer" className="bills-action-btn" title="Print Bill">
                                   <Printer size={16} />
-                                </button>
+                                </a>
                                 <button className="bills-action-btn" title="Resend on WhatsApp" onClick={() => handleResendWhatsApp(bill)}>
                                   <MessageCircle size={16} />
                                 </button>
@@ -189,9 +187,9 @@ export default function BillsPage() {
                           </>
                         )}
                         {bill.status === 'voided' && bill.billSlug && (
-                          <button className="bills-action-btn" title="View" onClick={() => window.open(`/bill/${bill.billSlug}`, '_blank')}>
+                          <a href={`/bill/${bill.billSlug}`} target="_blank" rel="noopener noreferrer" className="bills-action-btn" title="View Bill">
                             <ExternalLink size={16} />
-                          </button>
+                          </a>
                         )}
                       </div>
                     </td>

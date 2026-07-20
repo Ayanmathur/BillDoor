@@ -18,7 +18,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Star, Receipt, CalendarClock, MessageSquare,
   Briefcase, Settings, Bell, Moon, Sun, LogOut, PanelLeftClose,
-  PanelLeft, DoorOpen, ChevronRight, Menu, X
+  PanelLeft, DoorOpen, ChevronRight, Menu, X, ArrowLeft
 } from 'lucide-react';
 import { fetchUnreadCountAction } from '@/app/dashboard/notifications/actions';
 import './app-shell.css';
@@ -219,6 +219,14 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
         </button>
 
         <div className="topbar-left">
+          <button 
+            className="topbar-btn back-btn" 
+            onClick={() => router.back()} 
+            title="Go Back" 
+            aria-label="Go back"
+          >
+            <ArrowLeft size={18} />
+          </button>
           <h1 className="topbar-title">{pageTitle}</h1>
         </div>
         <div className="topbar-right">
