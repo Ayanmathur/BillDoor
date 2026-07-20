@@ -18,7 +18,6 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Star, Receipt, CalendarClock, MessageSquare,
   Briefcase, Settings, Bell, Moon, Sun, LogOut, PanelLeftClose,
-  Briefcase, Settings, Bell, Moon, Sun, LogOut, PanelLeftClose,
   PanelLeft, DoorOpen, ChevronRight, Menu, X
 } from 'lucide-react';
 import { fetchUnreadCountAction } from '@/app/dashboard/notifications/actions';
