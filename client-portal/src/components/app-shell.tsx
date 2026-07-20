@@ -161,18 +161,48 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
         </div>
 
         <div className="sidebar-footer">
+          {/* Theme Toggle */}
+          <div className="nav-item" style={{ padding: 'var(--space-2) var(--space-3)', cursor: 'pointer' }} onClick={toggleTheme} title={collapsed ? 'Toggle Theme' : undefined}>
+            <div className="nav-item-icon">
+              {collapsed ? (
+                theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />
+              ) : (
+                <label className="ui-switch" onClick={(e) => e.stopPropagation()}>
+                  <input type="checkbox" checked={theme === 'dark'} onChange={toggleTheme} />
+                  <div className="slider">
+                    <div className="circle"></div>
+                  </div>
+                </label>
+              )}
+            </div>
+            {!collapsed && <span className="nav-item-label" style={{ marginLeft: 8 }}>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>}
+          </div>
+
+          {/* Logout */}
+          <button className="logout-btn" onClick={handleLogout} title={collapsed ? 'Logout' : undefined}>
+            <div className="sign">
+              <LogOut size={17} color="white" />
+            </div>
+            {!collapsed && <div className="text">Logout</div>}
+          </button>
+
+          <div className="sidebar-divider" style={{ margin: 'var(--space-2) 0' }} />
+
           <button className="sidebar-collapse-btn" onClick={toggleCollapse} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
             {collapsed ? <PanelLeft size={18} /> : <><PanelLeftClose size={18} /> <span className="nav-item-label">Collapse</span></>}
           </button>
+
+          <div id="mobile-sidebar-widget-area"></div>
         </div>
       </nav>
 
       {/* Top Bar */}
       <div className="topbar">
+        <button className="mobile-menu-btn" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+          <div className="mobile-handle-line"></div>
+        </button>
+
         <div className="topbar-left">
-          <button className="mobile-menu-btn" onClick={() => setMobileOpen(true)} aria-label="Open menu">
-            <Menu size={20} />
-          </button>
           <h1 className="topbar-title">{pageTitle}</h1>
         </div>
         <div className="topbar-right">
@@ -182,16 +212,6 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
             {unreadCount > 0 && (
               <span className="topbar-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
             )}
-          </button>
-
-          {/* Theme Toggle */}
-          <button className="topbar-btn" title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} onClick={toggleTheme}>
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-
-          {/* Logout */}
-          <button className="topbar-btn" title="Logout" onClick={handleLogout}>
-            <LogOut size={18} />
           </button>
 
           {/* User */}

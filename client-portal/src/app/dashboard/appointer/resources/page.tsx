@@ -245,13 +245,16 @@ export default function ResourcesPage() {
                       return (
                         <div key={day} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', opacity: isOpen ? 1 : 0.5 }}>
                           <div style={{ width: 60, textTransform: 'capitalize', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-medium)' }}>{day}</div>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', fontSize: 'var(--text-sm)' }}>
-                            <input type="checkbox" checked={isOpen} onChange={(e) => {
-                              const checked = e.target.checked;
-                              setEditingHours({ ...editingHours, [day]: checked ? { open: '09:00', close: '18:00' } : null });
-                            }} />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-sm)' }}>
+                            <label className="toggle-switch">
+                              <input type="checkbox" checked={isOpen} onChange={(e) => {
+                                const checked = e.target.checked;
+                                setEditingHours({ ...editingHours, [day]: checked ? { open: '09:00', close: '18:00' } : null });
+                              }} />
+                              <span className="toggle-slider"></span>
+                            </label>
                             Open
-                          </label>
+                          </div>
                           {isOpen && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                               <input type="time" className="input-field" style={{ padding: 'var(--space-1) var(--space-2)', fontSize: 'var(--text-sm)', width: 110 }} value={dayData.open} onChange={(e) => setEditingHours({ ...editingHours, [day]: { ...dayData, open: e.target.value } })} />

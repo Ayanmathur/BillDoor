@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Barcode, Save, Loader2, Check, Link as LinkIcon, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Barcode, Save, Loader2, Check, Link as LinkIcon, MessageSquare, Copy, ExternalLink } from 'lucide-react';
 import {
   fetchBillitSettingsAction,
   updateBillitSettingsAction,
@@ -28,6 +28,7 @@ export default function BillitSettingsPage() {
   const [catalogTemplate, setCatalogTemplate] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateError, setTemplateError] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -73,6 +74,8 @@ export default function BillitSettingsPage() {
   function copyLink() {
     const url = `${window.location.origin}/catalog/${slug}`;
     navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   function downloadQR() {
@@ -201,7 +204,14 @@ export default function BillitSettingsPage() {
                   readOnly 
                   style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }} 
                 />
-                <button className="btn" onClick={copyLink}>Copy Link</button>
+                <button className="copy-open-btn" onClick={copyLink} title="Copy link">
+                  <span className="text">{copied ? 'Copied' : 'Copy'}</span>
+                  <span className="svgIcon">{copied ? <Check size={16} /> : <Copy size={16} />}</span>
+                </button>
+                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="copy-open-btn" title="Open link">
+                  <span className="text">Open</span>
+                  <span className="svgIcon"><ExternalLink size={16} /></span>
+                </a>
               </div>
             </div>
 

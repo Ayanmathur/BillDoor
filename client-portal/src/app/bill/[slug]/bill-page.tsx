@@ -45,6 +45,7 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
   const [feedbackText, setFeedbackText] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [offerRevealed, setOfferRevealed] = useState(false);
 
   // AI draft for 4-5★
   const [aiDraft, setAiDraft] = useState('');
@@ -307,6 +308,24 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
             <span>₹{Number(bill.grand_total || 0).toFixed(2)}</span>
           </div>
         </div>
+
+        {/* Offer / Discount Reveal (if enabled) */}
+        {(client?.reward_settings?.digital_bill_offer_enabled !== false) && (
+          <div style={{ display: 'flex', justifyContent: 'center', margin: 'var(--space-4) 0' }}>
+            <div className={`btn-container ${offerRevealed ? 'revealed' : ''}`} onClick={() => setOfferRevealed(true)}>
+              <div className="btn-drawer transition-top">
+                {offerRevealed ? (client?.reward_settings?.offer_code || 'SAVE20') : 'your reward for trusting us.'}
+              </div>
+              <button className="btn-offer-reveal">
+                <span className="btn-text">Unlock Now</span>
+                <svg className="btn-corner" viewBox="0 0 32 32"><polyline points="0,32 0,0 32,0" /></svg>
+                <svg className="btn-corner" viewBox="0 0 32 32"><polyline points="0,32 0,0 32,0" /></svg>
+                <svg className="btn-corner" viewBox="0 0 32 32"><polyline points="0,32 0,0 32,0" /></svg>
+                <svg className="btn-corner" viewBox="0 0 32 32"><polyline points="0,32 0,0 32,0" /></svg>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Loyalty Stamp Progress (Track 2) */}
         {loyaltyConfig?.track2_enabled && loyaltyConfig?.track2 && (

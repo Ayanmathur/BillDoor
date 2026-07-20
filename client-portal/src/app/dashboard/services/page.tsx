@@ -171,7 +171,9 @@ export default function ServicesPage() {
         
         if (adminPhone) {
           const msg = encodeURIComponent(`Hi, I would like to request the ${title} service.`);
-          window.open(`https://wa.me/${adminPhone}?text=${msg}`, '_blank');
+          window.location.href = `https://wa.me/${adminPhone}?text=${msg}`;
+        } else {
+          alert('Service requested successfully! However, the admin WhatsApp number is not configured for chat.');
         }
       } else {
         alert(res.error || 'Failed to create request');
@@ -180,6 +182,8 @@ export default function ServicesPage() {
       if (adminPhone) {
         const msg = encodeURIComponent(`Hi, I am following up on my ${title} service request.`);
         window.open(`https://wa.me/${adminPhone}?text=${msg}`, '_blank');
+      } else {
+        alert('Admin WhatsApp number is not configured.');
       }
     }
   };
@@ -325,6 +329,8 @@ export default function ServicesPage() {
           onClick={() => {
             if (adminPhone) {
               window.open(`https://wa.me/${adminPhone}?text=Hi, I need support with my account.`, '_blank');
+            } else {
+              alert('Admin WhatsApp number is not configured.');
             }
           }}
           className="btn-support-chat"

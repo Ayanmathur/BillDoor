@@ -184,12 +184,14 @@ export default function ReviewsDashboard() {
               <code style={{ fontSize: 'var(--text-sm)', background: 'var(--color-bg-primary)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-sm)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {linkInfo?.reviewUrl || '...'}
               </code>
-              <button className="quick-action-btn" onClick={handleCopyLink} style={{ fontSize: 'var(--text-xs)', padding: 'var(--space-1) var(--space-2)' }}>
-                {copied ? <Check size={12} /> : <Copy size={12} />} {copied ? 'Copied' : 'Copy'}
+              <button className="copy-open-btn" onClick={handleCopyLink} title="Copy link">
+                <span className="text">{copied ? 'Copied' : 'Copy'}</span>
+                <span className="svgIcon">{copied ? <Check size={16} /> : <Copy size={16} />}</span>
               </button>
               {linkInfo?.reviewUrl && (
-                <a href={linkInfo.reviewUrl} target="_blank" rel="noopener noreferrer" className="quick-action-btn" style={{ fontSize: 'var(--text-xs)', padding: 'var(--space-1) var(--space-2)', textDecoration: 'none' }}>
-                  <ExternalLink size={12} /> Open
+                <a href={linkInfo.reviewUrl} target="_blank" rel="noopener noreferrer" className="copy-open-btn" title="Open link">
+                  <span className="text">Open</span>
+                  <span className="svgIcon"><ExternalLink size={16} /></span>
                 </a>
               )}
             </div>

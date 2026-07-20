@@ -55,7 +55,8 @@ export async function submitInquiryAction(data: {
     .select('admin_whatsapp_number')
     .single();
 
-  const adminPhone = settings?.admin_whatsapp_number || '';
+  const fallback = process.env.ADMIN_WHATSAPP_NUMBER ? `91${process.env.ADMIN_WHATSAPP_NUMBER.replace(/^91/, '')}` : '919422880355';
+  const adminPhone = settings?.admin_whatsapp_number || fallback;
 
   // Save inquiry to DB (admin can see it in their panel)
   await supabase.from('inquiries').insert({

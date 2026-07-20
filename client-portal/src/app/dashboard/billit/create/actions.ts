@@ -413,7 +413,7 @@ export async function fetchBillSettingsAction() {
 
   const { data: client } = await supabase
     .from('clients')
-    .select('business_name, slug, barcode_enabled, has_gst, gst_number, whatsapp_templates')
+    .select('business_name, slug, barcode_enabled, has_gst, gst_number, whatsapp_templates, reward_settings')
     .eq('id', user.id)
     .single();
 

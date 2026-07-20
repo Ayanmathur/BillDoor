@@ -245,6 +245,22 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  
+  /* 3D Animation styles */
+  transition: all 0.2s;
+  border-bottom: 4px solid color-mix(in srgb, var(--color-accent) 80%, black);
+}
+
+.btn-service-main:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  border-bottom-width: 6px;
+}
+
+.btn-service-main:active {
+  border-bottom-width: 2px;
+  filter: brightness(0.9);
+  transform: translateY(2px);
 }
 
 .btn-service-meeting {

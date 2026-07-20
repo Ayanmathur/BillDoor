@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Link2, Copy, Check, QrCode, Save, Loader2,
-  Clock, Calendar, Timer, Download, Shield,
+  Clock, Calendar, Timer, Download, Shield, ExternalLink
 } from 'lucide-react';
 import {
   fetchAppointerSettingsAction,
@@ -185,12 +185,16 @@ export default function AppointerSettingsPage() {
                 }}
               />
               <button
-                className="btn"
+                className="copy-open-btn"
                 onClick={handleCopyLink}
-                style={{ padding: 'var(--space-1) var(--space-2)', fontSize: 'var(--text-xs)' }}
               >
-                {copied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}
+                <span className="text">{copied ? 'Copied' : 'Copy'}</span>
+                <span className="svgIcon">{copied ? <Check size={16} /> : <Copy size={16} />}</span>
               </button>
+              <a href={bookingUrl} target="_blank" rel="noopener noreferrer" className="copy-open-btn">
+                <span className="text">Open</span>
+                <span className="svgIcon"><ExternalLink size={16} /></span>
+              </a>
             </div>
 
             <div style={{

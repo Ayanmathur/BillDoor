@@ -12,7 +12,8 @@ export async function fetchAdminWhatsAppAction() {
     .from('platform_settings')
     .select('admin_whatsapp_number')
     .single();
-  return { phone: data?.admin_whatsapp_number || '' };
+  const fallback = process.env.ADMIN_WHATSAPP_NUMBER ? `91${process.env.ADMIN_WHATSAPP_NUMBER.replace(/^91/, '')}` : '919422880355';
+  return { phone: data?.admin_whatsapp_number || fallback };
 }
 
 // Fetch client's website URL

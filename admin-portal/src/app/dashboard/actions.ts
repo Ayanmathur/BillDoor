@@ -112,7 +112,7 @@ export async function generateLicenseKeyAction(data: {
   return {
     rawKey,
     keyId: newKey.id,
-    whatsappNumber: settings?.admin_whatsapp_number || '',
+    whatsappNumber: settings?.admin_whatsapp_number || (process.env.ADMIN_WHATSAPP_NUMBER ? `91${process.env.ADMIN_WHATSAPP_NUMBER.replace(/^91/, '')}` : '919422880355'),
   };
 }
 

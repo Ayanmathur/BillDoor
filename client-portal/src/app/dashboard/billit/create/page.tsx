@@ -15,6 +15,8 @@ import {
   Phone, Search, Plus, Trash2, Send, Printer, Save, Loader2,
   Gift, Check, X, Barcode, MessageSquare, User,
 } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import StandardCalculatorWidget from '@/components/calculator-widget';
 import {
   lookupCustomerAction,
   lookupBarcodeAction,
@@ -70,6 +72,10 @@ export default function CreateBillPage() {
   const [rewardCode, setRewardCode] = useState('');
   const [rewardValid, setRewardValid] = useState<any>(null);
   const [rewardError, setRewardError] = useState('');
+  const [rewardEnabled, setRewardEnabled] = useState(true);
+
+  // Calculator
+  const [isPortraitMobile, setIsPortraitMobile] = useState(false);
 
   // Extra charges
   const [extraCharges, setExtraCharges] = useState(0);
@@ -93,35 +99,22 @@ export default function CreateBillPage() {
         setBusinessName(result.settings.business_name || '');
         setClientSlug(result.settings.slug || '');
         setHasGst(result.settings.has_gst || false);
+        if (result.settings.reward_settings && result.settings.reward_settings.enabled === false) {
+          setRewardEnabled(false);
+        }
       }
     }
     loadSettings();
+
+    // Check media query for mobile calculator portal
+    const mql = window.matchMedia('(max-width: 768px) and (orientation: portrait)');
+    setIsPortraitMobile(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsPortraitMobile(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
   }, []);
 
-  // Pre-fill from GST Calculator
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const calcAmount = params.get('calcAmount');
-    const calcGstPercent = params.get('calcGstPercent');
-    const calcDesc = params.get('calcDesc');
-    const calcDiscount = params.get('calcDiscount');
-    if (calcAmount) {
-      const newItem: LineItem = {
-        id: crypto.randomUUID(),
-        description: calcDesc || 'Calculator Quote',
-        quantity: 1,
-        unit: 'unit',
-        unitPrice: parseFloat(calcAmount || '0') || 0,
-        discount: parseFloat(calcDiscount || '0') || 0,
-        gstPercent: parseFloat(calcGstPercent || '0') || 0,
-        addedVia: 'manual',
-      };
-      setItems([newItem]);
-      // Clean URL
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
+  // Removed old GST calculator pre-fill code
 
   // Barcode scanner listener (HID mode: fast keystrokes + Enter)
   useEffect(() => {
@@ -182,9 +175,23 @@ export default function CreateBillPage() {
           break;
       }
     }
+    
+    function handleEnter(e: KeyboardEvent) {
+      if (e.key === 'Enter' && !e.altKey && !e.ctrlKey) {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && tag !== 'BUTTON') {
+          e.preventDefault();
+          addManualItem();
+        }
+      }
+    }
 
     window.addEventListener('keydown', handleShortcut);
-    return () => window.removeEventListener('keydown', handleShortcut);
+    window.addEventListener('keydown', handleEnter);
+    return () => {
+      window.removeEventListener('keydown', handleShortcut);
+      window.removeEventListener('keydown', handleEnter);
+    };
   });
 
   // Phone lookup
@@ -452,6 +459,7 @@ export default function CreateBillPage() {
       </div>
 
       {/* Step 2: Reward Code (optional) */}
+      {rewardEnabled && (
       <div className="settings-section">
         <h3 className="settings-section-title"><Gift size={18} /> Reward Code <span style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-normal)', color: 'var(--color-text-tertiary)' }}>(optional)</span></h3>
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -474,6 +482,7 @@ export default function CreateBillPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* Step 3: Items */}
       <div className="settings-section">
@@ -624,6 +633,15 @@ export default function CreateBillPage() {
           {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save & Send
         </button>
       </div>
+
+      {/* Calculator Widget */}
+      {isPortraitMobile ? (
+        typeof document !== 'undefined' && document.getElementById('mobile-sidebar-widget-area') 
+          ? createPortal(<StandardCalculatorWidget />, document.getElementById('mobile-sidebar-widget-area')!)
+          : null
+      ) : (
+        <StandardCalculatorWidget />
+      )}
     </div>
   );
 }
