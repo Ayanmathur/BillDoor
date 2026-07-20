@@ -80,7 +80,7 @@ export async function resetClientPasswordAction(clientId: string, newPasswordPla
   await logAuditEvent(supabase, {
     actorType: 'admin',
     actorId: user.id,
-    action: AUDIT_ACTIONS.CLIENT_UPDATED,
+    action: AUDIT_ACTIONS.CLIENT_PASSWORD_RESET,
     metadata: { reason: 'Admin reset client password', targetClientId: clientId },
   });
 
