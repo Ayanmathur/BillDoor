@@ -253,7 +253,7 @@ export default function ReviewsDashboard() {
       ) : reviews.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 'var(--space-5)', color: 'var(--color-text-tertiary)' }}>
           <Star size={40} style={{ marginBottom: 'var(--space-2)', opacity: 0.3 }} />
-          <p>{showArchived ? 'No archived reviews.' : 'No reviews yet. Share your QR code to start collecting feedback!'}</p>
+          <p>{showArchived ? 'No archived reviews.' : 'No reviews yet. Share your QR code to start collecting feedback.'}</p>
         </div>
       ) : (
         <div style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>

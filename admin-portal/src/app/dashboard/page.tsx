@@ -360,7 +360,6 @@ export default function AdminDashboard() {
               <div />
               <div className="prefill-section">
                 <div className="prefill-header" style={{ cursor: 'pointer' }} onClick={() => setKeygenShowPrefill(!keygenShowPrefill)}>
-                  <Sparkles size={16} color="hsl(38 90% 50%)" />
                   <span className="upsell-badge">Setup by us — billable</span>
                   <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', flex: 1 }}>
                     Pre-fill business details (paid setup service)

@@ -10,7 +10,7 @@
  */
 
 import { headers } from 'next/headers';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { checkRateLimit, getClientIp } from '@/shared/rate-limit';
 import crypto from 'crypto';
 import { z } from 'zod';
@@ -23,7 +23,7 @@ export async function fetchClientBySlugAction(slug: string) {
   const rateCheck = checkRateLimit({ prefix: 'review:fetch', maxRequests: 30, windowSeconds: 60 }, ip);
   if (!rateCheck.success) return { error: 'Rate limited.', client: null };
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   const { data: client } = await supabase
     .from('clients')
@@ -63,7 +63,7 @@ export async function submitReviewAction(data: {
 
   if (data.stars < 1 || data.stars > 5) return { error: 'Invalid rating.' };
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   // Create or update review session
   let sessionId = data.sessionId;
@@ -132,7 +132,7 @@ export async function generateAiReviewAction(data: {
   if (!rateCheck.success) return { error: 'Rate limited. Try again later.', draft: null };
 
   // Cap regenerations per session
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   const { data: session } = await supabase
     .from('review_sessions')
     .select('regeneration_count')
@@ -226,7 +226,7 @@ export async function issueRewardAction(data: {
   const rateCheck = checkRateLimit({ prefix: 'reward:issue', maxRequests: 5, windowSeconds: 300 }, ip);
   if (!rateCheck.success) return { error: 'Rate limited.', reward: null };
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   // Fetch client reward settings
   const { data: client } = await supabase
@@ -291,7 +291,7 @@ export async function logGoogleReviewClickAction(data: {
   const rateCheck = checkRateLimit({ prefix: 'google:click', maxRequests: 20, windowSeconds: 300 }, ip);
   if (!rateCheck.success) return {};
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   await supabase
     .from('google_review_events')

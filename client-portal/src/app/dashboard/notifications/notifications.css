@@ -13,7 +13,7 @@
   box-sizing: border-box;
   padding: 12px 16px;
   background-color: var(--color-bg-elevated);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -29,12 +29,7 @@
 }
 
 .notification-wave {
-  position: absolute;
-  transform: rotate(90deg);
-  left: -31px;
-  top: 32px;
-  width: 80px;
-  opacity: 0.3;
+  display: none;
 }
 
 .notification-icon-container {

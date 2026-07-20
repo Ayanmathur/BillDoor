@@ -6,8 +6,8 @@
 
 .bill-page {
   min-height: 100dvh;
-  background: #F5F5F5;
-  padding: var(--space-4);
+  background: var(--color-bg-secondary, #F5F5F5);
+  padding: var(--space-6, 32px);
   display: flex;
   justify-content: center;
 }
@@ -16,8 +16,9 @@
   width: 100%;
   max-width: 480px;
   background: white;
-  border-radius: var(--radius-xl);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--color-border-subtle, #E5E5E5);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   overflow: hidden;
 }
 
@@ -230,37 +231,26 @@
 .bill-social-icon {
   width: 40px;
   height: 40px;
-  background-color: rgb(44, 44, 44);
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  transition: transform 0.3s, background-color 0.3s;
-  color: white;
+  transition: all 0.2s ease;
+  color: var(--color-text-secondary);
   text-decoration: none;
 }
 
-.bill-social-icon.instagram:hover { background-color: #d62976; }
-.bill-social-icon.facebook:hover { background-color: #1877F2; }
-.bill-social-icon.website:hover { background-color: var(--color-accent); }
-.bill-social-icon.whatsapp:hover { background-color: #128C7E; }
+.bill-social-icon:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-hover);
+}
 
 .bill-social-icon:active {
-  transform: scale(0.9);
-}
-
-.bill-social-icon svg {
-  transition-duration: .3s;
-}
-
-.bill-social-icon:hover svg {
-  animation: slide-in-top 0.3s both;
-}
-
-@keyframes slide-in-top {
-  0% { transform: translateY(-40px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
+  transform: scale(0.98);
 }
 
 .bill-google-cta {
@@ -323,111 +313,37 @@
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-/* -------------------------------------------
-   UI Polish: Particle Explosion Star Rating
-   ------------------------------------------- */
 .radio-stars {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: var(--space-2);
   flex-direction: row-reverse;
 }
 
 .radio-stars > input {
-  position: absolute;
-  appearance: none;
-  opacity: 0;
-  width: 0;
-  height: 0;
+  display: none;
 }
 
 .radio-stars > label {
   cursor: pointer;
   font-size: 30px;
-  position: relative;
   display: inline-block;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
 }
 
 .radio-stars > label > svg {
-  fill: #E5E5E5;
-  transition: fill 0.3s ease, filter 0.3s ease;
-}
-
-.radio-stars > label::before,
-.radio-stars > label::after {
-  content: "";
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background-color: #ff9e0b;
-  border-radius: 50%;
-  opacity: 0;
-  transform: scale(0);
-  transition: transform 0.4s ease, opacity 0.4s ease;
-}
-
-.radio-stars > label::before {
-  top: -15px;
-  left: 50%;
-  transform: translateX(-50%) scale(0);
-}
-
-.radio-stars > label::after {
-  bottom: -15px;
-  left: 50%;
-  transform: translateX(-50%) scale(0);
-}
-
-.radio-stars > label:hover::before,
-.radio-stars > label:hover::after,
-.radio-stars > input:checked + label::before,
-.radio-stars > input:checked + label::after {
-  opacity: 1;
-  transform: translateX(-50%) scale(1.5);
-  animation: particle-explosion 1s ease-out;
-}
-
-.radio-stars > label:hover {
-  transform: scale(1.2);
-  animation: star-pulse 0.6s infinite alternate;
+  fill: var(--color-border-subtle, #E5E5E5);
+  transition: fill 0.2s ease;
 }
 
 .radio-stars > label:hover > svg,
-.radio-stars > label:hover ~ label > svg {
-  fill: #ff9e0b;
-  filter: drop-shadow(0 0 15px rgba(255, 158, 11, 0.9));
-  animation: star-shimmer 1s ease infinite alternate;
-}
-
+.radio-stars > label:hover ~ label > svg,
 .radio-stars > input:checked + label > svg,
 .radio-stars > input:checked + label ~ label > svg {
-  fill: #ff9e0b;
-  filter: drop-shadow(0 0 15px rgba(255, 158, 11, 0.9));
-  animation: star-pulse 0.8s infinite alternate;
+  fill: var(--color-accent, #1a1a1a);
 }
 
-@keyframes star-pulse {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.1); }
-}
-
-@keyframes particle-explosion {
-  0% { opacity: 0; transform: translateX(-50%) scale(0.5); }
-  50% { opacity: 1; transform: translateX(-50%) scale(1.2); }
-  100% { opacity: 0; transform: translateX(-50%) scale(0.5); }
-}
-
-@keyframes star-shimmer {
-  0% { filter: drop-shadow(0 0 10px rgba(255, 158, 11, 0.5)); }
-  100% { filter: drop-shadow(0 0 20px rgba(255, 158, 11, 1)); }
-}
-
-/* -------------------------------------------
-   UI Polish: Offer/Coupon Pop Buttons
-   ------------------------------------------- */
 .btn-pop-container {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -435,81 +351,31 @@
 }
 
 .btn-pop {
-  position: relative;
   min-width: 140px;
   min-height: 48px;
-  border-radius: 12px;
-  border: none;
-  padding: 0.25em 1em;
-  background: linear-gradient(rgba(255,255,255,0.2), rgba(0,0,0,0.1)), var(--btn-pop-color, var(--color-accent));
-  box-shadow: 1px 1px 2px -1px rgba(255,255,255,0.5) inset, 0 2px 1px rgba(0,0,0,0.05), 0 4px 2px rgba(0,0,0,0.05), 0 8px 4px rgba(0,0,0,0.05);
-  transition: transform 0.25s cubic-bezier(0, 0, 0, 2.5), filter 0.25s cubic-bezier(0, 0, 0, 2.5);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  padding: 0.5em 1em;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font-family: var(--font-heading);
+  font-weight: 600;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.btn-pop:hover {
+  background: var(--color-bg-hover);
 }
 
 .btn-pop-drawer {
-  position: absolute;
-  display: flex;
-  justify-content: center;
-  min-height: 28px;
-  border-radius: 12px;
-  border: none;
-  padding: 0.25em 1em;
-  font-size: 0.75em;
-  font-weight: 600;
-  font-family: var(--font-body);
-  color: rgba(0,0,0,0.6);
-  background-color: var(--btn-pop-drawer-bg, #fff);
-  opacity: 0;
-  transition: transform 0.125s ease, opacity 0.125s ease, filter 0.25s cubic-bezier(0, 0, 0, 2.5);
-  filter: blur(2px);
-  z-index: 0;
-}
-
-.btn-pop-drawer.transition-top {
-  top: 0; left: 0; right: 0;
-  border-radius: 10px 10px 0 0;
-  align-items: flex-start;
-}
-.btn-pop-drawer.transition-bottom {
-  bottom: 0; left: 0; right: 0;
-  border-radius: 0 0 10px 10px;
-  align-items: flex-end;
+  display: none;
 }
 
 .btn-pop-text {
-  display: inline-block;
-  font-size: 1.1em;
-  font-family: var(--font-heading);
-  font-weight: 600;
-  color: transparent;
-  background-image: linear-gradient(#444, rgba(0,0,0,0.6));
-  background-clip: text;
-  -webkit-background-clip: text;
-  filter: drop-shadow(0 1px 0 rgba(255,255,255,0.4)) drop-shadow(0 -1px 0 rgba(0,0,0,0.4));
-  transition: transform 0.25s cubic-bezier(0, 0, 0, 2.5);
-  z-index: 1;
-}
-
-.btn-pop-container:hover .btn-pop {
-  transform: scale(1.05);
-  filter: drop-shadow(0 12px 12px rgba(0,0,0,0.1));
-}
-
-.btn-pop-container:hover .btn-pop-drawer.transition-top {
-  transform: translateY(-24px);
-  filter: blur(0px);
-  opacity: 1;
-}
-.btn-pop-container:hover .btn-pop-drawer.transition-bottom {
-  transform: translateY(24px);
-  filter: blur(0px);
-  opacity: 1;
-}
-.btn-pop-container:hover .btn-pop-text {
-  transform: scale(1.05);
-  color: rgba(0,0,0,0.8);
+  font-size: var(--text-md);
 }

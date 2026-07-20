@@ -7,7 +7,7 @@
  */
 
 import { headers } from 'next/headers';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { checkRateLimit, getClientIp } from '@/shared/rate-limit';
 import { z } from 'zod';
 
@@ -16,7 +16,7 @@ export async function fetchBillBySlugAction(slug: string) {
   const rateCheck = checkRateLimit({ prefix: 'bill:fetch', maxRequests: 30, windowSeconds: 60 }, ip);
   if (!rateCheck.success) return { error: 'Rate limited.', bill: null, client: null, customer: null };
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   const { data: bill } = await supabase
     .from('bills')
@@ -95,7 +95,7 @@ export async function submitInlineReviewAction(data: {
   const rateCheck = checkRateLimit({ prefix: 'bill:review', maxRequests: 5, windowSeconds: 300 }, ip);
   if (!rateCheck.success) return { error: 'Too many attempts.' };
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   // Check if already reviewed for this bill
   const { data: existing } = await supabase

@@ -8,7 +8,7 @@
  * and creates appointments with the same overlap guard as staff-side booking.
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import { checkRateLimit, getClientIp } from '@/shared/rate-limit';
 import { z } from 'zod';
@@ -21,7 +21,7 @@ export async function fetchBookingInfoAction(slug: string) {
   const rateCheck = checkRateLimit({ prefix: 'book:fetch', maxRequests: 30, windowSeconds: 60 }, ip);
   if (!rateCheck.success) return { error: 'Too many requests. Please try again later.' };
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   // Find client by slug
   const { data: client } = await supabase
@@ -92,7 +92,7 @@ export async function fetchAvailableSlotsAction(data: {
   const rateCheck = checkRateLimit({ prefix: 'book:slots', maxRequests: 60, windowSeconds: 60 }, ip);
   if (!rateCheck.success) return { error: 'Too many requests.', slots: [], closed: false };
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   const { clientId, resourceId, date, durationMin, bufferMin = 0 } = data;
   const totalNeeded = durationMin + bufferMin;
@@ -211,7 +211,7 @@ export async function createPublicBookingAction(data: {
 
   const cleanPhone = (data.customerPhone || '').replace(/\D/g, '');
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   const buffer = data.bufferMin || 0;
   const slotEndWithBuffer = new Date(new Date(data.slotEnd).getTime() + buffer * 60000).toISOString();
 

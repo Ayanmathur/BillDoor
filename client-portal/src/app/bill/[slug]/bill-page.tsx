@@ -323,7 +323,7 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
               if (isUnlocked) {
                 return (
                   <div style={{ animation: 'slideUp 0.3s ease-out' }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-success)', marginBottom: 8 }}>🎉 Reward Unlocked!</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-success)', marginBottom: 8 }}>Reward Unlocked!</div>
                     <div className="btn-pop-container">
                       <button className="btn-pop" style={{ '--btn-pop-color': '#d8ff7c' } as any}>
                         <div className="btn-pop-drawer transition-top">Claim on next visit</div>

@@ -116,7 +116,7 @@ export default function NotificationsPage() {
       {notifications.length === 0 ? (
         <div style={{ textAlign: 'center', paddingTop: '10vh', color: 'var(--color-text-tertiary)' }}>
           <Bell size={48} style={{ margin: '0 auto var(--space-4)', opacity: 0.2 }} />
-          <p>You're all caught up!</p>
+          <p>You are all caught up.</p>
         </div>
       ) : (
         <div className="notification-grid">
@@ -126,12 +126,6 @@ export default function NotificationsPage() {
             
             return (
               <div key={notif.id} className={`notification-card ${theme.colorClass} ${notif.read ? 'read' : ''}`}>
-                <svg className="notification-wave" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 3C12 3 8.5 6 8.5 12C8.5 18 12 21 12 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  <path d="M12 3C12 3 15.5 6 15.5 12C15.5 18 12 21 12 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  <path d="M3 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-
                 <div className="notification-icon-container">
                   {theme.icon}
                 </div>

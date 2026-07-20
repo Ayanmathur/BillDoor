@@ -3,35 +3,24 @@
 /* 1. Catalog Add Button */
 .btn-add-item {
   position: relative;
-  width: 150px;
+  width: auto;
+  padding: 0 var(--space-4);
   height: 40px;
   cursor: pointer;
   display: flex;
   align-items: center;
+  gap: var(--space-2);
   border: 1px solid var(--color-success);
   background-color: var(--color-success);
   border-radius: var(--radius-md);
-  overflow: hidden;
   color: white;
   text-decoration: none;
-}
-
-.btn-add-item, .btn-add-icon, .btn-add-text {
-  transition: all 0.3s;
-}
-
-.btn-add-text {
-  transform: translateX(30px);
   font-weight: 600;
   font-size: var(--text-sm);
+  transition: background-color 0.2s, box-shadow 0.2s;
 }
 
 .btn-add-icon {
-  position: absolute;
-  transform: translateX(109px);
-  height: 100%;
-  width: 39px;
-  background-color: rgba(0,0,0,0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,29 +28,20 @@
 
 .btn-add-item:hover {
   background-color: var(--color-success);
-}
-
-.btn-add-item:hover .btn-add-text {
-  color: transparent;
-}
-
-.btn-add-item:hover .btn-add-icon {
-  width: 148px;
-  transform: translateX(0);
-  background-color: transparent;
+  box-shadow: var(--shadow-xs);
 }
 
 .btn-add-item:active {
-  border: 1px solid var(--color-success);
+  transform: translateY(1px);
 }
 
 /* 2. Billit Input Box (Rounded Box + Animated Float) */
 .billit-input-group {
   background-color: var(--color-bg-elevated);
-  padding: var(--space-4) var(--space-4) var(--space-2);
-  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
   max-width: 350px;
   margin-bottom: var(--space-4);
 }

@@ -76,7 +76,7 @@
 .wa-hub-card {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: var(--space-5);
   text-decoration: none;
   color: inherit;
@@ -88,8 +88,8 @@
 
 .wa-hub-card:hover {
   border-color: var(--color-accent);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
 }
 
 .wa-hub-card-icon {
@@ -185,7 +185,7 @@
   padding: var(--space-4);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
 }
 
 .wa-stat-value {
@@ -210,7 +210,7 @@
 .wa-template-card {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: var(--space-4);
   transition: border-color 0.15s;
 }
@@ -369,7 +369,7 @@
   padding: var(--space-2) var(--space-4);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);

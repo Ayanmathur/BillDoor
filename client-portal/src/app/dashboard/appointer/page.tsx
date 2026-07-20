@@ -102,7 +102,7 @@ export default function AppointerPage() {
   // WhatsApp reminder
   function handleSendReminder(appt: ApptItem) {
     const slotTime = new Date(appt.slotStart).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-    const template = `Hi ${appt.customerName}, reminder: your appointment at ${businessName} is at ${slotTime}. See you soon!`;
+    const template = `Hi ${appt.customerName}, reminder: your appointment at ${businessName} is at ${slotTime}. See you soon.`;
     const waUrl = `https://wa.me/${appt.customerPhone}?text=${encodeURIComponent(template)}`;
     window.open(waUrl, '_blank');
   }
@@ -110,12 +110,12 @@ export default function AppointerPage() {
   // Status styling
   function getStatusStyle(status: string, slotStart: string) {
     const isLate = status === 'booked' && new Date(slotStart) < now;
-    if (status === 'completed') return { bg: 'var(--color-bg-tertiary)', border: 'var(--color-border-subtle)', opacity: 0.6, badge: '✓ Done', badgeColor: 'var(--color-success)' };
-    if (status === 'no_show') return { bg: 'var(--color-error-subtle)', border: 'var(--color-error)', opacity: 0.7, badge: '✗ No-Show', badgeColor: 'var(--color-error)' };
-    if (status === 'cancelled') return { bg: 'var(--color-bg-tertiary)', border: 'var(--color-border-subtle)', opacity: 0.4, badge: '— Cancelled', badgeColor: 'var(--color-text-tertiary)' };
-    if (status === 'walkin') return { bg: 'var(--color-bg-elevated)', border: 'var(--color-accent)', opacity: 1, badge: '⚡ Walk-in', badgeColor: 'var(--color-accent)', dashed: true };
-    if (isLate) return { bg: 'var(--color-warning-subtle)', border: 'var(--color-warning)', opacity: 1, badge: '⚠ Running Late', badgeColor: 'var(--color-warning)' };
-    return { bg: 'var(--color-bg-elevated)', border: 'var(--color-accent)', opacity: 1, badge: '● Booked', badgeColor: 'var(--color-accent)' };
+    if (status === 'completed') return { bg: 'var(--color-bg-tertiary)', border: 'var(--color-border-subtle)', opacity: 0.6, badge: 'Done', badgeColor: 'var(--color-success)' };
+    if (status === 'no_show') return { bg: 'var(--color-error-subtle)', border: 'var(--color-error)', opacity: 0.7, badge: 'No-Show', badgeColor: 'var(--color-error)' };
+    if (status === 'cancelled') return { bg: 'var(--color-bg-tertiary)', border: 'var(--color-border-subtle)', opacity: 0.4, badge: 'Cancelled', badgeColor: 'var(--color-text-tertiary)' };
+    if (status === 'walkin') return { bg: 'var(--color-bg-elevated)', border: 'var(--color-accent)', opacity: 1, badge: 'Walk-in', badgeColor: 'var(--color-accent)', dashed: true };
+    if (isLate) return { bg: 'var(--color-warning-subtle)', border: 'var(--color-warning)', opacity: 1, badge: 'Running Late', badgeColor: 'var(--color-warning)' };
+    return { bg: 'var(--color-bg-elevated)', border: 'var(--color-accent)', opacity: 1, badge: 'Booked', badgeColor: 'var(--color-accent)' };
   }
 
   if (loading) {

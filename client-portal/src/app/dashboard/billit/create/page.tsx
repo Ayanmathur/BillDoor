@@ -350,9 +350,9 @@ export default function CreateBillPage() {
     if (!billResult) return;
     const appUrl = billResult.billUrl.split('/bill/')[0];
     const reviewLink = clientSlug ? `${appUrl}/review/${clientSlug}` : '';
-    const template = `Dear ${billResult.customerName}, thank you for relying on ${businessName}!\n\n📄 Your digital bill: ${billResult.billUrl}${reviewLink ? `\n\n⭐ Please review us: ${reviewLink}` : ''}\n\nWe value your feedback!`;
+    const template = `Dear ${billResult.customerName}, thank you for choosing ${businessName}.\n\nYour digital bill: ${billResult.billUrl}${reviewLink ? `\n\nPlease review us: ${reviewLink}` : ''}\n\nWe value your feedback.`;
     const waUrl = `https://wa.me/${billResult.customerPhone}?text=${encodeURIComponent(template)}`;
-    window.open(waUrl, '_blank');
+    window.location.href = waUrl;
     logWhatsAppSendAction(billResult.id, billResult.customerPhone);
   }
 

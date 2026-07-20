@@ -315,7 +315,7 @@ export default function ServicesPage() {
       <div className="support-banner">
         <div className="support-banner-content">
           <h2>
-            <HeadphonesIcon size={24} /> Need Priority Support?
+            <HeadphonesIcon size={24} /> Priority Support
           </h2>
           <p>
             Our team is available 24/7 for technical assistance, billing inquiries, and custom requests.

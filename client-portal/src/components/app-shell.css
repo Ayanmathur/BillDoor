@@ -339,7 +339,7 @@
 .dash-card {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
@@ -349,7 +349,7 @@
 
 .dash-card:hover {
   border-color: var(--color-accent);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-xs);
 }
 
 .dash-card-header {
@@ -415,7 +415,7 @@
 .quick-action-btn:hover {
   border-color: var(--color-accent);
   background: var(--color-accent-subtle);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
 }
 
 /* ---- Settings ---- */
@@ -458,7 +458,7 @@
 .settings-section {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: var(--space-5);
   margin-bottom: var(--space-4);
 }
@@ -545,9 +545,7 @@
   background-color: var(--color-bg-tertiary);
   border-radius: 100px;
   padding: 1px;
-  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0s;
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 5px inset, rgba(0, 0, 0, 0.1) 0px 0px 0px 24px inset,
-        var(--color-accent) 0px 0px 0px 0px inset, rgba(224, 224, 224, 0.2) 0px 1px 0px 0px;
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0s;
 }
 
 .toggle-slider::after {
@@ -560,14 +558,13 @@
   height: 24px;
   background-color: #ffffff;
   border-radius: 200px;
-  box-shadow: transparent 0px 0px 0px 2px, rgba(0, 0, 0, 0.2) 0px 4px 4px;
-  transition: left 300ms cubic-bezier(0.4, 0, 0.2, 1) 0s, background-color 300ms cubic-bezier(0.4, 0, 0.2, 1) 0s;
-  will-change: left, background-color;
+  box-shadow: var(--shadow-xs);
+  transition: left 300ms cubic-bezier(0.4, 0, 0.2, 1) 0s;
+  will-change: left;
 }
 
 .toggle-switch input[type="checkbox"]:checked + .toggle-slider {
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 5px inset, var(--color-accent) 0px 0px 0px 2px inset, var(--color-accent) 0px 0px 0px 24px inset,
-        rgba(224, 224, 224, 0.2) 0px 1px 0px 0px;
+  background-color: var(--color-accent);
 }
 
 .toggle-switch input[type="checkbox"]:checked + .toggle-slider::after {

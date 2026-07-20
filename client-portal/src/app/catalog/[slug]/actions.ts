@@ -5,7 +5,7 @@
  * Rate-limited. Unauthenticated. Read-only.
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import { checkRateLimit, getClientIp } from '@/shared/rate-limit';
 
@@ -16,7 +16,7 @@ export async function fetchCatalogAction(slug: string) {
     return { error: 'Too many requests. Please try again later.' };
   }
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   const { data: client } = await supabase
     .from('clients')

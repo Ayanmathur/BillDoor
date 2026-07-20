@@ -339,7 +339,7 @@ export default function ReviewPage({
               {/* Reward Card */}
               {reward && (
                 <div className="reward-card">
-                  <div className="reward-card-title">🎉 Thank You Reward</div>
+                  <div className="reward-card-title">Thank You Reward</div>
                   <div className="reward-code">{reward.code}</div>
                   <div className="reward-value">
                     {reward.type === 'percent_discount' ? `${reward.value}% off` : `₹${reward.value} off`} at {reward.businessName}
@@ -363,7 +363,7 @@ export default function ReviewPage({
               {/* Reward Card */}
               {reward && (
                 <div className="reward-card">
-                  <div className="reward-card-title">🎉 Here&apos;s a reward for your feedback</div>
+                  <div className="reward-card-title">Here&apos;s a reward for your feedback</div>
                   <div className="reward-code">{reward.code}</div>
                   <div className="reward-value">
                     {reward.type === 'percent_discount' ? `${reward.value}% off` : `₹${reward.value} off`} at {reward.businessName}
