@@ -322,13 +322,25 @@ export default function BillitSettingsPage() {
                   readOnly 
                   style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }} 
                 />
-                <button className="btn btn-secondary" onClick={copyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 12px' }}>
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
-                  <span>{copied ? 'Copied' : 'Copy'}</span>
+                <button className={`copy-open-btn-custom ${copied ? 'copied' : ''}`} onClick={copyLink} title="Copy link">
+                  <span className="text">{copied ? 'Copied' : 'Copy'}</span>
+                  <span className="icon">
+                    {copied ? (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 384 512" className="fill-icon">
+                        <path d="M280 64h40c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128C0 92.7 28.7 64 64 64h40 9.6C121 27.5 153.3 0 192 0s71 27.5 78.4 64H280zM64 112c-8.8 0-16 7.2-16 16V448c0 8.8 7.2 16 16 16H320c8.8 0 16-7.2 16-16V128c0-8.8-7.2-16-16-16H304v24c0 13.3-10.7 24-24 24H192 104c-13.3 0-24-10.7-24-24V112H64zm128-8a24 24 0 1 0 0-48 24 24 0 1 0 0 48z" />
+                      </svg>
+                    )}
+                  </span>
                 </button>
-                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 12px', textDecoration: 'none' }}>
-                  <ExternalLink size={16} />
-                  <span>Open</span>
+                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="copy-open-btn-custom" title="Open link">
+                  <span className="text">Open</span>
+                  <span className="icon">
+                    <ExternalLink size={16} color="white" />
+                  </span>
                 </a>
               </div>
             </div>

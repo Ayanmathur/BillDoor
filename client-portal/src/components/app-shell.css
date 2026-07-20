@@ -901,5 +901,255 @@
   100% { transform: translateX(26px) rotate(360deg); }
 }
 
+/* ============================================================
+   Custom UI Revisions (Logout, ThemeToggle, CopyButton)
+   Vanilla CSS translations of the requested Tailwind designs
+   ============================================================ */
 
+/* Logout Button */
+.logout-btn-custom {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  width: 44px;
+  overflow: hidden;
+  border-radius: 9999px;
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  transition: all 300ms ease-out;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: var(--space-2) auto;
+}
 
+[data-theme='dark'] .logout-btn-custom {
+  background-color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.collapsed .logout-btn-custom {
+  margin: var(--space-2) auto;
+}
+
+.logout-btn-custom:hover {
+  width: 128px;
+  border-radius: 1rem;
+  background-color: #0f172a;
+}
+
+[data-theme='dark'] .logout-btn-custom:hover {
+  background-color: #0f172a;
+}
+
+.logout-btn-custom:active {
+  transform: scale(0.97);
+}
+
+.logout-btn-custom .sign {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  flex-shrink: 0;
+  transition: padding 300ms;
+}
+
+.logout-btn-custom:hover .sign {
+  padding-left: 12px;
+}
+
+.logout-btn-custom .sign svg {
+  height: 16px;
+  width: 16px;
+  color: #0f172a;
+  fill: currentColor;
+  stroke: currentColor;
+  transition: color 300ms;
+}
+
+[data-theme='dark'] .logout-btn-custom .sign svg {
+  color: #e2e8f0;
+}
+
+.logout-btn-custom:hover .sign svg {
+  color: white;
+}
+
+.logout-btn-custom .text {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  opacity: 0;
+  transition: all 300ms;
+}
+
+.logout-btn-custom:hover .text {
+  max-width: 5rem;
+  padding-right: 16px;
+  opacity: 1;
+}
+
+/* Theme Toggle */
+.theme-toggle-custom {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  width: 64px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 300ms;
+  background-color: #7dd3fc;
+}
+
+[data-theme='dark'] .theme-toggle-custom {
+  background-color: #1e293b;
+}
+
+.theme-toggle-custom input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.theme-toggle-sun {
+  position: absolute;
+  right: 6px;
+  height: 16px;
+  width: 16px;
+  color: #fde047;
+  transition: opacity 300ms;
+  pointer-events: none;
+  animation: theme-toggle-spin 16s linear infinite;
+  opacity: 1;
+}
+
+[data-theme='dark'] .theme-toggle-sun {
+  opacity: 0;
+}
+
+.theme-toggle-moon {
+  position: absolute;
+  left: 6px;
+  height: 16px;
+  width: 16px;
+  color: #c7d2fe;
+  transition: opacity 300ms;
+  pointer-events: none;
+  animation: theme-toggle-tilt 6s ease-in-out infinite;
+  opacity: 0;
+}
+
+[data-theme='dark'] .theme-toggle-moon {
+  opacity: 1;
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  left: 4px;
+  height: 28px;
+  width: 28px;
+  border-radius: 9999px;
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  transition: transform 300ms;
+  pointer-events: none;
+  transform: translateX(0);
+}
+
+[data-theme='dark'] .theme-toggle-thumb {
+  transform: translateX(28px);
+}
+
+@keyframes theme-toggle-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes theme-toggle-tilt {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle-sun, .theme-toggle-moon {
+    animation: none;
+  }
+}
+
+/* Copy / Open Button */
+.copy-open-btn-custom {
+  position: relative;
+  display: inline-flex;
+  height: 36px;
+  user-select: none;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  transition: transform 150ms;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+}
+
+.copy-open-btn-custom:active {
+  transform: scale(0.98);
+}
+
+.copy-open-btn-custom .text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  background-color: #0d9488;
+  transition: background-color 150ms;
+  height: 100%;
+}
+
+.copy-open-btn-custom:hover .text {
+  background-color: #0f766e;
+}
+
+.copy-open-btn-custom.copied .text {
+  background-color: #059669;
+}
+
+.copy-open-btn-custom .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  background-color: #115e59;
+  transition: background-color 150ms;
+  height: 100%;
+}
+
+.copy-open-btn-custom:hover .icon {
+  background-color: #134e4a;
+}
+
+.copy-open-btn-custom.copied .icon {
+  background-color: #047857;
+}
+
+.copy-open-btn-custom .icon svg {
+  height: 16px;
+  width: 16px;
+  stroke: white;
+  fill: none;
+  stroke-width: 3;
+}
+.copy-open-btn-custom .icon svg.fill-icon {
+  fill: white;
+  stroke: none;
+}
