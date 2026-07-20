@@ -104,14 +104,15 @@ export default function SettingsPage() {
         setLinkedinUrl(s.linkedinUrl || '');
         setXUrl(s.xUrl || '');
         setWhatsappUrl(s.whatsappUrl || '');
-      }
-      if (s.rewardSettings) {
+
+        if (s.rewardSettings) {
           setRewardTriggers(s.rewardSettings.triggers || rewardTriggers);
           setRewardType(s.rewardSettings.reward_type || 'percent_discount');
           setRewardValue(s.rewardSettings.reward_value ?? 10);
           setReviewRewardMode(s.rewardSettings.review_reward_mode || 'all_feedback');
           setMaxPerDay(s.rewardSettings.max_per_customer_per_day ?? 1);
         }
+        
         // Load loyalty config
         if (s.loyaltyConfig?.track2_enabled) {
           setTrack2Enabled(true);
