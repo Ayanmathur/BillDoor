@@ -162,37 +162,44 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
 
         <div className="sidebar-footer">
           {/* Theme Toggle */}
-          <div className={`nav-item ${collapsed ? 'collapsed-theme' : ''}`} style={{ cursor: 'default', marginTop: 'auto', marginBottom: 'var(--space-2)' }}>
-            <div className="nav-item-icon">
-              {collapsed ? (
-                theme === 'dark' ? <Moon size={20} onClick={toggleTheme} style={{ cursor: 'pointer' }} /> : <Sun size={20} onClick={toggleTheme} style={{ cursor: 'pointer' }} />
-              ) : (
-                <label className="theme-toggle-custom">
-                  <input type="checkbox" checked={theme === 'dark'} onChange={toggleTheme} aria-label="Toggle dark mode" />
-                  <svg viewBox="0 0 24 24" className="theme-toggle-sun" fill="currentColor">
-                    <circle r="5" cy="12" cx="12" />
-                    <path d="m21 13h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 0 2zm-17 0h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 0 2zm13.66-5.66a1 1 0 0 1 -.66-.29 1 1 0 0 1 0-1.41l.71-.71a1 1 0 1 1 1.41 1.41l-.71.71a1 1 0 0 1 -.75.29zm-12.02 12.02a1 1 0 0 1 -.71-.29 1 1 0 0 1 0-1.41l.71-.66a1 1 0 0 1 1.41 1.41l-.71.71a1 1 0 0 1 -.7.24zm6.36-14.36a1 1 0 0 1 -1-1v-1a1 1 0 0 1 2 0v1a1 1 0 0 1 -1 1zm0 17a1 1 0 0 1 -1-1v-1a1 1 0 0 1 2 0v1a1 1 0 0 1 -1 1zm-5.66-14.66a1 1 0 0 1 -.7-.29l-.71-.71a1 1 0 0 1 1.41-1.41l.71.71a1 1 0 0 1 0 1.41 1 1 0 0 1 -.71.29zm12.02 12.02a1 1 0 0 1 -.7-.29l-.66-.71a1 1 0 0 1 1.36-1.36l.71.71a1 1 0 0 1 0 1.41 1 1 0 0 1 -.71.24z" />
-                  </svg>
-                  <svg viewBox="0 0 384 512" className="theme-toggle-moon" fill="currentColor">
-                    <path d="m223.5 32c-123.5 0-223.5 100.3-223.5 224s100 224 223.5 224c60.6 0 115.5-24.2 155.8-63.4 5-4.9 6.3-12.5 3.1-18.7s-10.1-9.7-17-8.5c-9.8 1.7-19.8 2.6-30.1 2.6-96.9 0-175.5-78.8-175.5-176 0-65.8 36-123.1 89.3-153.3 6.1-3.5 9.2-10.5 7.7-17.3s-7.3-11.9-14.3-12.5c-6.3-.5-12.6-.8-19-.8z" />
-                  </svg>
-                  <span className="theme-toggle-thumb" />
-                </label>
-              )}
-            </div>
-            {!collapsed && <span className="nav-item-label" style={{ marginLeft: 8 }}>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>}
-          </div>
+          <button 
+            className={`nav-item ${collapsed ? 'collapsed-theme' : ''}`} 
+            onClick={toggleTheme} 
+            title={collapsed ? 'Toggle Theme' : undefined} 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              width: '100%', 
+              textAlign: 'left', 
+              cursor: 'pointer', 
+              marginTop: 'auto',
+              marginBottom: 'var(--space-2)'
+            }}
+          >
+            <span className="nav-item-icon">
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </span>
+            {!collapsed && <span className="nav-item-label">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+          </button>
 
           {/* Logout */}
-          <button className="logout-btn-custom" onClick={handleLogout} aria-label="Log out" title={collapsed ? 'Logout' : undefined}>
-            <span className="sign">
-              <svg viewBox="0 0 512 512">
-                <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z" />
-              </svg>
+          <button 
+            className="nav-item" 
+            onClick={handleLogout} 
+            title={collapsed ? 'Logout' : undefined}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              width: '100%', 
+              textAlign: 'left', 
+              cursor: 'pointer',
+              color: 'var(--color-error)'
+            }}
+          >
+            <span className="nav-item-icon">
+              <LogOut size={20} />
             </span>
-            <span className="text">
-              Log out
-            </span>
+            {!collapsed && <span className="nav-item-label">Logout</span>}
           </button>
 
           <div className="sidebar-divider" style={{ margin: 'var(--space-2) 0' }} />
