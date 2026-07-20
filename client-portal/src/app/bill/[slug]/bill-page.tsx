@@ -17,7 +17,7 @@
  * 7. Print/Download button
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Printer, Download, Check, Loader2, Instagram, Facebook, Globe,
   ExternalLink, Linkedin, Twitter, MessageCircle
@@ -63,7 +63,7 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(countdownRef.current!);
-          window.open(googleReviewUrl, '_blank');
+          window.location.href = googleReviewUrl;
           return 0;
         }
         return prev - 1;
@@ -127,9 +127,9 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
   }
 
   async function handleCopyDraft() {
-    await navigator.clipboard.writeText(aiDraft);
+    try { await navigator.clipboard.writeText(aiDraft); } catch (e) {}
     if (countdownRef.current) clearInterval(countdownRef.current);
-    if (googleReviewUrl) setTimeout(() => window.open(googleReviewUrl, '_blank'), 300);
+    if (googleReviewUrl) window.location.href = googleReviewUrl;
   }
 
   const lineItems = bill.line_items || [];
@@ -171,9 +171,9 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
           ) : (
             <>
               <div className="bill-rating-prompt">How was your experience?</div>
-              <div className="radio-stars">
+              <div className="rating">
                 {[5, 4, 3, 2, 1].map((rating) => (
-                  <div key={rating} style={{ display: 'inline-block' }}>
+                  <React.Fragment key={rating}>
                     <input 
                       type="radio" 
                       id={`star${rating}`} 
@@ -183,12 +183,8 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
                       onChange={() => handleEmojiClick(rating)}
                       disabled={submitting}
                     />
-                    <label htmlFor={`star${rating}`} title={`${rating} stars`}>
-                      <svg viewBox="0 0 24 24" height="30" width="30" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"></path>
-                      </svg>
-                    </label>
-                  </div>
+                    <label htmlFor={`star${rating}`} title={`${rating} stars`}></label>
+                  </React.Fragment>
                 ))}
               </div>
             </>
@@ -365,35 +361,35 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
 
         {/* Social + Review Footer */}
         <div className="bill-footer">
-          <div className="bill-socials">
+          <div className="card" style={{ margin: '0 auto' }}>
             {client.instagram_url && (
-              <a href={client.instagram_url} target="_blank" rel="noopener noreferrer" className="bill-social-icon instagram" title="Instagram">
-                <Instagram size={18} />
+              <a href={client.instagram_url} target="_blank" rel="noopener noreferrer" className="socialContainer containerOne" title="Instagram">
+                <Instagram className="socialSvg" />
               </a>
             )}
             {client.facebook_url && (
-              <a href={client.facebook_url} target="_blank" rel="noopener noreferrer" className="bill-social-icon facebook" title="Facebook">
-                <Facebook size={18} />
-              </a>
-            )}
-            {client.website_url && (
-              <a href={client.website_url} target="_blank" rel="noopener noreferrer" className="bill-social-icon website" title="Website">
-                <Globe size={18} />
-              </a>
-            )}
-            {client.linkedin_url && (
-              <a href={client.linkedin_url} target="_blank" rel="noopener noreferrer" className="bill-social-icon linkedin" title="LinkedIn">
-                <Linkedin size={18} />
+              <a href={client.facebook_url} target="_blank" rel="noopener noreferrer" className="socialContainer containerFive" title="Facebook">
+                <Facebook className="socialSvg" />
               </a>
             )}
             {client.x_url && (
-              <a href={client.x_url} target="_blank" rel="noopener noreferrer" className="bill-social-icon twitter" title="X (Twitter)">
-                <Twitter size={18} />
+              <a href={client.x_url} target="_blank" rel="noopener noreferrer" className="socialContainer containerTwo" title="X (Twitter)">
+                <Twitter className="socialSvg" />
+              </a>
+            )}
+            {client.linkedin_url && (
+              <a href={client.linkedin_url} target="_blank" rel="noopener noreferrer" className="socialContainer containerThree" title="LinkedIn">
+                <Linkedin className="socialSvg" />
               </a>
             )}
             {client.whatsapp_url && (
-              <a href={client.whatsapp_url} target="_blank" rel="noopener noreferrer" className="bill-social-icon whatsapp" title="WhatsApp">
-                <MessageCircle size={18} />
+              <a href={client.whatsapp_url} target="_blank" rel="noopener noreferrer" className="socialContainer containerFour" title="WhatsApp">
+                <MessageCircle className="socialSvg" />
+              </a>
+            )}
+            {client.website_url && (
+              <a href={client.website_url} target="_blank" rel="noopener noreferrer" className="socialContainer containerSix" title="Website">
+                <Globe className="socialSvg" />
               </a>
             )}
           </div>
