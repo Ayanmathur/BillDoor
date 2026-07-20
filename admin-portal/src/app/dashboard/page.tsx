@@ -161,7 +161,8 @@ export default function AdminDashboard() {
     const msg = encodeURIComponent(
       `Your BillDoor license key:\n\n${generatedKey.rawKey}\n\nGo to app.billdoor.com → "Have a license key?" to activate your account.`
     );
-    window.open(`https://wa.me/91${keygenMobile}?text=${msg}`, '_blank');
+    const cleanPhone = keygenMobile.replace(/\D/g, '').replace(/^91/, '');
+    window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
   }
 
   async function handleToggleStatus(clientId: string, action: 'revoke' | 'reactivate') {
@@ -198,7 +199,8 @@ export default function AdminDashboard() {
     const msg = encodeURIComponent(
       `Hi! Your BillDoor subscription renewal is due.\n\nAmount: ₹${amount} (${paymentMonths} month${paymentMonths > 1 ? 's' : ''})\nPay here: ${paymentResult.shortUrl}\n\nYour subscription will be automatically extended after payment.`
     );
-    window.open(`https://wa.me/91${paymentModal.phone.replace(/^\+?91/, '')}?text=${msg}`, '_blank');
+    const cleanPhone = paymentModal.phone.replace(/\D/g, '').replace(/^91/, '');
+    window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
   }
 
   async function handleToggleModule(clientId: string, current: Record<string, boolean>, moduleKey: string) {
@@ -218,7 +220,8 @@ export default function AdminDashboard() {
   }
 
   function handleMessageClient(phone: string) {
-    window.open(`https://wa.me/91${phone.replace(/^\+?91/, '')}`, '_blank');
+    const cleanPhone = phone.replace(/\D/g, '').replace(/^91/, '');
+    window.open(`https://wa.me/91${cleanPhone}`, '_blank');
   }
 
   async function handleExtendValidity(clientId: string, months: number) {
@@ -625,7 +628,8 @@ export default function AdminDashboard() {
                             <button className="action-btn" title="Resend via WhatsApp"
                               onClick={() => {
                                 const msg = encodeURIComponent(`Your BillDoor license key:\n\n${unmaskedKeys[key.id]}\n\nGo to app.billdoor.com → "Have a license key?" to activate your account.`);
-                                window.open(`https://wa.me/91${key.mobile_number.replace(/^\+?91/, '')}?text=${msg}`, '_blank');
+                                const cleanPhone = key.mobile_number.replace(/\D/g, '').replace(/^91/, '');
+                                window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
                               }}>
                               <MessageCircle size={16} />
                             </button>
@@ -677,7 +681,10 @@ export default function AdminDashboard() {
                     <td>
                       <div className="action-row">
                         <button className="action-btn" title="Message on WhatsApp"
-                          onClick={() => window.open(`https://wa.me/91${inq.phone.replace(/^\+?91/, '')}`, '_blank')}>
+                          onClick={() => {
+                            const cleanPhone = inq.phone.replace(/\D/g, '').replace(/^91/, '');
+                            window.open(`https://wa.me/91${cleanPhone}`, '_blank');
+                          }}>
                           <MessageCircle size={16} />
                         </button>
                         {inq.status === 'new' && (
