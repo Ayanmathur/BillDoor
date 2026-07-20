@@ -69,7 +69,7 @@ export async function verifyKeyAction(data: {
     .single();
 
   if (error || !key) {
-    return { error: 'Invalid license key. Please check and try again.' };
+    return { error: `Invalid license key (Debug: ${error?.message || 'Not found'} - RLS/Env Issue?)` };
   }
 
   if (key.status === 'activated') {
