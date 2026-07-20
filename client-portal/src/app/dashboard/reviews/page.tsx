@@ -144,11 +144,34 @@ export default function ReviewsDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 'var(--space-4)', marginBottom: 'var(--space-5)', alignItems: 'stretch' }}>
         {/* QR Card */}
         <div className="dash-card" style={{ textAlign: 'center', minWidth: 160, justifyContent: 'center' }}>
-          <div style={{ width: 120, height: 120, background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--space-2)' }}>
-            <QrCode size={80} strokeWidth={1} color="var(--color-text-primary)" />
-          </div>
+          {linkInfo?.reviewUrl ? (
+            <img
+              id="review-qr-img"
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(linkInfo.reviewUrl)}&margin=8`}
+              alt="Review QR Code"
+              width={120}
+              height={120}
+              style={{ borderRadius: 'var(--radius-md)', margin: '0 auto var(--space-2)', display: 'block' }}
+            />
+          ) : (
+            <div style={{ width: 120, height: 120, background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--space-2)' }}>
+              <QrCode size={80} strokeWidth={1} color="var(--color-text-tertiary)" />
+            </div>
+          )}
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>Scan to review</span>
-          <button className="quick-action-btn" style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-xs)', justifyContent: 'center' }}>
+          <button
+            className="quick-action-btn"
+            style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-xs)', justifyContent: 'center' }}
+            onClick={() => {
+              if (!linkInfo?.reviewUrl) return;
+              const url = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(linkInfo.reviewUrl)}&margin=16&format=png`;
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `review-qr-${linkInfo.slug || 'code'}.png`;
+              a.target = '_blank';
+              a.click();
+            }}
+          >
             <Download size={12} /> Download QR
           </button>
         </div>

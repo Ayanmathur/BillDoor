@@ -379,3 +379,36 @@
 .btn-pop-text {
   font-size: var(--text-md);
 }
+
+/* ============================================================
+   Print Styles — only show the bill, hide everything else
+   ============================================================ */
+@media print {
+  /* Hide everything except the bill */
+  body { background: white !important; }
+  .bill-page { padding: 0 !important; background: white !important; }
+  .bill-container { box-shadow: none !important; border: none !important; border-radius: 0 !important; max-width: 100% !important; }
+
+  /* Hide interactive elements */
+  .bill-actions,
+  .bill-review-section,
+  .bill-share-row,
+  .review-btn,
+  .btn-pop,
+  .bill-footer-cta,
+  .bill-loyalty-section,
+  button { display: none !important; }
+
+  /* Keep the bill content visible */
+  .bill-header,
+  .bill-body,
+  .bill-items-table,
+  .bill-totals,
+  .bill-notes { display: block !important; }
+
+  /* Clean typography for print */
+  * { color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  /* Page setup */
+  @page { margin: 12mm; size: 80mm auto; }
+}
