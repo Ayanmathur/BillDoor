@@ -184,14 +184,14 @@ export default function ReviewsDashboard() {
               <code style={{ fontSize: 'var(--text-sm)', background: 'var(--color-bg-primary)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-sm)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {linkInfo?.reviewUrl || '...'}
               </code>
-              <button className="copy-open-btn" onClick={handleCopyLink} title="Copy link">
-                <span className="text">{copied ? 'Copied' : 'Copy'}</span>
-                <span className="svgIcon">{copied ? <Check size={16} /> : <Copy size={16} />}</span>
+              <button className="btn" onClick={handleCopyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: '#0d9488', color: 'white', border: 'none' }}>
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? 'Copied!' : 'Copy'}
               </button>
               {linkInfo?.reviewUrl && (
-                <a href={linkInfo.reviewUrl} target="_blank" rel="noopener noreferrer" className="copy-open-btn" title="Open link">
-                  <span className="text">Open</span>
-                  <span className="svgIcon"><ExternalLink size={16} /></span>
+                <a href={linkInfo.reviewUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: '#0d9488', color: 'white', border: 'none' }}>
+                  <ExternalLink size={16} />
+                  Open
                 </a>
               )}
             </div>

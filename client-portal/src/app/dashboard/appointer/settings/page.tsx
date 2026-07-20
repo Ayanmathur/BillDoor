@@ -184,16 +184,13 @@ export default function AppointerSettingsPage() {
                   outline: 'none',
                 }}
               />
-              <button
-                className="copy-open-btn"
-                onClick={handleCopyLink}
-              >
-                <span className="text">{copied ? 'Copied' : 'Copy'}</span>
-                <span className="svgIcon">{copied ? <Check size={16} /> : <Copy size={16} />}</span>
+              <button className="btn" onClick={handleCopyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: '#0d9488', color: 'white', border: 'none' }}>
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? 'Copied!' : 'Copy'}
               </button>
-              <a href={bookingUrl} target="_blank" rel="noopener noreferrer" className="copy-open-btn">
-                <span className="text">Open</span>
-                <span className="svgIcon"><ExternalLink size={16} /></span>
+              <a href={bookingUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: '#0d9488', color: 'white', border: 'none' }}>
+                <ExternalLink size={16} />
+                Open
               </a>
             </div>
 
