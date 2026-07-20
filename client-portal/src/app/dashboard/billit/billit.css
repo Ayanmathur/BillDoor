@@ -162,20 +162,31 @@
   border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* 7. Copy/Open Link Buttons (vinodjangid07 style) */
+/* 7. Copy/Open Link Buttons — theme-aware */
 .copy-open-btn {
-  width: 100px;
-  height: 35px;
+  width: 90px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm, 4px);
   overflow: hidden;
-  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.164);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   text-decoration: none;
   padding: 0;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.copy-open-btn:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+.copy-open-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 .copy-open-btn .text {
@@ -185,9 +196,11 @@
   align-items: center;
   justify-content: center;
   color: white;
-  background-color: rgb(2, 153, 153);
-  font-size: var(--text-sm);
-  transition: background-color 0.2s;
+  background-color: var(--color-accent, rgb(2, 153, 153));
+  font-size: var(--text-xs, 12px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: background-color 0.2s ease;
 }
 
 .copy-open-btn .svgIcon {
@@ -197,14 +210,15 @@
   align-items: center;
   justify-content: center;
   color: white;
-  background-color: teal;
-  transition: background-color 0.2s;
+  background-color: var(--color-accent-hover, rgb(0, 128, 128));
+  transition: background-color 0.2s ease;
 }
 
 .copy-open-btn:hover .text {
-  background-color: rgb(0, 133, 133);
+  background-color: var(--color-accent-hover, rgb(0, 133, 133));
 }
 
 .copy-open-btn:hover .svgIcon {
-  background-color: rgb(0, 105, 105);
+  background-color: color-mix(in srgb, var(--color-accent-hover, teal) 85%, black);
 }
+
