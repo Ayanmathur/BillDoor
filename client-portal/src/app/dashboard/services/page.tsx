@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  Globe, Monitor, Search, BarChart3, Palette, 
+  Globe, Monitor, Search, BarChart3, Palette, Share2,
   HeadphonesIcon, MessageCircle, Calendar, ExternalLink, 
   Check, Clock, Loader2, Plus 
 } from 'lucide-react';
@@ -47,6 +47,12 @@ const SERVICES = [
     title: 'Brand Identity',
     description: 'Logos, color palettes, and visual guidelines for your business.',
     icon: Palette,
+  },
+  {
+    id: 'social_media_management',
+    title: 'Social Media Management',
+    description: 'Professional management of your social media — content planning, posting, engagement, and growth.',
+    icon: Share2,
   },
   {
     id: 'support',
@@ -159,6 +165,17 @@ export default function ServicesPage() {
 
   const handleAction = async (serviceId: string, title: string) => {
     const status = getRequestStatus(serviceId);
+
+    // Priority Support: direct WhatsApp, no service_request record
+    if (serviceId === 'support') {
+      if (adminPhone) {
+        const msg = encodeURIComponent(`Hi, I need priority support for my account.`);
+        window.open(`https://wa.me/${adminPhone}?text=${msg}`, '_blank');
+      } else {
+        alert('Admin WhatsApp number is not configured.');
+      }
+      return;
+    }
     
     if (!status || status === 'done') {
       setActionLoading(serviceId);
@@ -171,7 +188,7 @@ export default function ServicesPage() {
         
         if (adminPhone) {
           const msg = encodeURIComponent(`Hi, I would like to request the ${title} service.`);
-          window.location.href = `https://wa.me/${adminPhone}?text=${msg}`;
+          window.open(`https://wa.me/${adminPhone}?text=${msg}`, '_blank');
         } else {
           alert('Service requested successfully! However, the admin WhatsApp number is not configured for chat.');
         }

@@ -44,6 +44,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const navItems = [
     { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Clients', href: '/dashboard/clients', icon: Briefcase },
+    { name: 'Service Requests', href: '/dashboard/services', icon: Briefcase },
     { name: 'Portfolio', href: '/dashboard/portfolio', icon: Briefcase },
     { name: 'Audit Logs', href: '/dashboard/audit', icon: FileText },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },

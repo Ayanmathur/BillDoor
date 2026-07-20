@@ -322,13 +322,13 @@ export default function BillitSettingsPage() {
                   readOnly 
                   style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }} 
                 />
-                <button className={`catalog-action-btn copy ${copied ? 'copied' : ''}`} onClick={copyLink} title="Copy link">
+                <button className="btn btn-primary" onClick={copyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
                   {copied ? <Check size={16} /> : <Copy size={16} />}
-                  <span>{copied ? 'Copied' : 'Copy Link'}</span>
+                  {copied ? 'Copied!' : 'Copy'}
                 </button>
-                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="catalog-action-btn open" title="Open link">
+                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none' }}>
                   <ExternalLink size={16} />
-                  <span>Open Catalog</span>
+                  Open
                 </a>
               </div>
             </div>

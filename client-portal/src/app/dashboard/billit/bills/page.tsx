@@ -4,9 +4,10 @@ import { useState, useEffect, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FileText, AlertTriangle, Check, Trash2, Edit, ExternalLink,
-  ChevronLeft, ChevronRight, Loader2, X, Filter
+  ChevronLeft, ChevronRight, Loader2, X, Filter, Printer, MessageCircle
 } from 'lucide-react';
 import { fetchBillsAction, voidBillAction, finalizeDraftAction, deleteDraftAction } from '../create/actions';
+import { fetchBillWhatsAppTemplateAction } from '../settings/actions';
 import './bills.css';
 
 export default function BillsPage() {
@@ -65,6 +66,30 @@ export default function BillsPage() {
     if (confirm('Are you sure you want to delete this draft?')) {
       await deleteDraftAction(id);
       loadBills();
+    }
+  }
+
+  async function handleResendWhatsApp(bill: any) {
+    try {
+      const templateRes = await fetchBillWhatsAppTemplateAction();
+      const billUrl = `${window.location.origin}/bill/${bill.billSlug}`;
+      const rawTemplate = templateRes.template?.content as string | undefined;
+      let message = rawTemplate || `Hi {customer_name}, here is your bill from {shop_name}: {bill_link}`;
+      message = message
+        .replace(/\{customer_name\}/g, bill.customerName || 'Customer')
+        .replace(/\{shop_name\}/g, 'our store')
+        .replace(/\{bill_link\}/g, billUrl)
+        .replace(/\{bill_number\}/g, bill.billNumber || '')
+        .replace(/\{review_link\}/g, billUrl);
+      const encoded = encodeURIComponent(message);
+      const phone = bill.customerPhone ? bill.customerPhone.replace(/\D/g, '') : '';
+      if (phone) {
+        window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
+      } else {
+        window.open(`https://wa.me/?text=${encoded}`, '_blank');
+      }
+    } catch {
+      alert('Failed to load WhatsApp template.');
     }
   }
 
@@ -133,9 +158,20 @@ export default function BillsPage() {
                               <AlertTriangle size={16} />
                             </button>
                             {bill.billSlug && (
-                              <button className="bills-action-btn" title="View" onClick={() => window.open(`/bill/${bill.billSlug}`, '_blank')}>
-                                <ExternalLink size={16} />
-                              </button>
+                              <>
+                                <button className="bills-action-btn" title="View Bill" onClick={() => window.open(`/bill/${bill.billSlug}`, '_blank')}>
+                                  <ExternalLink size={16} />
+                                </button>
+                                <button className="bills-action-btn" title="Print Bill" onClick={() => {
+                                  const w = window.open(`/bill/${bill.billSlug}?print=1`, '_blank');
+                                  if (!w) alert('Popup blocked! Please allow popups for this site to print bills.');
+                                }}>
+                                  <Printer size={16} />
+                                </button>
+                                <button className="bills-action-btn" title="Resend on WhatsApp" onClick={() => handleResendWhatsApp(bill)}>
+                                  <MessageCircle size={16} />
+                                </button>
+                              </>
                             )}
                           </>
                         )}
