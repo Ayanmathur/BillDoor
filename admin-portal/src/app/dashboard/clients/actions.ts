@@ -60,24 +60,18 @@ export async function resetClientPasswordAction(clientId: string, newPasswordPla
     return { error: 'Failed to update client password in database' };
   }
 
-  // Also update Supabase Auth User if the client has an email
-  // We need to fetch the client's username to update auth email
-  const { data: client } = await supabase.from('clients').select('username').eq('id', clientId).single();
+  // Use the admin client (which has service_role key) to update Supabase Auth
+  const { createAdminClient } = await import('@/lib/supabase/server');
+  const supabaseAdmin = await createAdminClient();
+
+  const { data: client } = await supabaseAdmin.from('clients').select('username').eq('id', clientId).single();
   if (client) {
-    const authEmail = `${client.username}@billdoor.local`;
-    
-    // We can't use admin.updateUserById because we don't know the exact auth user ID for sure without querying auth.users
-    // Wait, the auth user ID *should* be the client ID if they signed up through our system!
-    const { error: authError } = await supabase.auth.admin.updateUserById(clientId, {
+    await supabaseAdmin.auth.admin.updateUserById(clientId, {
       password: newPasswordPlain
     });
-    
-    // If authError happens, it might be because the user doesn't exist in Auth yet.
-    // That's fine, we updated the clients table password_hash, so when they log in next time,
-    // our signInWithPassword hook handles it or falls back to creating the auth user.
   }
 
-  await logAuditEvent(supabase, {
+  await logAuditEvent(supabaseAdmin, {
     actorType: 'admin',
     actorId: user.id,
     action: AUDIT_ACTIONS.CLIENT_PASSWORD_RESET,
