@@ -207,7 +207,7 @@ export default function CustomersPage() {
         </div>
       ) : (
         <div style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-          <table className="client-table" style={{ width: '100%' }}>
+          <table className="table" style={{ width: '100%' }}>
             <thead>
               <tr>
                 <th>Name</th>
