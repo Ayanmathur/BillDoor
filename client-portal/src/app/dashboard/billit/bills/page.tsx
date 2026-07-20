@@ -76,7 +76,9 @@ export default function BillsPage() {
         fetchBillSettingsAction()
       ]);
       const businessName = settingsRes.settings?.business_name || 'our store';
+      const clientSlug = settingsRes.settings?.slug;
       const billUrl = `${window.location.origin}/bill/${bill.billSlug}`;
+      const reviewLink = clientSlug ? `${window.location.origin}/review/${clientSlug}` : '';
       const rawTemplate = templateRes.template?.content as string | undefined;
       let message = rawTemplate || `Hi {customer_name}, here is your bill from {business_name}: {bill_link}`;
       message = message
@@ -85,7 +87,7 @@ export default function BillsPage() {
         .replace(/\{bill_link\}/g, billUrl)
         .replace(/\{bill_number\}/g, bill.billNumber || '')
         .replace(/\{grand_total\}/g, Number(bill.grandTotal || 0).toLocaleString('en-IN'))
-        .replace(/\{review_link\}/g, billUrl);
+        .replace(/\{review_link\}/g, reviewLink);
       const encoded = encodeURIComponent(message);
       const phone = bill.customerPhone ? bill.customerPhone.replace(/\D/g, '') : '';
       if (phone) {
