@@ -53,7 +53,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     <div className="app-shell">
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
-          <img src={collapsed ? "/favicon.png" : "/logo-dark.png"} alt="BillDoor" className="sidebar-logo" />
+          <img src={collapsed ? "/favicon.png" : (theme === 'dark' ? "/logo-dark.png" : "/logo-light.png")} alt="BillDoor" className="sidebar-logo" />
         </div>
         
         <nav className="sidebar-nav">

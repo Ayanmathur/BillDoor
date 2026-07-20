@@ -127,7 +127,7 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
           {collapsed ? (
             <img src="/logo-icon.png" alt="BillDoor Logo" style={{ height: '32px', width: 'auto' }} />
           ) : (
-            <img src="/logo-dark.png" alt="BillDoor Logo" style={{ height: '28px', width: 'auto' }} />
+            <img src={theme === 'dark' ? "/logo-dark.png" : "/logo-light.png"} alt="BillDoor Logo" style={{ height: '28px', width: 'auto' }} />
           )}
         </Link>
 
