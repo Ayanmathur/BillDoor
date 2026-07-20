@@ -80,7 +80,7 @@ export default function BillsPage() {
       const billUrl = `${window.location.origin}/bill/${bill.billSlug}`;
       const reviewLink = clientSlug ? `${window.location.origin}/review/${clientSlug}` : '';
       const rawTemplate = templateRes.template?.content as string | undefined;
-      let message = rawTemplate || `Hi {customer_name}, here is your bill from {business_name}: {bill_link}`;
+      let message = rawTemplate || `Hi {customer_name}, here is your bill from {business_name}.\nAmount: ₹{grand_total}.\nView Bill:\n{bill_link}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n{review_link}\n\nThankYou!`;
       message = message
         .replace(/\{customer_name\}/g, bill.customerName || 'Customer')
         .replace(/\{business_name\}/g, businessName)

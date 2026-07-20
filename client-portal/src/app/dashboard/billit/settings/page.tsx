@@ -37,7 +37,7 @@ export default function BillitSettingsPage() {
   const [copied, setCopied] = useState(false);
 
   // Bill WhatsApp template
-  const [billTemplate, setBillTemplate] = useState('Dear {customer_name}, thanks for shopping at {business_name}! Your digital bill: {bill_link}');
+  const [billTemplate, setBillTemplate] = useState('Hi {customer_name}, here is your bill from {business_name}.\nAmount: ₹{grand_total}.\nView Bill:\n{bill_link}.\n\nYour support means the world to us! ❤️\n\nWe\'d love your feedback\nPlease review us here:\n{review_link}\n\nThankYou!');
   const [savingBillTemplate, setSavingBillTemplate] = useState(false);
   const [billTemplateError, setBillTemplateError] = useState('');
 
@@ -273,7 +273,7 @@ export default function BillitSettingsPage() {
           <textarea
             value={billTemplate}
             onChange={e => setBillTemplate(e.target.value)}
-            placeholder="Dear {customer_name}, thanks for shopping at {business_name}! Your digital bill: {bill_link}"
+            placeholder="Hi {customer_name}, here is your bill from {business_name}.\nAmount: ₹{grand_total}.\nView Bill:\n{bill_link}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n{review_link}\n\nThankYou!"
             style={{ width: '100%', minHeight: 100, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', resize: 'vertical', boxSizing: 'border-box' }}
           />
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-1)' }}>

@@ -372,7 +372,7 @@ export default function CreateBillPage() {
         .replace(/\{review_link\}/g, reviewLink);
     } else {
       // Default fallback
-      message = `Dear ${billResult.customerName}, thank you for choosing ${businessName}.\n\nYour digital bill: ${billResult.billUrl}${reviewLink ? `\n\nPlease review us: ${reviewLink}` : ''}\n\nWe value your feedback.`;
+      message = `Hi ${billResult.customerName}, here is your bill from ${businessName}.\nAmount: ₹${Number(billResult.grandTotal).toLocaleString('en-IN')}.\nView Bill:\n${billResult.billUrl}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n${reviewLink}\n\nThankYou!`;
     }
 
     const cleanPhone = billResult.customerPhone.replace(/\D/g, '');

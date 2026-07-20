@@ -264,7 +264,7 @@ export async function activateAction(data: {
       client_id: authUser.user.id,
       type: 'billit',
       name: 'Bill Receipt',
-      content: 'Hi {customer_name}, here is your bill from {business_name}. Amount: ₹{grand_total}. View: {bill_link}',
+      content: 'Hi {customer_name}, here is your bill from {business_name}.\nAmount: ₹{grand_total}.\nView Bill:\n{bill_link}.\n\nYour support means the world to us! ❤️\n\nWe\'d love your feedback\nPlease review us here:\n{review_link}\n\nThankYou!',
       is_active: true,
     },
     {
@@ -278,7 +278,7 @@ export async function activateAction(data: {
       client_id: authUser.user.id,
       type: 'broadcast',
       name: 'Thank You & Review',
-      content: 'Hi {customer_name}, thank you for relying on {business_name}! 🙏\n\nHere is your bill: {bill_link}\n\nWe\'d love your feedback — please review us here: {review_link}\n\nYour support means the world to us! ❤️',
+      content: 'Hi {customer_name}, thank you for relying on {business_name}! 🙏\n\nHere is your bill: {bill_link}\n\nWe\'d love your feedback , please review us here: {review_link}\n\nYour support means the world to us! ❤️',
       is_active: true,
     },
   ];
