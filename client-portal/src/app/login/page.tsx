@@ -230,7 +230,7 @@ export default function LoginPage() {
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
-              </FloatingInput>
+              </StaticInput>
 
               {/* Submit */}
               <button
