@@ -2,9 +2,37 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Eye, EyeOff } from 'lucide-react';
+import { Shield, Eye, EyeOff, Receipt, Star, CalendarClock, Store, Cake, Scissors, Stethoscope, GraduationCap, Building2, Utensils, Heart } from 'lucide-react';
 import { adminLoginAction } from './actions';
 import './login.css';
+
+// Minimal, elegant background pattern of abstract business icons
+function LoginBackground() {
+  const icons = [Receipt, Star, CalendarClock, Store, Cake, Scissors, Stethoscope, GraduationCap, Building2, Utensils, Heart];
+  // Generate a fixed pattern so it doesn't flicker on rehydration
+  const pattern = Array.from({ length: 40 }).map((_, i) => {
+    const Icon = icons[i % icons.length];
+    const top = `${((i * 17) % 100)}%`;
+    const left = `${((i * 23) % 100)}%`;
+    const size = 24 + ((i * 7) % 24);
+    const opacity = 0.03 + (((i * 3) % 5) * 0.01);
+    const rotation = ((i * 45) % 360);
+    return (
+      <div key={i} style={{ position: 'absolute', top, left, opacity, transform: `rotate(${rotation}deg)` }}>
+        <Icon size={size} color="currentColor" />
+      </div>
+    );
+  });
+
+  return (
+    <div className="login-background-pattern" style={{
+      position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0,
+      color: 'var(--color-text-primary)'
+    }}>
+      {pattern}
+    </div>
+  );
+}
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -29,8 +57,9 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="admin-login-page">
-      <div className="admin-login-container">
+    <div className="admin-login-page" style={{ position: 'relative' }}>
+      <LoginBackground />
+      <div className="admin-login-container" style={{ position: 'relative', zIndex: 10 }}>
         <div className="admin-login-header">
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
             <img src="/logo-light.png" alt="BillDoor Logo" width="180" style={{ objectFit: 'contain' }} className="admin-login-main-logo" />

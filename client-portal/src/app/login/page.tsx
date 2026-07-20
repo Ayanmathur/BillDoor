@@ -13,11 +13,39 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DoorOpen, Eye, EyeOff, X, Send, Loader2, ArrowLeft } from 'lucide-react';
+import { DoorOpen, Eye, EyeOff, X, Send, Loader2, ArrowLeft, Receipt, Star, CalendarClock, Store, Cake, Scissors, Stethoscope, GraduationCap, Building2, Utensils, Heart } from 'lucide-react';
 import { validateLogin } from '@/shared/validation';
 import { loginAction } from './actions';
 import { submitInquiryAction } from './inquiry-action';
 import './login.css';
+
+// Minimal, elegant background pattern of abstract business icons
+function LoginBackground() {
+  const icons = [Receipt, Star, CalendarClock, Store, Cake, Scissors, Stethoscope, GraduationCap, Building2, Utensils, Heart];
+  // Generate a fixed pattern so it doesn't flicker on rehydration
+  const pattern = Array.from({ length: 40 }).map((_, i) => {
+    const Icon = icons[i % icons.length];
+    const top = `${((i * 17) % 100)}%`;
+    const left = `${((i * 23) % 100)}%`;
+    const size = 24 + ((i * 7) % 24);
+    const opacity = 0.03 + (((i * 3) % 5) * 0.01);
+    const rotation = ((i * 45) % 360);
+    return (
+      <div key={i} style={{ position: 'absolute', top, left, opacity, transform: `rotate(${rotation}deg)` }}>
+        <Icon size={size} color="currentColor" />
+      </div>
+    );
+  });
+
+  return (
+    <div className="login-background-pattern" style={{
+      position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0,
+      color: 'var(--color-text-primary)'
+    }}>
+      {pattern}
+    </div>
+  );
+}
 
 // Helper component for static label input
 function StaticInput({ id, type, label, value, onChange, placeholder, disabled, autoFocus, autoComplete, error, children }: any) {
@@ -120,8 +148,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-container">
+    <div className="login-page" style={{ position: 'relative' }}>
+      <LoginBackground />
+      <div className="login-container" style={{ position: 'relative', zIndex: 10 }}>
         {/* Header */}
         <div className="login-header">
           <img src="/logo-icon.png" alt="BillDoor Logo" className="login-logo" style={{ objectFit: 'contain' }} />
