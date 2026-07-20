@@ -252,6 +252,14 @@ export default function LoginPage() {
             </a>
             <button
               type="button"
+              onClick={() => alert("Please contact your administrator on WhatsApp to reset your password.")}
+              className="login-link"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }}
+            >
+              Forgot Password? <strong>Contact Admin</strong>
+            </button>
+            <button
+              type="button"
               onClick={() => setShowInquiry(true)}
               className="login-link"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }}
