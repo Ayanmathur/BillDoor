@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BillDoor | Enterprise Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            /* Enterprise Color Palette */
+            --primary: #0f62fe; /* IBM/Enterprise Blue */
+            --primary-hover: #0353e9;
+            --secondary: #475467;
+            --success: #12b76a;
+            --success-bg: #ecfdf3;
+            --danger: #d92d20;
+            --danger-bg: #fef3f2;
+            --warning: #f79009;
+            --warning-bg: #fffaeb;
+            --info: #06b6d4;
+            
+            --bg-body: #f8fafc;
+            --bg-surface: #ffffff;
+            
+            --text-main: #101828;
+            --text-muted: #475467;
+            --text-light: #667085;
+            
+            --border-light: #eaecf0;
+            --border-focus: #98a2b3;
+            
+            /* Tighter, professional border radii */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            
+            /* Subtle SaaS Shadows */
+            --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(16, 24, 40, 0.05), 0 2px 4px -2px rgba(16, 24, 40, 0.05);
+            --shadow-lg: 0 12px 16px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03);
+            
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-size: 14px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 { font-weight: 600; color: var(--text-main); }
+        h4 { font-size: 18px; }
+        h5 { font-size: 16px; }
+        p { color: var(--text-muted); }
+        
+        button, input, select {
+            font-family: inherit;
+            border: none;
+            outline: none;
+            background: none;
+        }
+        
+        a { text-decoration: none; color: inherit; cursor: pointer; }
+        
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 8px; } .gap-3 { gap: 12px; } .gap-4 { gap: 16px; } .gap-6 { gap: 24px; }
+        .text-sm { font-size: 13px; }
+        .text-xs { font-size: 12px; }
+        .font-medium { font-weight: 500; }
+        .text-muted { color: var(--text-muted); }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+        }
+
+        .logo-dot {
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius-md);
+            color: var(--text-muted);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            background-color: #eff6ff;
+            color: var(--primary);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .global-alert {
+            background-color: #eff8ff;
+            border-bottom: 1px solid #b2ddff;
+            color: #175cd3;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .topbar {
+            height: 64px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            flex-shrink: 0;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: var(--radius-md);
+            width: 320px;
+            border: 1px solid transparent;
+            transition: 0.2s;
+        }
+        
+        .search-bar:focus-within {
+            border-color: var(--primary);
+            background: var(--bg-surface);
+            box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.1);
+        }
+
+        .search-bar input {
+            width: 100%;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-upgrade {
+            background: var(--danger-bg);
+            color: var(--danger);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid #fecaca;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .btn-upgrade:hover { background: #fee2e2; }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: var(--radius-md);
+        }
+        
+        .user-profile:hover { background: #f1f5f9; }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .page-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-primary:hover { background: var(--primary-hover); }
+        
+        .btn-outline {
+            background: white;
+            border-color: var(--border-light);
+            color: var(--text-main);
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-outline:hover { background: #f8fafc; }
+
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+        }
+
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            background: white;
+            margin-top: 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: #f8fafc; }
+
+        .checkbox-cell { width: 48px; text-align: center; }
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid var(--border-focus);
+            cursor: pointer;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge.success { background: var(--success-bg); color: var(--success); }
+        .badge.warning { background: var(--warning-bg); color: var(--warning); }
+
+        .table-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-light);
+            background: white;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+            border-bottom-left-radius: var(--radius-md);
+            border-bottom-right-radius: var(--radius-md);
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            padding: 16px;
+            width: 320px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            transform: translateY(100%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: auto;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+        }
+        .toast-icon.success { background: var(--success); }
+
+        .toast-content h5 { font-size: 14px; margin-bottom: 2px; }
+        .toast-content p { font-size: 13px; margin: 0; }
+
+        .view { display: none; }
+        .view.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="app-container">
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="logo">
+                    <div class="logo-dot">B</div>
+                    BillDoor
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-target="dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" data-target="billing">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                    Billing
+                </a>
+                <a href="#" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    CRM
+                </a>
+                <a href="#" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    WhatsApp
+                </a>
+                <a href="#" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    Reviews
+                </a>
+                
+                <div style="margin: 16px 0; border-top: 1px solid var(--border-light);"></div>
+                
+                <a href="#" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-2.82.33 1.65 1.65 0 0 0 0 1.51v.08a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.08a1.65 1.65 0 0 0 0-1.51 1.65 1.65 0 0 0-2.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51 0h-.08a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.08a1.65 1.65 0 0 0 1.51 0 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 2.82-.33 1.65 1.65 0 0 0 0-1.51v-.08a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.08a1.65 1.65 0 0 0 0 1.51 1.65 1.65 0 0 0 2.82.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 0h.08a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.08a1.65 1.65 0 0 0-1.51 0z"></path></svg>
+                    Settings
+                </a>
+            </nav>
+            
+            <div style="padding: 16px; border-top: 1px solid var(--border-light);">
+                <p class="text-xs text-muted">BillDoor Enterprise v2.1</p>
+                <p class="text-xs text-muted" style="margin-top: 4px;">© 2026. All Rights Reserved.</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="global-alert">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span><strong>Platform Update:</strong> New WhatsApp Marketing features are now live. <a href="#" style="text-decoration: underline;">Learn more</a></span>
+            </div>
+
+            <header class="topbar">
+                <div class="search-bar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" placeholder="Search invoices, customers, or settings...">
+                </div>
+
+                <div class="topbar-actions">
+                    <button class="btn-upgrade">Upgrade Plan</button>
+                    <button style="color: var(--text-muted);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar">AM</div>
+                        <span class="text-sm font-medium">Ayan Mathur</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-content">
+                
+                <div id="dashboard" class="view active">
+                    <div class="page-header">
+                        <div>
+                            <h2>Dashboard Overview</h2>
+                            <p>Track your revenue, customers, and operations across all branches.</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button class="btn btn-outline">Export CSV</button>
+                            <button class="btn btn-primary" onclick="showToast('Workflow Started', 'Navigating to invoice creation.')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Create Invoice
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid-4">
+                        <div class="card flex flex-col gap-4">
+                            <div class="flex justify-between items-center">
+                                <p class="text-sm font-medium text-muted">Total Revenue (30d)</p>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            </div>
+                            <h3>₹18,45,230</h3>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="badge success">↑ 14.6%</span>
+                                <span class="text-muted">vs last month</span>
+                            </div>
+                        </div>
+                        <div class="card flex flex-col gap-4">
+                            <div class="flex justify-between items-center">
+                                <p class="text-sm font-medium text-muted">Active Subscriptions</p>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            </div>
+                            <h3>1,204</h3>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="badge success">↑ 3.2%</span>
+                                <span class="text-muted">vs last month</span>
+                            </div>
+                        </div>
+                        <div class="card flex flex-col gap-4">
+                            <div class="flex justify-between items-center">
+                                <p class="text-sm font-medium text-muted">Pending Invoices</p>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </div>
+                            <h3>42</h3>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="badge warning">Needs Attention</span>
+                            </div>
+                        </div>
+                        <div class="card flex flex-col gap-4">
+                            <div class="flex justify-between items-center">
+                                <p class="text-sm font-medium text-muted">Google Rating</p>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            </div>
+                            <h3>4.9</h3>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="text-muted">Based on 1,284 reviews</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 32px; margin-bottom: 16px;">Recent Transactions</h4>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="checkbox-cell"><input type="checkbox"></th>
+                                    <th>Invoice ID</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="checkbox-cell"><input type="checkbox"></td>
+                                    <td class="font-medium text-primary">#INV-2026-001</td>
+                                    <td>Rahul Sharma</td>
+                                    <td class="text-muted">Jul 20, 2026</td>
+                                    <td class="font-medium">₹2,450.00</td>
+                                    <td><span class="badge success">Paid</span></td>
+                                    <td><button class="btn btn-outline" style="padding: 4px 8px;">View</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="checkbox-cell"><input type="checkbox"></td>
+                                    <td class="font-medium text-primary">#INV-2026-002</td>
+                                    <td>Aisha Khan</td>
+                                    <td class="text-muted">Jul 19, 2026</td>
+                                    <td class="font-medium">₹4,120.00</td>
+                                    <td><span class="badge warning">Pending</span></td>
+                                    <td><button class="btn btn-outline" style="padding: 4px 8px;">View</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="checkbox-cell"><input type="checkbox"></td>
+                                    <td class="font-medium text-primary">#INV-2026-003</td>
+                                    <td>Ankit Verma</td>
+                                    <td class="text-muted">Jul 18, 2026</td>
+                                    <td class="font-medium">₹980.00</td>
+                                    <td><span class="badge success">Paid</span></td>
+                                    <td><button class="btn btn-outline" style="padding: 4px 8px;">View</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="checkbox-cell"><input type="checkbox"></td>
+                                    <td class="font-medium text-primary">#INV-2026-004</td>
+                                    <td>Meera Joshi</td>
+                                    <td class="text-muted">Jul 17, 2026</td>
+                                    <td class="font-medium">₹1,500.00</td>
+                                    <td><span class="badge success">Paid</span></td>
+                                    <td><button class="btn btn-outline" style="padding: 4px 8px;">View</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="table-pagination">
+                            <span>Rows per page: <strong>10</strong></span>
+                            <span>1-4 of 42</span>
+                            <div class="flex gap-2">
+                                <button class="btn btn-outline" style="padding: 4px; border-radius: 4px;" disabled>&lt;</button>
+                                <button class="btn btn-outline" style="padding: 4px; border-radius: 4px;">&gt;</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="billing" class="view">
+                    <div class="page-header">
+                        <div>
+                            <h2>Digital Billing</h2>
+                            <p>Create invoices, take payments, and send bills instantly on WhatsApp.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                         <div class="empty-state">
+                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                 <polyline points="14 2 14 8 20 8"></polyline>
+                                 <line x1="16" y1="13" x2="8" y2="13"></line>
+                                 <line x1="16" y1="17" x2="8" y2="17"></line>
+                                 <polyline points="10 9 9 9 8 9"></polyline>
+                             </svg>
+                             <h4 style="margin-bottom: 8px;">No active cart</h4>
+                             <p style="margin-bottom: 24px; max-width: 300px;">Search for a customer to start building an invoice and processing payments.</p>
+                             <button class="btn btn-primary" onclick="showToast('Feature Demo', 'Switching back to Dashboard.')">Search Customer</button>
+                         </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Simple View Router
+        const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+        const views = document.querySelectorAll('.view');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = item.getAttribute('data-target');
+                
+                if(!target) {
+                    showToast('Coming Soon', 'This module is being updated.');
+                    return;
+                }
+
+                // Update Nav Active State
+                navItems.forEach(n => n.classList.remove('active'));
+                item.classList.add('active');
+
+                // Update View
+                views.forEach(v => v.classList.remove('active'));
+                document.getElementById(target).classList.add('active');
+            });
+        });
+
+        // Sonner-style Toast System
+        function showToast(title, message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            const iconHtml = type === 'success' 
+                ? `<div class="toast-icon success"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>`
+                : `<div class="toast-icon" style="background:var(--primary)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>`;
+
+            toast.innerHTML = `
+                ${iconHtml}
+                <div class="toast-content">
+                    <h5>${title}</h5>
+                    <p class="text-muted">${message}</p>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Trigger reflow to enable transition
+            void toast.offsetWidth; 
+            toast.classList.add('show');
+
+            // Auto dismiss
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Demo Toast on load
+        setTimeout(() => {
+            showToast('System Updated', 'Successfully loaded the new enterprise dashboard UI.');
+        }, 800);
+    </script>
+</body>
+</html>

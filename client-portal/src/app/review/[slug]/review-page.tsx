@@ -65,7 +65,7 @@ export default function ReviewPage({
   // Google review URL
   const googleReviewUrl = googlePlaceId
     ? `https://search.google.com/local/writereview?placeid=${googlePlaceId}`
-    : null;
+    : `https://www.google.com/search?q=${encodeURIComponent(businessName + ' reviews')}`;
 
   // Countdown logic
   const startCountdown = useCallback(() => {
@@ -128,6 +128,13 @@ export default function ReviewPage({
       if (aiResult.draft) {
         setAiDraft(aiResult.draft);
         setPreviousDrafts([aiResult.draft]);
+        try {
+          await navigator.clipboard.writeText(aiResult.draft);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 3000);
+        } catch (e) {
+          // Ignore clipboard errors
+        }
         startCountdown();
       }
       setAiLoading(false);
@@ -165,6 +172,13 @@ export default function ReviewPage({
     if (result.draft) {
       setAiDraft(result.draft);
       setPreviousDrafts(prev => [...prev, result.draft!]);
+      try {
+        await navigator.clipboard.writeText(result.draft);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+      } catch (e) {
+        // Ignore clipboard errors
+      }
       startCountdown(); // Restart countdown after new draft
     }
     setAiLoading(false);
@@ -293,13 +307,18 @@ export default function ReviewPage({
                       <Star size={12} /> Suggested review for Google
                     </div>
                     <div className="ai-draft-text">{aiDraft}</div>
+                    
+                    <div className="ai-draft-copy-notice" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-success, #10b981)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: 'var(--space-3)' }}>
+                      <Check size={14} /> Already copied to clipboard for pasting!
+                    </div>
+
                     <div className="ai-draft-actions">
                       <button className={`btn-copy-anim ${copied ? 'copied' : ''}`} onClick={handleCopyDraft}>
                         <span className="copy-text-default">
-                          <Copy size={14} /> Copy & Go to Google
+                          <ExternalLink size={14} /> Go to Google
                         </span>
                         <span className="copy-text-success">
-                          <Check size={14} /> Copied!
+                          <Check size={14} /> Opening...
                         </span>
                       </button>
                       <button

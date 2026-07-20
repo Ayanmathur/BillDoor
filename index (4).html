@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BillDoor — Enterprise Billing, Booking & Reputation Platform</title>
+<style>
+/* ============ RESET (Module 1) ============ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',system-ui,sans-serif;background:#f6f8fb;color:#202124;line-height:1.5;-webkit-font-smoothing:antialiased;}
+img{max-width:100%;display:block;}
+button,input,textarea,select{font:inherit;border:none;outline:none;background:none;}
+a{text-decoration:none;color:inherit;}
+ul{list-style:none;}
+table{border-collapse:collapse;width:100%;}
+
+/* ============ VARIABLES (Module 1) ============ */
+:root{
+  --primary:#2962ff;
+  --primary-dark:#0039cb;
+  --secondary:#7b61ff;
+  --success:#12b76a;
+  --danger:#ef4444;
+  --warning:#ff9800;
+  --info:#06b6d4;
+  --whatsapp:#25D366;
+  --google:#fbbc05;
+  --text:#1d2939;
+  --text-light:#667085;
+  --bg:#f5f7fb;
+  --surface:#ffffff;
+  --border:#e4e7ec;
+  --shadow-sm:0 3px 12px rgba(0,0,0,.05);
+  --shadow-md:0 8px 24px rgba(0,0,0,.08);
+  --shadow-lg:0 20px 50px rgba(0,0,0,.12);
+  --radius-xs:4px;
+  --radius-sm:8px;
+  --radius:12px;
+  --radius-lg:18px;
+  --radius-xl:26px;
+  --transition:.25s ease;
+}
+
+/* ============ TYPOGRAPHY (Module 1) ============ */
+h1{font-size:42px;font-weight:700;}
+h2{font-size:34px;font-weight:700;}
+h3{font-size:28px;font-weight:600;}
+h4{font-size:22px;font-weight:600;}
+h5{font-size:18px;font-weight:600;}
+p{font-size:15px;color:var(--text-light);}
+.small{font-size:13px;}
+.caption{font-size:12px;opacity:.8;}
+
+/* ============ UTILITIES (Module 1) ============ */
+.flex{display:flex;}
+.grid{display:grid;}
+.center{display:flex;align-items:center;justify-content:center;}
+.space-between{display:flex;justify-content:space-between;align-items:center;}
+.gap8{gap:8px;} .gap12{gap:12px;} .gap16{gap:16px;} .gap24{gap:24px;}
+.mt16{margin-top:16px;} .mt24{margin-top:24px;} .mb16{margin-bottom:16px;}
+.p16{padding:16px;} .p24{padding:24px;}
+.shadow{box-shadow:var(--shadow-md);}
+.round{border-radius:var(--radius);}
+.border{border:1px solid var(--border);}
+
+/* ============ LAYOUT (Module 1) ============ */
+.wrapper{display:flex;min-height:100vh;}
+.sidebar{width:270px;background:#111827;color:white;padding:22px;display:flex;flex-direction:column;flex-shrink:0;}
+.content{flex:1;padding:28px;background:var(--bg);max-width:100%;overflow-x:hidden;}
+.container{max-width:1500px;margin:auto;}
+.topbar{height:72px;background:white;display:flex;justify-content:space-between;align-items:center;padding:0 24px;border-radius:16px;box-shadow:var(--shadow-sm);margin-bottom:24px;}
+
+@media(max-width:992px){
+  .sidebar{width:80px;}
+  .sidebar a span.label{display:none;}
+  .content{padding:16px;}
+  .search{width:220px;}
+}
+@media(max-width:768px){
+  .wrapper{flex-direction:column;}
+  .sidebar{width:100%;height:auto;}
+  .topbar{flex-direction:column;gap:12px;height:auto;padding:16px;}
+  .search{width:100%;}
+}
+
+/* ============ BUTTONS ============ */
+.btn{padding:13px 22px;border-radius:12px;cursor:pointer;transition:.25s;font-weight:600;display:inline-flex;align-items:center;gap:8px;}
+.btn-primary{background:var(--primary);color:white;}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-2px);}
+.btn-outline{border:1px solid var(--primary);color:var(--primary);}
+.btn-outline:hover{background:var(--primary);color:white;}
+
+/* ============ SEARCH ============ */
+.search{display:flex;align-items:center;background:white;padding:12px 18px;border-radius:14px;border:1px solid var(--border);width:360px;}
+.search input{width:100%;margin-left:10px;}
+.search svg{flex-shrink:0;}
+
+/* ============ CARD ============ */
+.card{background:white;padding:24px;border-radius:18px;box-shadow:var(--shadow-sm);transition:.25s;}
+.card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg);}
+
+/* ============ SIDEBAR NAV ============ */
+.logo{font-size:22px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:10px;}
+.logo .dot{width:10px;height:10px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 5px rgba(41,98,255,.25);}
+.sidebar nav{display:flex;flex-direction:column;margin-top:40px;gap:8px;flex:1;}
+.sidebar a{padding:14px;border-radius:12px;cursor:pointer;transition:.25s;display:flex;align-items:center;gap:12px;color:#cbd5e1;font-size:14px;font-weight:600;}
+.sidebar a:hover{background:rgba(255,255,255,.08);color:white;}
+.sidebar .active{background:var(--primary);color:white;}
+.sidebar-foot{border-top:1px solid rgba(255,255,255,.1);padding-top:16px;font-size:12px;color:#94a3b8;}
+
+/* ============ TOPBAR PROFILE ============ */
+.profile{display:flex;align-items:center;gap:12px;font-weight:600;cursor:pointer;}
+.profile .avatar{width:40px;height:40px;border-radius:50%;background:#dbeafe;color:#2563eb;font-weight:700;}
+
+/* ============ RESPONSIVE PAGE VISIBILITY ============ */
+.page{display:none;}
+.page.active{display:block;animation:fadein .3s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ===================================================== */
+/* MODULE 2 — DASHBOARD                                   */
+/* ===================================================== */
+.dashboard{display:flex;flex-direction:column;gap:24px;}
+.hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.analytics-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
+
+.stat-card{background:white;padding:24px;border-radius:20px;box-shadow:var(--shadow-sm);transition:.3s;display:flex;flex-direction:column;gap:18px;cursor:pointer;}
+.stat-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg);}
+.stat-top{display:flex;justify-content:space-between;}
+.icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.icon.success{background:#dcfce7;color:#16a34a;}
+.icon.wa{background:#dcfce7;color:#16a34a;}
+.icon.reviews{background:#fef3c7;color:#b45309;}
+.icon.appt{background:#dbeafe;color:#1d4ed8;}
+.progress{height:8px;background:#eef2f7;border-radius:20px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,#2563eb,#4f46e5);border-radius:20px;}
+.stat-bottom{display:flex;justify-content:space-between;font-size:13px;color:var(--text-light);}
+.green{color:#22c55e;font-weight:600;}
+
+.quick-actions{display:flex;gap:18px;flex-wrap:wrap;}
+.quick-actions button{flex:1;min-width:160px;background:white;padding:18px;border-radius:18px;border:1px solid var(--border);font-weight:600;cursor:pointer;transition:.25s;display:flex;flex-direction:column;gap:8px;align-items:center;}
+.quick-actions button:hover{background:var(--primary);color:white;}
+
+.activity-card{background:white;padding:24px;border-radius:20px;display:flex;flex-direction:column;gap:22px;box-shadow:var(--shadow-sm);}
+.activity{display:flex;align-items:center;gap:14px;}
+.activity span{margin-left:auto;color:#94a3b8;font-size:13px;}
+.dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.dot.success{background:#22c55e;} .dot.warning{background:#f59e0b;} .dot.info{background:#2563eb;}
+
+.bill-table{background:white;border-radius:18px;overflow:hidden;width:100%;}
+.bill-table th{background:#f8fafc;padding:18px;text-align:left;font-size:13px;color:var(--text-light);}
+.bill-table td{padding:18px;border-top:1px solid #edf2f7;font-size:14px;}
+.paid{background:#dcfce7;padding:6px 12px;border-radius:40px;color:#15803d;font-size:13px;font-weight:600;}
+.pending{background:#fef3c7;padding:6px 12px;border-radius:40px;color:#92400e;font-size:13px;font-weight:600;}
+
+.chart-placeholder{height:280px;border:2px dashed #cbd5e1;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:20px;color:#94a3b8;gap:10px;}
+.chart-card{background:white;padding:24px;border-radius:22px;box-shadow:var(--shadow-sm);}
+.card-header{display:flex;justify-content:space-between;align-items:center;}
+.card-header select{padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:white;font-size:13px;}
+
+/* ===================================================== */
+/* MODULE 3 — BILLING / POS                               */
+/* ===================================================== */
+.billing-page{display:grid;grid-template-columns:2fr 420px;gap:24px;align-items:start;}
+.billing-left{display:flex;flex-direction:column;gap:20px;}
+.billing-right{background:white;border-radius:22px;padding:24px;box-shadow:var(--shadow-sm);}
+
+.customer-search{display:flex;gap:14px;}
+.customer-search input{flex:1;padding:16px;border:1px solid var(--border);border-radius:16px;background:white;}
+.customer-search button{padding:0 24px;background:var(--primary);color:white;border-radius:16px;cursor:pointer;font-weight:600;}
+
+.customer-card{display:flex;align-items:center;gap:16px;padding:18px;background:white;border-radius:18px;border:1px solid var(--border);cursor:pointer;transition:.25s;}
+.customer-card:hover{border-color:var(--primary);transform:translateY(-3px);}
+.avatar{width:56px;height:56px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:#2563eb;flex-shrink:0;}
+.vip{margin-left:auto;background:#fef3c7;padding:6px 12px;border-radius:30px;font-size:12px;font-weight:600;}
+
+.service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.service-card{background:white;padding:22px;border-radius:18px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow-sm);transition:.25s;}
+.service-card:hover{transform:translateY(-4px);}
+.service-card div.price{font-weight:700;font-size:18px;}
+.service-card button{margin-top:auto;padding:12px;border-radius:12px;background:var(--primary);color:white;cursor:pointer;font-weight:600;}
+
+.cart-item{display:flex;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);}
+.summary{display:flex;flex-direction:column;gap:14px;margin-top:20px;}
+.summary div{display:flex;justify-content:space-between;font-size:14px;}
+.summary hr{border:none;border-top:1px solid var(--border);margin:6px 0;}
+.total{font-size:20px;font-weight:700;}
+
+.payment-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:24px;}
+.payment-grid button{padding:20px;border-radius:16px;background:white;border:1px solid var(--border);cursor:pointer;transition:.25s;font-weight:600;display:flex;flex-direction:column;gap:8px;align-items:center;}
+.payment-grid button:hover,.payment-grid button.selected{background:var(--primary);color:white;}
+
+.qr-card{padding:24px;background:#f8fafc;border-radius:20px;text-align:center;margin-top:24px;}
+.qr-svg{width:150px;height:150px;margin:auto;margin-bottom:14px;background:white;border-radius:12px;padding:10px;box-shadow:var(--shadow-sm);}
+
+.floating-total{position:fixed;bottom:24px;right:24px;display:flex;align-items:center;gap:20px;padding:18px 26px;background:#111827;color:white;border-radius:20px;box-shadow:var(--shadow-lg);z-index:50;}
+.floating-total button{background:var(--primary);padding:14px 22px;border-radius:12px;color:white;cursor:pointer;font-weight:600;}
+
+.transactions{background:white;border-radius:18px;overflow:hidden;width:100%;}
+.transactions td,.transactions th{padding:18px;border-bottom:1px solid #edf2f7;font-size:14px;}
+.transactions th{background:#f8fafc;text-align:left;color:var(--text-light);font-size:13px;}
+
+/* ===================================================== */
+/* MODULE 7 — APPOINTMENTS                                */
+/* ===================================================== */
+.appointment-layout{display:grid;grid-template-columns:320px 1fr 380px;gap:24px;align-items:start;}
+.calendar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.calendar-header .left{display:flex;align-items:center;gap:16px;}
+.calendar-header .right{display:flex;gap:12px;flex-wrap:wrap;}
+.calendar-header button{padding:12px 18px;border-radius:12px;background:white;cursor:pointer;border:1px solid var(--border);font-weight:600;}
+.calendar-header .active{background:var(--primary);color:white;border-color:var(--primary);}
+.calendar-header .primary{background:var(--primary);color:white;border-color:var(--primary);}
+
+.schedule-card{background:white;padding:24px;border-radius:20px;box-shadow:var(--shadow-sm);}
+.schedule-item{display:flex;align-items:center;padding:18px 0;border-bottom:1px solid #edf2f7;gap:18px;}
+.time-col{font-weight:700;color:var(--primary);width:60px;flex-shrink:0;}
+.confirmed{margin-left:auto;background:#dcfce7;color:#15803d;padding:8px 14px;border-radius:30px;font-size:12px;font-weight:600;}
+.waiting{margin-left:auto;background:#fef3c7;color:#92400e;padding:8px 14px;border-radius:30px;font-size:12px;font-weight:600;}
+
+.time-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.time-grid button{padding:16px;border-radius:14px;background:white;border:1px solid var(--border);cursor:pointer;font-weight:600;}
+.time-grid .booked{background:#fee2e2!important;color:#b91c1c;}
+.time-grid .selected{background:var(--primary)!important;color:white;}
+
+.appointment-card{background:white;padding:22px;border-radius:18px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow-sm);transition:.25s;}
+.appointment-card:hover{transform:translateY(-4px);}
+.appointment-card .top{display:flex;justify-content:space-between;align-items:center;}
+.appointment-card .cust{color:var(--text);font-weight:500;}
+.appointment-card .footer{display:flex;justify-content:space-between;align-items:center;}
+.appointment-card .footer button{padding:10px 16px;border-radius:10px;background:#eff6ff;color:var(--primary);cursor:pointer;font-weight:600;}
+
+.staff-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
+.staff-card{padding:20px;border-radius:18px;background:white;}
+.staff-card.available{border-left:6px solid #22c55e;}
+.staff-card.busy{border-left:6px solid #ef4444;}
+.staff-card span{font-size:12px;font-weight:700;color:var(--text-light);}
+
+.queue-card{background:white;padding:24px;border-radius:20px;box-shadow:var(--shadow-sm);}
+.queue-item{display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid #edf2f7;}
+.queue-item span.num{font-weight:700;color:var(--primary);}
+.queue-item button{margin-left:auto;background:var(--primary);color:white;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600;}
+
+.automation-card{background:white;padding:24px;border-radius:18px;display:flex;flex-direction:column;gap:18px;box-shadow:var(--shadow-sm);}
+.automation-card label{display:flex;align-items:center;gap:10px;font-size:14px;}
+
+.booking-summary{background:white;padding:24px;border-radius:20px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow-sm);margin-top:24px;}
+.booking-summary div{display:flex;justify-content:space-between;font-size:14px;}
+.booking-summary hr{border:none;border-top:1px solid var(--border);}
+.booking-summary button{margin-top:12px;padding:14px;background:var(--primary);color:white;border-radius:14px;cursor:pointer;font-weight:600;}
+
+/* ===================================================== */
+/* MODULE 6 — REVIEWS                                     */
+/* ===================================================== */
+.reviews-layout{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start;}
+.score-card{background:white;padding:28px;border-radius:24px;box-shadow:var(--shadow-sm);}
+.score-header{display:flex;justify-content:space-between;align-items:center;}
+.score-circle{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#15803d);color:white;display:flex;justify-content:center;align-items:center;font-size:22px;font-weight:700;flex-shrink:0;}
+.stars{font-size:28px;color:#fbbf24;letter-spacing:6px;margin:18px 0;}
+.rating-footer{display:flex;justify-content:space-between;color:var(--text-light);font-size:13px;}
+
+.review-card{background:white;padding:24px;border-radius:20px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:18px;margin-bottom:18px;}
+.review-top{display:flex;align-items:center;gap:16px;}
+.review-top span{margin-left:auto;font-size:13px;color:var(--text-light);}
+.stars-small{color:#fbbf24;letter-spacing:2px;}
+.review-text{font-size:15px;line-height:1.8;color:var(--text);}
+.review-tags{display:flex;gap:10px;flex-wrap:wrap;}
+.review-tags span{padding:7px 14px;background:#eff6ff;border-radius:40px;font-size:12px;color:#2563eb;}
+.review-actions{display:flex;gap:14px;}
+.review-actions button{padding:12px 20px;border-radius:12px;cursor:pointer;font-weight:600;}
+.review-actions .reply{background:var(--primary);color:white;}
+.review-actions .view{background:#f1f5f9;color:var(--text);}
+
+.ai-reply{background:white;padding:24px;border-radius:20px;margin-top:20px;box-shadow:var(--shadow-sm);}
+.ai-reply textarea{width:100%;height:130px;padding:18px;border-radius:14px;border:1px solid var(--border);resize:none;margin:16px 0;}
+.reply-buttons{display:flex;gap:12px;}
+.reply-buttons button{padding:12px 18px;border-radius:12px;cursor:pointer;font-weight:600;}
+.reply-buttons .regen{background:#f1f5f9;}
+.reply-buttons .send{background:var(--whatsapp);color:white;}
+
+.alert-card{display:flex;align-items:center;gap:18px;padding:20px;border-radius:18px;margin-bottom:16px;}
+.alert-card.danger{background:#fef2f2;border-left:5px solid #ef4444;}
+.alert-card button{margin-left:auto;padding:12px 18px;background:#ef4444;color:white;border-radius:12px;cursor:pointer;font-weight:600;}
+
+.keywords{display:flex;flex-wrap:wrap;gap:14px;}
+.keywords span{padding:12px 20px;background:#eff6ff;border-radius:40px;color:#2563eb;font-weight:600;font-size:14px;}
+.keywords .big{font-size:22px;font-weight:700;background:#dbeafe;}
+
+.rating-bars{background:white;padding:24px;border-radius:20px;box-shadow:var(--shadow-sm);}
+.bar{display:grid;grid-template-columns:90px 1fr 50px;gap:12px;align-items:center;margin-bottom:16px;}
+.bar span{font-size:13px;color:var(--text-light);}
+.track{height:12px;background:#edf2f7;border-radius:40px;overflow:hidden;}
+.track div{height:100%;background:#22c55e;}
+
+.campaign-box{padding:30px;background:linear-gradient(135deg,#2563eb,#4f46e5);border-radius:22px;color:white;text-align:center;}
+.campaign-box p{color:rgba(255,255,255,.85);}
+.campaign-box button{margin-top:20px;padding:14px 24px;background:white;color:#2563eb;border-radius:14px;cursor:pointer;font-weight:700;}
+
+/* ===================================================== */
+/* MODULE 5 — WHATSAPP                                    */
+/* ===================================================== */
+.wa-layout{display:grid;grid-template-columns:340px 1fr 340px;height:calc(100vh - 40px);background:#eef2f7;border-radius:22px;overflow:hidden;box-shadow:var(--shadow-md);}
+.chat-list{background:white;border-right:1px solid #e6e9ef;overflow:auto;}
+.chat-list-head{padding:20px;border-bottom:1px solid #edf2f7;font-weight:700;font-size:18px;}
+.conversation{display:flex;flex-direction:column;background:#f7f9fc;}
+.customer-panel{background:white;border-left:1px solid #e6e9ef;overflow:auto;}
+
+.chat-item{display:flex;gap:14px;padding:18px;cursor:pointer;transition:.25s;border-bottom:1px solid #edf2f7;}
+.chat-item:hover{background:#f8fafc;}
+.chat-item.active{background:#eff6ff;border-left:4px solid var(--primary);}
+.chat-item .avatar{width:50px;height:50px;background:#2563eb;color:white;font-size:16px;}
+.chat-content{flex:1;min-width:0;}
+.chat-content p{margin-top:4px;color:#64748b;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-meta{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+.chat-meta span{font-size:11px;color:var(--text-light);}
+.badge{min-width:22px;height:22px;padding:0 6px;background:#22c55e;color:white;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+
+.chat-header{height:74px;background:white;display:flex;justify-content:space-between;align-items:center;padding:0 22px;border-bottom:1px solid #edf2f7;}
+.chat-header .customer{display:flex;align-items:center;gap:14px;}
+.chat-header .customer .avatar{width:44px;height:44px;font-size:14px;}
+.chat-header .customer p{font-size:12px;}
+.header-actions{display:flex;gap:10px;}
+.header-actions button{width:40px;height:40px;border-radius:12px;background:#f1f5f9;cursor:pointer;transition:.25s;}
+.header-actions button:hover{background:#2563eb;color:white;}
+
+.messages{flex:1;padding:22px;overflow:auto;display:flex;flex-direction:column;gap:14px;}
+.message{max-width:65%;padding:14px 16px;border-radius:18px;position:relative;font-size:14px;line-height:1.6;}
+.message span{display:block;margin-top:6px;font-size:11px;opacity:.65;text-align:right;}
+.message.received{background:white;align-self:flex-start;}
+.message.sent{background:#dcfce7;align-self:flex-end;}
+
+.composer{background:white;padding:14px;display:flex;gap:10px;align-items:flex-end;border-top:1px solid #edf2f7;}
+.composer textarea{flex:1;min-height:46px;max-height:120px;padding:12px 14px;border:1px solid var(--border);border-radius:16px;resize:none;}
+.icon-btn{width:40px;height:40px;border-radius:12px;background:#f1f5f9;cursor:pointer;flex-shrink:0;}
+.send-btn{width:46px;height:46px;border-radius:16px;background:var(--whatsapp);color:white;font-size:16px;cursor:pointer;flex-shrink:0;}
+
+.customer-info{padding:22px;display:flex;flex-direction:column;gap:22px;}
+.customer-info .profile{flex-direction:column;text-align:center;gap:6px;}
+.customer-info .avatar.large{width:80px;height:80px;font-size:24px;margin:auto;}
+.info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.info-grid div{padding:14px;background:#f8fafc;border-radius:14px;}
+.info-grid label{display:block;font-size:11px;color:#64748b;margin-bottom:6px;}
+.primary-btn{background:var(--primary);color:white;padding:14px;border-radius:14px;cursor:pointer;font-weight:600;width:100%;}
+
+.campaign-card{background:white;padding:22px;border-radius:18px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:16px;}
+.campaign-stats{display:flex;justify-content:space-between;font-size:12px;color:#64748b;flex-wrap:wrap;gap:8px;}
+.campaign-card button{padding:14px;background:var(--primary);color:white;border-radius:12px;cursor:pointer;font-weight:600;}
+.wa-campaign-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+
+/* page header shared */
+.page-head{margin-bottom:24px;}
+.page-head p{margin-top:6px;}
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- ================= SIDEBAR (Module 1 & 10) ================= -->
+  <div class="sidebar">
+    <div class="logo"><span class="dot"></span> BillDoor</div>
+    <nav>
+      <a class="nav-link active" data-page="dashboard"><span>📊</span><span class="label">Dashboard</span></a>
+      <a class="nav-link" data-page="billing"><span>🧾</span><span class="label">Billing</span></a>
+      <a class="nav-link" data-page="appointments"><span>📅</span><span class="label">Appointments</span></a>
+      <a class="nav-link" data-page="reviews"><span>⭐</span><span class="label">Reviews</span></a>
+      <a class="nav-link" data-page="whatsapp"><span>💬</span><span class="label">WhatsApp</span></a>
+      <a class="nav-link" data-page="settings"><span>⚙️</span><span class="label">Settings</span></a>
+    </nav>
+    <div class="sidebar-foot">BillDoor Enterprise<br>v1.0 — Demo Mock</div>
+  </div>
+
+  <!-- ================= CONTENT ================= -->
+  <div class="content">
+    <div class="container">
+
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input placeholder="Search customers, bills, appointments…">
+        </div>
+        <div class="profile">
+          <div class="avatar center">A</div>
+          <span>Admin</span>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- PAGE: DASHBOARD (Module 2)                                    -->
+      <!-- ============================================================ -->
+      <section id="dashboard" class="page active">
+        <div class="dashboard">
+          <div class="page-head">
+            <h2>Welcome back, Admin</h2>
+            <p>Here's what's happening across BillDoor Demo Salon today.</p>
+          </div>
+
+          <section class="hero-grid">
+            <div class="stat-card">
+              <div class="stat-top">
+                <div><p>Total Revenue</p><h2>₹8,45,230</h2></div>
+                <div class="icon success">💰</div>
+              </div>
+              <div class="progress"><div class="progress-fill" style="width:74%"></div></div>
+              <div class="stat-bottom"><span class="green">▲ 14.6%</span><span>Compared to last month</span></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-top">
+                <div><p>Google Rating</p><h2>4.9</h2></div>
+                <div class="icon reviews">⭐</div>
+              </div>
+              <div class="progress"><div class="progress-fill" style="width:96%"></div></div>
+              <div class="stat-bottom"><span class="green">▲ 0.2</span><span>1,284 reviews</span></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-top">
+                <div><p>WhatsApp Sent</p><h2>2,540</h2></div>
+                <div class="icon wa">💬</div>
+              </div>
+              <div class="progress"><div class="progress-fill" style="width:87%"></div></div>
+              <div class="stat-bottom"><span class="green">87%</span><span>Read rate</span></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-top">
+                <div><p>Appointments Today</p><h2>18</h2></div>
+                <div class="icon appt">📅</div>
+              </div>
+              <div class="progress"><div class="progress-fill" style="width:60%"></div></div>
+              <div class="stat-bottom"><span class="green">6 upcoming</span><span>12 completed</span></div>
+            </div>
+          </section>
+
+          <div class="quick-actions">
+            <button onclick="showPage('billing')">➕<span>Create Bill</span></button>
+            <button onclick="showPage('appointments')">📅<span>Appointment</span></button>
+            <button onclick="showPage('whatsapp')">📨<span>Broadcast</span></button>
+            <button onclick="showPage('reviews')">⭐<span>Request Review</span></button>
+          </div>
+
+          <section class="analytics-grid">
+            <div class="chart-card">
+              <div class="card-header">
+                <h4>Revenue Trend</h4>
+                <select><option>Last 7 Days</option><option>Last Month</option><option>Last Year</option></select>
+              </div>
+              <div class="chart-placeholder">📈 Revenue Chart Visualization</div>
+            </div>
+            <div class="activity-card">
+              <h4>Recent Activity</h4>
+              <div class="activity"><div class="dot success"></div><div><h5>Invoice Paid</h5><p>Rahul Sharma paid ₹2,450</p></div><span>2m</span></div>
+              <div class="activity"><div class="dot warning"></div><div><h5>Review Received</h5><p>★★★★★ Google Review</p></div><span>15m</span></div>
+              <div class="activity"><div class="dot info"></div><div><h5>WhatsApp Sent</h5><p>Campaign delivered</p></div><span>28m</span></div>
+              <div class="activity"><div class="dot success"></div><div><h5>Appointment Booked</h5><p>Aisha Khan — Hair Spa</p></div><span>41m</span></div>
+            </div>
+          </section>
+
+          <div class="card">
+            <div class="card-header mb16"><h4>Recent Bills</h4><button class="btn btn-outline" onclick="showPage('billing')">View All</button></div>
+            <table class="bill-table">
+              <thead><tr><th>Invoice</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>#10021</td><td>Rahul Sharma</td><td>₹2,450</td><td><span class="paid">Paid</span></td></tr>
+                <tr><td>#10022</td><td>Aisha Khan</td><td>₹4,120</td><td><span class="pending">Pending</span></td></tr>
+                <tr><td>#10023</td><td>Ankit Verma</td><td>₹980</td><td><span class="paid">Paid</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- PAGE: BILLING (Module 3)                                      -->
+      <!-- ============================================================ -->
+      <section id="billing" class="page">
+        <div class="page-head">
+          <h2>Digital Billing</h2>
+          <p>Create invoices, take payments, and send bills instantly on WhatsApp.</p>
+        </div>
+
+        <div class="billing-page">
+          <div class="billing-left">
+
+            <div class="customer-search">
+              <input placeholder="Search by Name / Mobile">
+              <button>＋ Add Customer</button>
+            </div>
+
+            <div class="customer-card">
+              <div class="avatar">A</div>
+              <div><h4>Ayan Mathur</h4><p>9876543210</p></div>
+              <span class="vip">VIP</span>
+            </div>
+
+            <h5>Services</h5>
+            <div class="service-grid">
+              <div class="service-card"><h4>Hair Spa</h4><p>45 Minutes</p><div class="price">₹699</div><button onclick="addToCart('Hair Spa',699)">Add</button></div>
+              <div class="service-card"><h4>Hair Cut</h4><p>30 Minutes</p><div class="price">₹499</div><button onclick="addToCart('Hair Cut',499)">Add</button></div>
+              <div class="service-card"><h4>Facial</h4><p>40 Minutes</p><div class="price">₹899</div><button onclick="addToCart('Facial',899)">Add</button></div>
+              <div class="service-card"><h4>Manicure</h4><p>25 Minutes</p><div class="price">₹399</div><button onclick="addToCart('Manicure',399)">Add</button></div>
+              <div class="service-card"><h4>Beard Style</h4><p>20 Minutes</p><div class="price">₹299</div><button onclick="addToCart('Beard Style',299)">Add</button></div>
+              <div class="service-card"><h4>Head Massage</h4><p>30 Minutes</p><div class="price">₹399</div><button onclick="addToCart('Head Massage',399)">Add</button></div>
+            </div>
+
+            <div class="card">
+              <h5 class="mb16">Cart</h5>
+              <div id="cart-items">
+                <div class="cart-item"><div><h4>Hair Spa</h4><p>₹699 × 1</p></div><div>₹699</div></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header mb16"><h4>Transaction History</h4></div>
+              <table class="transactions">
+                <thead><tr><th>Date</th><th>Invoice</th><th>Customer</th><th>Method</th><th>Status</th><th>Amount</th></tr></thead>
+                <tbody>
+                  <tr><td>12 Jul</td><td>#20121</td><td>Rahul</td><td>UPI</td><td><span class="paid">Paid</span></td><td>₹1999</td></tr>
+                  <tr><td>11 Jul</td><td>#20120</td><td>Priya</td><td>Card</td><td><span class="paid">Paid</span></td><td>₹899</td></tr>
+                  <tr><td>10 Jul</td><td>#20119</td><td>Sameer</td><td>Cash</td><td><span class="pending">Pending</span></td><td>₹2450</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="billing-right">
+            <h4>Payment</h4>
+            <div class="summary">
+              <div><span>Subtotal</span><span id="sub">₹699</span></div>
+              <div><span>GST (18%)</span><span id="gst">₹126</span></div>
+              <div><span>Discount</span><span>-₹0</span></div>
+              <hr>
+              <div class="total"><span>Total</span><h2 id="total">₹825</h2></div>
+            </div>
+
+            <div class="payment-grid">
+              <button class="selected">💳<span>Card</span></button>
+              <button>💵<span>Cash</span></button>
+              <button>📱<span>UPI</span></button>
+              <button>🏦<span>Bank</span></button>
+            </div>
+
+            <div class="qr-card">
+              <svg class="qr-svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="white"/>
+                <g fill="#111827">
+                  <rect x="8" y="8" width="24" height="24"/><rect x="14" y="14" width="12" height="12" fill="white"/><rect x="18" y="18" width="4" height="4"/>
+                  <rect x="68" y="8" width="24" height="24"/><rect x="74" y="14" width="12" height="12" fill="white"/><rect x="78" y="18" width="4" height="4"/>
+                  <rect x="8" y="68" width="24" height="24"/><rect x="14" y="74" width="12" height="12" fill="white"/><rect x="18" y="78" width="4" height="4"/>
+                  <rect x="40" y="8" width="6" height="6"/><rect x="50" y="8" width="6" height="6"/><rect x="40" y="18" width="6" height="6"/>
+                  <rect x="40" y="40" width="6" height="6"/><rect x="50" y="40" width="6" height="6"/><rect x="60" y="40" width="6" height="6"/>
+                  <rect x="40" y="50" width="6" height="6"/><rect x="70" y="50" width="6" height="6"/><rect x="82" y="50" width="6" height="6"/>
+                  <rect x="40" y="60" width="6" height="6"/><rect x="50" y="60" width="6" height="6"/><rect x="60" y="70" width="6" height="6"/>
+                  <rect x="40" y="80" width="6" height="6"/><rect x="50" y="80" width="6" height="6"/><rect x="60" y="88" width="6" height="6"/>
+                  <rect x="70" y="70" width="6" height="6"/><rect x="82" y="80" width="6" height="6"/>
+                </g>
+              </svg>
+              <h4>Scan & Pay</h4>
+              <p>UPI Accepted</p>
+            </div>
+
+            <button class="btn btn-primary mt24" style="width:100%;justify-content:center" onclick="completePayment()">Complete Payment</button>
+          </div>
+        </div>
+
+        <!-- Payment Success (hidden until triggered) -->
+        <div id="payment-success" class="card mt24" style="display:none;text-align:center;padding:50px;">
+          <div style="width:90px;height:90px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:42px;color:#16a34a;margin:auto;">✓</div>
+          <h2 class="mt16">Payment Successful</h2>
+          <p>Invoice #2024013 · Bill sent on WhatsApp · Review request scheduled in 30 min</p>
+          <button class="btn btn-primary mt16">Print Invoice</button>
+        </div>
+
+        <div class="floating-total">
+          <span>₹825</span>
+          <button onclick="completePayment()">Complete Payment</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- PAGE: APPOINTMENTS (Module 7)                                 -->
+      <!-- ============================================================ -->
+      <section id="appointments" class="page">
+        <div class="page-head">
+          <h2>Appointments &amp; Scheduling</h2>
+          <p>Manage bookings, staff availability, and the walk-in queue.</p>
+        </div>
+
+        <div class="calendar-header">
+          <div class="left">
+            <button>◀</button>
+            <h4 style="margin:0">July 2026</h4>
+            <button>▶</button>
+          </div>
+          <div class="right">
+            <button class="active">Day</button>
+            <button>Week</button>
+            <button>Month</button>
+            <button class="primary">+ Appointment</button>
+          </div>
+        </div>
+
+        <div class="appointment-layout">
+          <!-- LEFT -->
+          <aside style="display:flex;flex-direction:column;gap:20px;">
+            <div class="schedule-card">
+              <h5 class="mb16">Today's Schedule</h5>
+              <div class="schedule-item"><div class="time-col">10:00</div><div><h5>Hair Spa</h5><p>Rahul Sharma</p></div><span class="confirmed">Confirmed</span></div>
+              <div class="schedule-item"><div class="time-col">13:00</div><div><h5>Dental Checkup</h5><p>Aisha Khan</p></div><span class="waiting">Waiting</span></div>
+              <div class="schedule-item"><div class="time-col">15:30</div><div><h5>Facial</h5><p>Priya Rao</p></div><span class="confirmed">Confirmed</span></div>
+            </div>
+
+            <div class="queue-card">
+              <h5 class="mb16">Walk-In Queue</h5>
+              <div class="queue-item"><span class="num">#12</span><p>Ankit Verma</p><button>Call</button></div>
+              <div class="queue-item"><span class="num">#13</span><p>Meera Joshi</p><button>Call</button></div>
+            </div>
+          </aside>
+
+          <!-- CENTER -->
+          <main style="display:flex;flex-direction:column;gap:20px;">
+            <h5>Available Time Slots</h5>
+            <div class="time-grid">
+              <button>09:00</button>
+              <button class="booked">09:30</button>
+              <button>10:00</button>
+              <button>10:30</button>
+              <button class="selected">11:00</button>
+              <button>11:30</button>
+              <button class="booked">12:00</button>
+              <button>12:30</button>
+            </div>
+
+            <h5 class="mt16">Today's Appointments</h5>
+            <div class="hero-grid" style="grid-template-columns:repeat(2,1fr)">
+              <div class="appointment-card">
+                <div class="top"><h5>Hair Cut + Spa</h5><span>10:00 AM</span></div>
+                <div class="cust">👤 Rahul Sharma</div>
+                <div class="footer"><span>₹799</span><button>View</button></div>
+              </div>
+              <div class="appointment-card">
+                <div class="top"><h5>Dental Checkup</h5><span>1:00 PM</span></div>
+                <div class="cust">👤 Aisha Khan</div>
+                <div class="footer"><span>₹500</span><button>View</button></div>
+              </div>
+            </div>
+
+            <h5 class="mt16">Staff Availability</h5>
+            <div class="staff-grid">
+              <div class="staff-card available"><h4>Amit</h4><p>Hair Stylist</p><span>Available</span></div>
+              <div class="staff-card busy"><h4>Sneha</h4><p>Spa</p><span>Busy</span></div>
+              <div class="staff-card available"><h4>Priya</h4><p>Beautician</p><span>Available</span></div>
+              <div class="staff-card busy"><h4>Karan</h4><p>Barber</p><span>Busy</span></div>
+            </div>
+
+            <div class="automation-card mt16">
+              <h5>Reminder Settings</h5>
+              <label><input type="checkbox" checked> 24 Hours Before</label>
+              <label><input type="checkbox" checked> 1 Hour Before</label>
+              <label><input type="checkbox"> Follow-up After Visit</label>
+            </div>
+          </main>
+
+          <!-- RIGHT -->
+          <aside>
+            <div class="booking-summary">
+              <h4>Booking Summary</h4>
+              <div><span>Customer</span><span>Rahul Sharma</span></div>
+              <div><span>Service</span><span>Hair Spa</span></div>
+              <div><span>Time</span><span>11:00 AM</span></div>
+              <div><span>Staff</span><span>Amit</span></div>
+              <hr>
+              <button>Confirm Appointment</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- PAGE: REVIEWS (Module 6)                                      -->
+      <!-- ============================================================ -->
+      <section id="reviews" class="page">
+        <div class="page-head">
+          <h2>Reviews &amp; Reputation</h2>
+          <p>Your Reputation Command Center — track, reply, and recover.</p>
+        </div>
+
+        <div class="reviews-layout">
+          <main class="reviews-main">
+            <div class="score-card mb16">
+              <div class="score-header">
+                <div><h2>4.8</h2><p>Overall Google Rating</p></div>
+                <div class="score-circle">96%</div>
+              </div>
+              <div class="stars">★★★★★</div>
+              <div class="rating-footer"><span>2,431 Reviews</span><span>↑ +0.2 this month</span></div>
+            </div>
+
+            <div class="alert-card danger">
+              <div style="font-size:24px">⚠️</div>
+              <div><h5>1-Star Review Detected</h5><p>Customer mentioned slow service.</p></div>
+              <button>Resolve</button>
+            </div>
+
+            <div class="review-card">
+              <div class="review-top">
+                <div class="avatar">RS</div>
+                <div><h5>Rahul Sharma</h5><div class="stars-small">★★★★★</div></div>
+                <span>2 hrs ago</span>
+              </div>
+              <p class="review-text">Amazing staff and quick service. Highly recommended.</p>
+              <div class="review-tags"><span>Staff</span><span>Service</span><span>Speed</span></div>
+              <div class="review-actions">
+                <button class="reply" onclick="document.getElementById('ai-reply-box').scrollIntoView({behavior:'smooth'})">Reply</button>
+                <button class="view">View Customer</button>
+              </div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-top">
+                <div class="avatar">AK</div>
+                <div><h5>Aisha Khan</h5><div class="stars-small">★★★★☆</div></div>
+                <span>1 day ago</span>
+              </div>
+              <p class="review-text">Great experience overall, though the wait time could be shorter.</p>
+              <div class="review-tags"><span>Wait Time</span><span>Value</span></div>
+              <div class="review-actions">
+                <button class="reply">Reply</button>
+                <button class="view">View Customer</button>
+              </div>
+            </div>
+
+            <div class="ai-reply" id="ai-reply-box">
+              <h5>AI Suggested Reply</h5>
+              <textarea>Thank you for your wonderful review! We're delighted that you enjoyed your experience. We look forward to welcoming you again soon.</textarea>
+              <div class="reply-buttons">
+                <button class="regen">Regenerate</button>
+                <button class="send">Send Reply</button>
+              </div>
+            </div>
+          </main>
+
+          <aside class="reviews-right" style="display:flex;flex-direction:column;gap:20px;">
+            <div class="rating-bars">
+              <h5 class="mb16">Rating Distribution</h5>
+              <div class="bar"><span>★★★★★</span><div class="track"><div style="width:78%"></div></div><span>1890</span></div>
+              <div class="bar"><span>★★★★☆</span><div class="track"><div style="width:15%"></div></div><span>360</span></div>
+              <div class="bar"><span>★★★☆☆</span><div class="track"><div style="width:5%"></div></div><span>120</span></div>
+              <div class="bar"><span>★★☆☆☆</span><div class="track"><div style="width:1%"></div></div><span>35</span></div>
+              <div class="bar"><span>★☆☆☆☆</span><div class="track"><div style="width:1%"></div></div><span>26</span></div>
+            </div>
+
+            <div class="card">
+              <h5 class="mb16">Keyword Analytics</h5>
+              <div class="keywords">
+                <span class="big">Service</span>
+                <span>Staff</span><span>Clean</span><span>Friendly</span><span>Price</span><span>Waiting</span>
+              </div>
+            </div>
+
+            <div class="campaign-box">
+              <h4>Request More Reviews</h4>
+              <p>Automatically ask customers for Google reviews after payment.</p>
+              <button>Create Campaign</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- PAGE: WHATSAPP (Module 5)                                     -->
+      <!-- ============================================================ -->
+      <section id="whatsapp" class="page">
+        <div class="page-head">
+          <h2>WhatsApp CRM &amp; Marketing</h2>
+          <p>Every conversation connected to bills, reviews, and appointments.</p>
+        </div>
+
+        <div class="wa-layout">
+          <aside class="chat-list">
+            <div class="chat-list-head">Chats</div>
+            <div class="chat-item active">
+              <div class="avatar">RS</div>
+              <div class="chat-content"><h5>Rahul Sharma</h5><p>Thanks! I'll visit next week.</p></div>
+              <div class="chat-meta"><span>2m</span><div class="badge">3</div></div>
+            </div>
+            <div class="chat-item">
+              <div class="avatar">AK</div>
+              <div class="chat-content"><h5>Aisha Khan</h5><p>Can I reschedule to Friday?</p></div>
+              <div class="chat-meta"><span>18m</span></div>
+            </div>
+            <div class="chat-item">
+              <div class="avatar">PJ</div>
+              <div class="chat-content"><h5>Priya Joshi</h5><p>Received the bill, thank you!</p></div>
+              <div class="chat-meta"><span>1h</span></div>
+            </div>
+            <div class="chat-item">
+              <div class="avatar">SK</div>
+              <div class="chat-content"><h5>Sameer Khan</h5><p>★★★★★ Loved the service</p></div>
+              <div class="chat-meta"><span>3h</span></div>
+            </div>
+          </aside>
+
+          <main class="conversation">
+            <div class="chat-header">
+              <div class="customer">
+                <div class="avatar">RS</div>
+                <div><h5>Rahul Sharma</h5><p>Last seen today 2:18 PM</p></div>
+              </div>
+              <div class="header-actions"><button>📞</button><button>🔍</button><button>⋮</button></div>
+            </div>
+            <div class="messages">
+              <div class="message received">Hi, I'd like to book a haircut tomorrow.<span>10:30 AM</span></div>
+              <div class="message sent">Sure! You're booked for 11:00 AM.<span>10:31 AM</span></div>
+              <div class="message received">Perfect, thank you!<span>10:32 AM</span></div>
+              <div class="message sent">Here's your invoice for today's visit — ₹699 for Hair Spa. 🧾<span>2:05 PM</span></div>
+              <div class="message received">Thanks! I'll visit next week.<span>2:07 PM</span></div>
+            </div>
+            <div class="composer">
+              <button class="icon-btn">😊</button>
+              <button class="icon-btn">📎</button>
+              <textarea placeholder="Type your message..."></textarea>
+              <button class="send-btn">➤</button>
+            </div>
+          </main>
+
+          <aside class="customer-panel">
+            <div class="customer-info">
+              <div class="profile">
+                <div class="avatar large">RS</div>
+                <h5>Rahul Sharma</h5>
+                <p>Customer Since 2024</p>
+              </div>
+              <div class="info-grid">
+                <div><label>Total Spent</label><h5>₹18,650</h5></div>
+                <div><label>Visits</label><h5>14</h5></div>
+                <div><label>Rating</label><h5>★★★★★</h5></div>
+                <div><label>Last Bill</label><h5>₹1,299</h5></div>
+              </div>
+              <button class="primary-btn" onclick="showPage('billing')">Open Customer Profile</button>
+            </div>
+          </aside>
+        </div>
+
+        <h5 class="mt24 mb16">Broadcast Campaigns</h5>
+        <div class="wa-campaign-grid">
+          <div class="campaign-card">
+            <h4>Weekend Offer</h4>
+            <p>20% OFF Hair Spa for Premium Members</p>
+            <div class="campaign-stats"><span>Sent: 2,540</span><span>Read: 2,214</span><span>Clicks: 918</span></div>
+            <button>View Analytics</button>
+          </div>
+          <div class="campaign-card">
+            <h4>Birthday Campaign</h4>
+            <p>Automated coupon sent on customer birthdays</p>
+            <div class="campaign-stats"><span>Sent: 340</span><span>Read: 312</span><span>Clicks: 201</span></div>
+            <button>View Analytics</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- PAGE: SETTINGS (Module 10, minimal)                           -->
+      <!-- ============================================================ -->
+      <section id="settings" class="page">
+        <div class="page-head">
+          <h2>Settings</h2>
+          <p>Organization, team, and business preferences.</p>
+        </div>
+        <div class="card">
+          <h4 class="mb16">Business Profile</h4>
+          <div style="display:flex;flex-direction:column;gap:16px;max-width:420px;">
+            <div><label class="small" style="display:block;margin-bottom:6px;">Business Name</label><input class="border round p16" style="width:100%" value="BillDoor Demo Salon"></div>
+            <div><label class="small" style="display:block;margin-bottom:6px;">GST Number</label><input class="border round p16" style="width:100%" placeholder="22AAAAA0000A1Z5"></div>
+            <button class="btn btn-primary" style="width:fit-content">Save Changes</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- Simple SPA navigation ----
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(a=>a.classList.remove('active'));
+  document.querySelector('.nav-link[data-page="'+id+'"]').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.nav-link').forEach(a=>{
+  a.addEventListener('click',()=>showPage(a.dataset.page));
+});
+
+// ---- Billing cart demo logic ----
+let cart = [{name:'Hair Spa',price:699}];
+function renderCart(){
+  const el = document.getElementById('cart-items');
+  el.innerHTML = cart.map(i=>`<div class="cart-item"><div><h4>${i.name}</h4><p>₹${i.price} × 1</p></div><div>₹${i.price}</div></div>`).join('');
+  const subtotal = cart.reduce((s,i)=>s+i.price,0);
+  const gst = Math.round(subtotal*0.18);
+  const total = subtotal+gst;
+  document.getElementById('sub').textContent = '₹'+subtotal;
+  document.getElementById('gst').textContent = '₹'+gst;
+  document.getElementById('total').textContent = '₹'+total;
+  document.querySelector('.floating-total span').textContent = '₹'+total;
+}
+function addToCart(name,price){
+  cart.push({name,price});
+  renderCart();
+}
+function completePayment(){
+  document.getElementById('payment-success').style.display='block';
+  document.getElementById('payment-success').scrollIntoView({behavior:'smooth'});
+}
+renderCart();
+</script>
+</body>
+</html>

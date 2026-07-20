@@ -20,38 +20,38 @@
    CSS Custom Properties — Light Theme (default)
    ============================================================ */
 :root {
-  /* ---- Accent: warm amber-copper, avoids the violet/blue AI-template look ---- */
-  --color-accent: #C87A3D;
-  --color-accent-hover: #B56C32;
-  --color-accent-subtle: #FDF3E9;
+  /* ---- Accent: subtle water teal (more blue than green) ---- */
+  --color-accent: #088395;
+  --color-accent-hover: #056674;
+  --color-accent-subtle: #E6F3F5;
   --color-accent-text: #FFFFFF;
 
-  /* ---- Surfaces ---- */
-  --color-bg-primary: #FAFAF8;
-  --color-bg-secondary: #F4F3F0;
-  --color-bg-tertiary: #EEEDEA;
+  /* ---- Surfaces (Stark White & Light Grey) ---- */
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #FAFAFA;
+  --color-bg-tertiary: #F5F5F5;
   --color-bg-elevated: #FFFFFF;
-  --color-bg-inverse: #1C1C1E;
+  --color-bg-inverse: #111111;
 
-  /* ---- Sidebar ---- */
-  --color-sidebar-bg: #1C1C1E;
-  --color-sidebar-text: #A8A8AC;
-  --color-sidebar-text-active: #FFFFFF;
-  --color-sidebar-item-hover: rgba(255, 255, 255, 0.06);
-  --color-sidebar-item-active: rgba(200, 122, 61, 0.15);
-  --color-sidebar-accent: #C87A3D;
-  --color-sidebar-divider: rgba(255, 255, 255, 0.08);
+  /* ---- Sidebar (Clean White Theme) ---- */
+  --color-sidebar-bg: #FFFFFF;
+  --color-sidebar-text: #6B6B6F;
+  --color-sidebar-text-active: #111111;
+  --color-sidebar-item-hover: #FAFAFA;
+  --color-sidebar-item-active: #E6F3F5;
+  --color-sidebar-accent: #088395;
+  --color-sidebar-divider: #EAEAEA;
 
   /* ---- Text ---- */
-  --color-text-primary: #1C1C1E;
+  --color-text-primary: #111111;
   --color-text-secondary: #6B6B6F;
   --color-text-tertiary: #9A9A9E;
-  --color-text-inverse: #FAFAF8;
+  --color-text-inverse: #FFFFFF;
 
   /* ---- Borders ---- */
-  --color-border: #E4E3E0;
-  --color-border-subtle: #EEEDEA;
-  --color-border-focus: #C87A3D;
+  --color-border: #EAEAEA;
+  --color-border-subtle: #F5F5F5;
+  --color-border-focus: #088395;
 
   /* ---- Status ---- */
   --color-success: #2D9F6F;
@@ -69,12 +69,12 @@
   --color-badge-expiring: #D4873E;
   --color-badge-unused: #9A9A9E;
 
-  /* ---- Shadows (restrained, not heavy) ---- */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.03);
-  --shadow-focus: 0 0 0 3px rgba(200, 122, 61, 0.2);
+  /* ---- Shadows (restrained, extremely flat) ---- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.03), 0 2px 4px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.03), 0 4px 6px rgba(0, 0, 0, 0.02);
+  --shadow-focus: 0 0 0 3px rgba(8, 131, 149, 0.15);
 
   /* ---- Typography (custom scale, NOT default Tailwind) ---- */
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -95,8 +95,8 @@
 
   --weight-normal: 400;
   --weight-medium: 500;
-  --weight-semibold: 600;
-  --weight-bold: 700;
+  --weight-semibold: 500; /* Lighter headings for elegant look */
+  --weight-bold: 600;
 
   /* ---- Spacing (4px/8px scale, §10b native-ready) ---- */
   --space-0: 0;
@@ -119,11 +119,11 @@
   --topnav-height: 56px;
   --content-max-width: 1200px;
 
-  /* ---- Radii (subtle, not heavy-rounded) ---- */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  /* ---- Radii (sharp, sophisticated) ---- */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
   --radius-full: 9999px;
 
   /* ---- Transitions ---- */
@@ -143,36 +143,36 @@
 }
 
 /* ============================================================
-   Dark Theme
+   Dark Theme (Subtle Teal Accent)
    ============================================================ */
 [data-theme='dark'] {
-  --color-accent: #D4913F;
-  --color-accent-hover: #E0A254;
-  --color-accent-subtle: rgba(212, 145, 63, 0.12);
-  --color-accent-text: #1C1C1E;
+  --color-accent: #0C9DB2;
+  --color-accent-hover: #13B4CB;
+  --color-accent-subtle: rgba(12, 157, 178, 0.12);
+  --color-accent-text: #111111;
 
-  --color-bg-primary: #121214;
-  --color-bg-secondary: #1C1C1E;
-  --color-bg-tertiary: #252528;
-  --color-bg-elevated: #1E1E21;
-  --color-bg-inverse: #FAFAF8;
+  --color-bg-primary: #0A0A0A;
+  --color-bg-secondary: #141414;
+  --color-bg-tertiary: #1A1A1A;
+  --color-bg-elevated: #141414;
+  --color-bg-inverse: #FFFFFF;
 
-  --color-sidebar-bg: #0F0F11;
-  --color-sidebar-text: #7A7A7E;
-  --color-sidebar-text-active: #F0F0F0;
-  --color-sidebar-item-hover: rgba(255, 255, 255, 0.04);
-  --color-sidebar-item-active: rgba(212, 145, 63, 0.12);
-  --color-sidebar-accent: #D4913F;
-  --color-sidebar-divider: rgba(255, 255, 255, 0.06);
+  --color-sidebar-bg: #0A0A0A;
+  --color-sidebar-text: #888888;
+  --color-sidebar-text-active: #FFFFFF;
+  --color-sidebar-item-hover: #141414;
+  --color-sidebar-item-active: rgba(12, 157, 178, 0.12);
+  --color-sidebar-accent: #0C9DB2;
+  --color-sidebar-divider: #1A1A1A;
 
-  --color-text-primary: #EDEDEF;
-  --color-text-secondary: #9A9A9E;
-  --color-text-tertiary: #6B6B6F;
-  --color-text-inverse: #1C1C1E;
+  --color-text-primary: #F5F5F5;
+  --color-text-secondary: #A3A3A3;
+  --color-text-tertiary: #737373;
+  --color-text-inverse: #111111;
 
-  --color-border: #2C2C2F;
-  --color-border-subtle: #232326;
-  --color-border-focus: #D4913F;
+  --color-border: #262626;
+  --color-border-subtle: #1A1A1A;
+  --color-border-focus: #0C9DB2;
 
   --color-success: #3DB87E;
   --color-success-subtle: rgba(61, 184, 126, 0.12);
@@ -187,7 +187,7 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.15);
-  --shadow-focus: 0 0 0 3px rgba(212, 145, 63, 0.25);
+  --shadow-focus: 0 0 0 3px rgba(12, 157, 178, 0.25);
 }
 
 /* ============================================================

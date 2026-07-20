@@ -170,9 +170,28 @@ Write a short, natural-sounding Google review (2-4 sentences). It should:
 
 Reply with ONLY the review text, no quotes, no explanation.`;
 
+  // Fallback templates if Gemini is not configured or fails
+  const fallbacks = [
+    `I had a fantastic experience with ${data.businessName}. Highly recommended!`,
+    `Excellent service at ${data.businessName}. The team is great and very professional.`,
+    `Really impressed with ${data.businessName}. Great quality and experience overall.`,
+    `If you're looking for great service, ${data.businessName} is the place to go. 5 stars!`,
+    `Wonderful experience. I will definitely be returning to ${data.businessName} in the future.`
+  ];
+  
+  const getFallback = () => {
+    // Pick a random fallback that hasn't been used recently if possible
+    const available = fallbacks.filter(f => !data.previousDrafts.includes(f));
+    const list = available.length > 0 ? available : fallbacks;
+    return list[Math.floor(Math.random() * list.length)];
+  };
+
   try {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return { error: 'AI service not configured.', draft: null };
+
+    if (!apiKey) {
+      return { draft: getFallback() };
+    }
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
@@ -191,17 +210,18 @@ Reply with ONLY the review text, no quotes, no explanation.`;
 
     if (!response.ok) {
       console.error('Gemini API error:', response.status);
-      return { error: 'AI service temporarily unavailable.', draft: null };
+      return { draft: getFallback() };
     }
 
     const result = await response.json();
     const draft = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
-    if (!draft) return { error: 'Failed to generate review.', draft: null };
+    if (!draft) return { draft: getFallback() };
 
     return { draft };
-  } catch {
-    return { error: 'AI service error. Try again.', draft: null };
+  } catch (error) {
+    console.error('AI generation exception:', error);
+    return { draft: getFallback() };
   }
 }
 
