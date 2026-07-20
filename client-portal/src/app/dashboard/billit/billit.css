@@ -42,7 +42,8 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-xs);
-  max-width: 350px;
+  flex: 1 1 300px;
+  max-width: 100%;
   margin-bottom: var(--space-4);
 }
 

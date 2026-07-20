@@ -18,7 +18,8 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Star, Receipt, CalendarClock, MessageSquare,
   Briefcase, Settings, Bell, Moon, Sun, LogOut, PanelLeftClose,
-  PanelLeft, DoorOpen, ChevronRight,
+  Briefcase, Settings, Bell, Moon, Sun, LogOut, PanelLeftClose,
+  PanelLeft, DoorOpen, ChevronRight, Menu, X
 } from 'lucide-react';
 import { fetchUnreadCountAction } from '@/app/dashboard/notifications/actions';
 import './app-shell.css';
@@ -57,6 +58,12 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
   const [collapsed, setCollapsed] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [unreadCount, setUnreadCount] = useState(notificationCount || 0);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   // Persist sidebar state
   useEffect(() => {
@@ -120,7 +127,12 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
     .toUpperCase();
 
   return (
-    <div className={`app-shell ${collapsed ? 'collapsed' : ''}`}>
+    <div className={`app-shell ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div className="mobile-overlay" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+      )}
+
       {/* Sidebar */}
       <nav className="sidebar" role="navigation" aria-label="Main navigation">
         <Link href="/dashboard" className="sidebar-brand" style={{ padding: collapsed ? 'var(--space-4) 0' : 'var(--space-4)', display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start' }}>
@@ -159,6 +171,9 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
       {/* Top Bar */}
       <div className="topbar">
         <div className="topbar-left">
+          <button className="mobile-menu-btn" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu size={20} />
+          </button>
           <h1 className="topbar-title">{pageTitle}</h1>
         </div>
         <div className="topbar-right">

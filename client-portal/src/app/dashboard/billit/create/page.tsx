@@ -479,8 +479,8 @@ export default function CreateBillPage() {
         <h3 className="settings-section-title"><Search size={18} /> Items</h3>
 
         {/* Search + Barcode */}
-        <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-3)', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 200px' }}>
             <input className="input-field" placeholder="Search products/services..." value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)} onFocus={() => searchQuery.length >= 2 && setShowSearch(true)} />
             {showSearch && searchResults.length > 0 && (
@@ -496,7 +496,7 @@ export default function CreateBillPage() {
             )}
           </div>
           {barcodeEnabled && (
-            <div className="input-group" style={{ width: 180 }}>
+            <div className="input-group" style={{ flex: '1 1 140px' }}>
               <input className="input-field" placeholder="Scan barcode..." style={{ paddingLeft: 8, fontSize: 'var(--text-xs)' }}
                 onKeyDown={async (e) => {
                   if (e.key === 'Enter') {

@@ -181,6 +181,17 @@
   gap: var(--space-3);
 }
 
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  padding: var(--space-1);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
 .topbar-title {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
@@ -270,49 +281,66 @@
 @media (max-width: 768px) {
   .app-shell {
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
+    grid-template-rows: auto 1fr;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: calc(var(--z-sidebar) - 1);
+    animation: fadeIn 0.2s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   .sidebar {
-    grid-row: 2;
-    flex-direction: row;
-    padding: 0;
-    border-right: none;
-    border-top: 1px solid var(--color-sidebar-divider);
-    overflow-x: auto;
-    overflow-y: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: var(--z-sidebar);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-lg);
   }
 
+  .app-shell.mobile-open .sidebar {
+    transform: translateX(0);
+  }
+
+  /* Reset sidebar internals for mobile drawer */
   .sidebar-brand,
   .sidebar-divider,
-  .sidebar-footer,
-  .sidebar-collapse-btn {
-    display: none;
+  .sidebar-footer {
+    display: flex;
   }
 
   .sidebar-nav {
-    flex-direction: row;
-    gap: 0;
-    padding: var(--space-1) var(--space-2);
-    width: 100%;
-    justify-content: space-around;
+    padding: 0 var(--space-2);
   }
 
   .nav-item {
-    flex-direction: column;
-    gap: 2px;
-    padding: var(--space-2) var(--space-2);
-    font-size: 10px;
-    min-width: 56px;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+    font-size: var(--text-base);
+    padding: var(--space-3);
   }
 
   .nav-item-label {
     opacity: 1 !important;
     width: auto !important;
-    font-size: 10px;
+    font-size: var(--text-base);
+  }
+
+  .sidebar-collapse-btn {
+    display: none;
   }
 
   .shell-content {
