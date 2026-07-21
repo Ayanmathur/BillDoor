@@ -150,7 +150,7 @@ export default function BillsPage() {
                       </span>
                     </td>
                     <td>{bill.customerName || 'Walk-in'}</td>
-                    <td>{new Date(bill.createdAt).toLocaleDateString()}</td>
+                    <td>{new Date(bill.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' })}</td>
                     <td>₹{Number(bill.grandTotal || 0).toFixed(2)}</td>
                     <td>
                       <span className={`bill-status-badge ${bill.status || 'draft'}`}>

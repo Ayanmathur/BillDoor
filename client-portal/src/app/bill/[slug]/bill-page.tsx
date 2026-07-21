@@ -250,9 +250,9 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
           <span className="bill-meta-label">Bill No.</span>
           <span className="bill-meta-value">{bill.bill_number}</span>
           <span className="bill-meta-label">Date</span>
-          <span className="bill-meta-value">{createdAt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+          <span className="bill-meta-value">{createdAt.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' })}</span>
           <span className="bill-meta-label">Time</span>
-          <span className="bill-meta-value">{createdAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+          <span className="bill-meta-value">{createdAt.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })}</span>
           {customer && (
             <>
               <span className="bill-meta-label">Customer</span>
