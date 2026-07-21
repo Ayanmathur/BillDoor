@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Link2, Copy, Check, QrCode, Save, Loader2,
-  Clock, Calendar, Timer, Download, Shield, ExternalLink
+  Clock, Calendar, Timer, Download, Shield, ExternalLink, Briefcase
 } from 'lucide-react';
 import {
   fetchAppointerSettingsAction,
@@ -215,6 +215,23 @@ export default function AppointerSettingsPage() {
             </div>
           </>
         )}
+      </div>
+
+      {/* Section 1.5: Services */}
+      <div className="settings-section" style={{ border: '1px solid var(--color-accent)', background: 'var(--color-accent-subtle)' }}>
+        <h3 className="settings-section-title" style={{ color: 'var(--color-accent)' }}>
+          <Briefcase size={18} /> Manage Services
+        </h3>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-3)' }}>
+          Services for appointments are shared with Billit. Manage them in your unified Catalog. Add items with <strong>Type: Service</strong> to make them available for online booking.
+        </p>
+        <button 
+          className="btn" 
+          onClick={() => router.push('/dashboard/billit/catalog')}
+          style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', backgroundColor: 'var(--color-accent)', color: 'white', border: 'none' }}
+        >
+          <ExternalLink size={16} /> Go to Catalog
+        </button>
       </div>
 
       {/* Section 2: Appointment Defaults */}
