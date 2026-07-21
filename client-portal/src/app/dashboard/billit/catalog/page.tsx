@@ -192,7 +192,7 @@ export default function CatalogPage() {
           .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(8, 1fr);
+            grid-template-rows: repeat(6, 1fr);
             height: 277mm; /* A4 height approx 297mm - 20mm margin */
             row-gap: 5mm;
             column-gap: 5mm;
@@ -230,7 +230,7 @@ export default function CatalogPage() {
       </head>
       <body>
         <div class="grid">
-          ${Array(16).fill(labelHtml).join('')}
+          ${Array(12).fill(labelHtml).join('')}
         </div>
         <script>
           window.onload = function() { 
