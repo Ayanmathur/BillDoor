@@ -11,7 +11,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Plus, Search, Edit3, Trash2, Package, Loader2, X, Save, Barcode, Printer, Download
 } from 'lucide-react';
-import JsBarcode from 'jsbarcode';
 import './../billit.css';
 import {
   fetchCatalogAction,

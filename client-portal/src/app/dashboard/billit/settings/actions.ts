@@ -37,7 +37,10 @@ export async function updateBillitSettingsAction(data: {
     })
     .eq('id', user.id);
 
-  if (error) return { error: 'Failed to save settings.' };
+  if (error) {
+    console.error('Settings Update Error:', error);
+    return { error: `Failed to save settings. (${error.message})` };
+  }
   return {};
 }
 
