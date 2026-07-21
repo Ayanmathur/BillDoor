@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Plus, Search, Edit3, Trash2, Package, Loader2, X, Save, Barcode, Printer, Download
 } from 'lucide-react';
+import JsBarcode from 'jsbarcode';
 import './../billit.css';
 import {
   fetchCatalogAction,
@@ -163,43 +164,92 @@ export default function CatalogPage() {
     const svg = document.createElementNS(svgNs, 'svg');
     JsBarcode(svg, item.barcode_value, {
       format: 'CODE128',
-      width: 1.5,
-      height: 40,
+      width: 2,
+      height: 50,
       displayValue: true,
-      fontSize: 11,
+      fontSize: 12,
       font: 'monospace',
       margin: 4,
     });
     const svgHtml = svg.outerHTML;
 
-    // Open print window with label layout (40mm × 30mm)
-    const printWindow = window.open('', '_blank', 'width=400,height=350');
-    if (!printWindow) return;
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Label — ${item.name}</title>
-        <style>
-          @page { size: 40mm 30mm; margin: 1mm; }
-          body { margin: 0; padding: 2mm; font-family: Arial, sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-          .label-name { font-size: 8pt; font-weight: bold; margin-bottom: 1mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 36mm; }
-          .label-price { font-size: 7pt; color: #666; margin-bottom: 1mm; }
-          svg { max-width: 36mm; height: auto; }
-        </style>
-      </head>
-      <body>
+    const labelHtml = `
+      <div class="label">
         <div class="label-name">${item.name}</div>
         <div class="label-price">₹${item.price}</div>
         ${svgHtml}
-        <script>window.onload = function() { window.print(); }</script>
+      </div>
+    `;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Print Labels — ${item.name}</title>
+        <style>
+          @page { size: A4; margin: 10mm; }
+          body { margin: 0; font-family: Arial, sans-serif; background: #fff; }
+          .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            height: 277mm; /* A4 height approx 297mm - 20mm margin */
+            row-gap: 5mm;
+            column-gap: 5mm;
+          }
+          .label {
+            border: 1px dashed #ccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2mm;
+            text-align: center;
+            box-sizing: border-box;
+            page-break-inside: avoid;
+          }
+          .label-name { 
+            font-size: 14pt; 
+            font-weight: bold; 
+            margin-bottom: 2mm; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            max-width: 90%; 
+          }
+          .label-price { 
+            font-size: 12pt; 
+            color: #333; 
+            margin-bottom: 2mm; 
+          }
+          svg { max-width: 90%; height: auto; }
+          @media print {
+            .label { border: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="grid">
+          ${Array(16).fill(labelHtml).join('')}
+        </div>
+        <script>
+          window.onload = function() { 
+            setTimeout(() => { window.print(); }, 500);
+          }
+        </script>
       </body>
       </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
   }
 
   function handleDownloadBarcode(item: CatalogItem) {
