@@ -337,6 +337,7 @@ export default function CreateBillPage() {
     setSaving(true); setError('');
 
     const result = await createBillAction({
+      billId: billResult?.id,
       customerPhone: phone,
       customerName,
       lineItems: items.map(i => ({
@@ -368,6 +369,20 @@ export default function CreateBillPage() {
     isCreatingRef.current = false; // Allow further saves if they start a new bill (wait, handleClear handles new bill)
     return result.bill;
   }
+
+  // Auto-save draft when phone and items are valid
+  useEffect(() => {
+    if (phone.replace(/\D/g, '').length >= 10 && items.length > 0 && !saving && !isCreatingRef.current) {
+      const timer = setTimeout(() => {
+        // Only auto-save if bill hasn't been issued yet
+        if (!billResult || billResult.billNumber.startsWith('DRAFT')) {
+          handleCreateBill(true);
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phone, items, extraCharges, rewardValid, customerName]);
 
   function getWhatsAppUrl(billToUse: any) {
     if (!billToUse) return '#';
@@ -677,10 +692,10 @@ export default function CreateBillPage() {
 
         {billResult ? (
           <>
-            <a href={`${billResult.billUrl}?print=1`} target="_blank" rel="noopener noreferrer" className="btn" title="Print (Alt+P)">
+            <a href={`${billResult.billUrl}?print=1`} target="_blank" rel="noopener noreferrer" className="btn" title="Print (Alt+P)" onClick={() => { if (billResult.billNumber.startsWith('DRAFT')) handleCreateBill(false); }}>
                <Printer size={14} /> Print
             </a>
-            <a href={getWhatsAppUrl(billResult)} target="_blank" rel="noopener noreferrer" onClick={() => logWhatsAppSendAction(billResult.id, billResult.customerPhone)} className="btn btn-primary" style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)">
+            <a href={getWhatsAppUrl(billResult)} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)" onClick={() => { logWhatsAppSendAction(billResult.id, billResult.customerPhone); if (billResult.billNumber.startsWith('DRAFT')) handleCreateBill(false); }}>
                <MessageSquare size={14} /> Send WhatsApp
             </a>
           </>

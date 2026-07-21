@@ -119,6 +119,7 @@ const lineItemSchema = z.object({
 });
 
 const createBillSchema = z.object({
+  billId: z.string().optional(),
   customerPhone: z.string().min(10),
   customerName: z.string().min(1),
   lineItems: z.array(lineItemSchema).min(1),
@@ -169,18 +170,40 @@ export async function createBillAction(data: z.infer<typeof createBillSchema>) {
     customerId = newCust.id;
   }
 
-  // 2. Generate bill number — atomic DB function (concurrency-safe)
+  // 2. Resolve bill number & slug
+  let existingBill: any = null;
+  if (d.billId) {
+    const { data: b } = await supabase.from('bills').select('id, status, bill_number, bill_slug').eq('id', d.billId).single();
+    existingBill = b;
+  }
+
   let billNumber: string;
-  if (d.asDraft) {
-    // Drafts get a placeholder number, no sequence consumed
-    billNumber = `DRAFT-${Date.now()}`;
+  let billSlug: string;
+
+  if (existingBill) {
+    if (existingBill.status === 'issued') {
+      billNumber = existingBill.bill_number;
+      billSlug = existingBill.bill_slug;
+    } else {
+      if (!d.asDraft) {
+        const { data: seqResult, error: seqErr } = await supabase.rpc('next_bill_number', { p_client_id: clientId });
+        if (seqErr || !seqResult) return { error: 'Failed to generate bill number.' };
+        billNumber = seqResult as string;
+        billSlug = existingBill.bill_slug; // Preserve existing slug so pre-opened tabs don't 404
+      } else {
+        billNumber = existingBill.bill_number;
+        billSlug = existingBill.bill_slug;
+      }
+    }
   } else {
-    // Atomic sequence via DB function (branches on has_gst automatically)
-    const { data: billNumResult, error: seqErr } = await supabase.rpc('next_bill_number', {
-      p_client_id: clientId,
-    });
-    if (seqErr || !billNumResult) return { error: 'Failed to generate bill number.' };
-    billNumber = billNumResult as string;
+    if (d.asDraft) {
+      billNumber = `DRAFT-${Date.now()}`;
+    } else {
+      const { data: seqResult, error: seqErr } = await supabase.rpc('next_bill_number', { p_client_id: clientId });
+      if (seqErr || !seqResult) return { error: 'Failed to generate bill number.' };
+      billNumber = seqResult as string;
+    }
+    billSlug = `${billNumber.toLowerCase().replace(/[^a-z0-9-]/g, '-')}-${crypto.randomBytes(3).toString('hex')}`;
   }
 
   // 3. Calculate totals
@@ -196,53 +219,73 @@ export async function createBillAction(data: z.infer<typeof createBillSchema>) {
   });
 
   const grandTotal = subtotal + gstTotal - d.rewardDiscount + d.extraCharges - d.discountTotal;
-
-  // 4. Generate bill slug
-  const billSlug = `${billNumber.toLowerCase().replace(/[^a-z0-9-]/g, '-')}-${crypto.randomBytes(3).toString('hex')}`;
-
-  // 5. Insert bill
   const billStatus = d.asDraft ? 'draft' : 'issued';
-  const { data: bill, error: billErr } = await supabase
-    .from('bills')
-    .insert({
-      client_id: clientId,
-      customer_id: customerId,
-      bill_number: billNumber,
-      bill_slug: billSlug,
-      line_items: processedItems,
-      subtotal,
-      discount_total: d.discountTotal + d.rewardDiscount,
-      gst_total: gstTotal,
-      extra_charges: d.extraCharges,
-      extra_charges_note: d.extraChargesNote || null,
-      grand_total: Math.max(0, grandTotal),
-      reward_code_id: d.asDraft ? null : (d.rewardCodeId || null),
-      notes: d.notes || null,
-      sent_via: null,
-      status: billStatus,
-    })
-    .select('id, bill_slug, bill_number, grand_total')
-    .single();
 
-  if (billErr) return { error: 'Failed to create bill. Try again.' };
+  // 4. Upsert bill
+  let bill: any;
+  let billErr: any;
 
-  // 6. Mark reward code as redeemed (skip for drafts)
-  if (d.rewardCodeId && !d.asDraft) {
-    await supabase
-      .from('reward_codes')
-      .update({ redeemed: true, redeemed_at: new Date().toISOString(), redeemed_bill_id: bill?.id })
-      .eq('id', d.rewardCodeId);
+  if (existingBill) {
+    const { data, error } = await supabase
+      .from('bills')
+      .update({
+        customer_id: customerId,
+        bill_number: billNumber,
+        bill_slug: billSlug,
+        line_items: processedItems,
+        subtotal,
+        discount_total: d.discountTotal + d.rewardDiscount,
+        gst_total: gstTotal,
+        extra_charges: d.extraCharges,
+        extra_charges_note: d.extraChargesNote || null,
+        grand_total: Math.max(0, grandTotal),
+        reward_code_id: d.asDraft ? null : (d.rewardCodeId || null),
+        notes: d.notes || null,
+        status: billStatus,
+      })
+      .eq('id', existingBill.id)
+      .select('id, bill_slug, bill_number, grand_total')
+      .single();
+    bill = data;
+    billErr = error;
+  } else {
+    const { data, error } = await supabase
+      .from('bills')
+      .insert({
+        client_id: clientId,
+        customer_id: customerId,
+        bill_number: billNumber,
+        bill_slug: billSlug,
+        line_items: processedItems,
+        subtotal,
+        discount_total: d.discountTotal + d.rewardDiscount,
+        gst_total: gstTotal,
+        extra_charges: d.extraCharges,
+        extra_charges_note: d.extraChargesNote || null,
+        grand_total: Math.max(0, grandTotal),
+        reward_code_id: d.asDraft ? null : (d.rewardCodeId || null),
+        notes: d.notes || null,
+        sent_via: null,
+        status: billStatus,
+      })
+      .select('id, bill_slug, bill_number, grand_total')
+      .single();
+    bill = data;
+    billErr = error;
   }
 
-  // 7. Update customer stats (skip for drafts)
-  if (!d.asDraft) {
-    // Update customer name if corrected
-    await supabase
-      .from('customers')
-      .update({ name: d.customerName })
-      .eq('id', customerId);
+  if (billErr) return { error: 'Failed to save bill. Try again.' };
 
-    // Atomic increment via DB function (avoids double-counting)
+  // 5. One-time side effects (skip if already issued previously)
+  if (!d.asDraft && (!existingBill || existingBill.status === 'draft')) {
+    if (d.rewardCodeId) {
+      await supabase.from('reward_codes')
+        .update({ redeemed: true, redeemed_at: new Date().toISOString(), redeemed_bill_id: bill?.id })
+        .eq('id', d.rewardCodeId);
+    }
+
+    await supabase.from('customers').update({ name: d.customerName }).eq('id', customerId);
+
     await supabase.rpc('increment_customer_visits', {
       p_customer_id: customerId,
       p_amount: Math.max(0, grandTotal),
