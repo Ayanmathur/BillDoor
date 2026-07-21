@@ -620,12 +620,14 @@ export default function CreateBillPage() {
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: 'var(--space-4)' }}>
-        <button className="btn" onClick={handleClear} style={{ padding: '0 var(--space-2)' }} title="Clear (Alt+C)">
-           <X size={14} />
-        </button>
-        <button className="btn" onClick={handleClear} title="New Bill (Alt+N)">
-           <Plus size={14} /> New Bill
-        </button>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', marginRight: 'auto' }}>
+          <button className="btn" onClick={handleClear} style={{ padding: '0 var(--space-2)' }} title="Clear (Alt+C)">
+             <X size={14} />
+          </button>
+          <button className="btn" onClick={handleClear} title="New Bill (Alt+N)">
+             <Plus size={14} /> New Bill
+          </button>
+        </div>
         <button className="btn" onClick={handlePrintDirectly} disabled={saving || items.length === 0} title="Print (Alt+P)">
            <Printer size={14} /> Print
         </button>
