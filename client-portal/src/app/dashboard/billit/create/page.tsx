@@ -321,7 +321,7 @@ export default function CreateBillPage() {
   const grandTotal = Math.max(0, subtotal + gstTotal - rewardDiscount + extraCharges);
 
   // Create bill
-  async function handleCreateBill(asDraft = false) {
+  async function handleCreateBill(asDraft = false, autoSend = false) {
     if (!phone || !customerName || items.length === 0) {
       setError('Fill in customer phone, name, and at least one item.');
       return;
@@ -352,33 +352,38 @@ export default function CreateBillPage() {
     if (result.error) { setError(result.error); setSaving(false); return; }
     setBillResult(result.bill);
     setSaving(false);
+    
+    if (autoSend) {
+      handleWhatsAppSend(result.bill);
+    }
   }
 
   // WhatsApp send — use saved template or fall back to default
-  function handleWhatsAppSend() {
-    if (!billResult) return;
-    const appUrl = billResult.billUrl.split('/bill/')[0];
+  function handleWhatsAppSend(overrideBill?: any) {
+    const targetBill = overrideBill || billResult;
+    if (!targetBill) return;
+    const appUrl = targetBill.billUrl.split('/bill/')[0];
     const reviewLink = clientSlug ? `${appUrl}/review/${clientSlug}` : '';
 
     let message: string;
     if (billWhatsAppTemplate) {
       // Use saved template with placeholder replacement
       message = billWhatsAppTemplate
-        .replace(/\{customer_name\}/g, billResult.customerName)
+        .replace(/\{customer_name\}/g, targetBill.customerName)
         .replace(/\{business_name\}/g, businessName)
-        .replace(/\{bill_link\}/g, billResult.billUrl)
-        .replace(/\{bill_number\}/g, billResult.billNumber || '')
-        .replace(/\{grand_total\}/g, Number(billResult.grandTotal).toLocaleString('en-IN'))
+        .replace(/\{bill_link\}/g, targetBill.billUrl)
+        .replace(/\{bill_number\}/g, targetBill.billNumber || '')
+        .replace(/\{grand_total\}/g, Number(targetBill.grandTotal).toLocaleString('en-IN'))
         .replace(/\{review_link\}/g, reviewLink);
     } else {
       // Default fallback
-      message = `Hi ${billResult.customerName}, here is your bill from ${businessName}.\nAmount: ₹${Number(billResult.grandTotal).toLocaleString('en-IN')}.\nView Bill:\n${billResult.billUrl}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n${reviewLink}\n\nThankYou!`;
+      message = `Hi ${targetBill.customerName}, here is your bill from ${businessName}.\nAmount: ₹${Number(targetBill.grandTotal).toLocaleString('en-IN')}.\nView Bill:\n${targetBill.billUrl}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n${reviewLink}\n\nThankYou!`;
     }
 
-    const cleanPhone = billResult.customerPhone.replace(/\D/g, '');
+    const cleanPhone = targetBill.customerPhone.replace(/\D/g, '');
     const waUrl = `https://wa.me/91${cleanPhone.replace(/^91/, '')}?text=${encodeURIComponent(message)}`;
     window.location.href = waUrl;
-    logWhatsAppSendAction(billResult.id, billResult.customerPhone);
+    logWhatsAppSendAction(targetBill.id, targetBill.customerPhone);
   }
 
   // Clear form
@@ -643,10 +648,10 @@ export default function CreateBillPage() {
       {/* Actions */}
       <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
         <button className="quick-action-btn" onClick={handleClear}><X size={14} /> Clear <kbd className="shortcut-hint">Alt+C</kbd></button>
-        <button className="quick-action-btn" onClick={() => handleCreateBill(true)} disabled={saving || items.length === 0} style={{ color: '#d97706' }}>
+        <button className="quick-action-btn" onClick={() => handleCreateBill(true, false)} disabled={saving || items.length === 0} style={{ color: '#d97706' }}>
           <Save size={14} /> Save as Draft <kbd className="shortcut-hint">Alt+D</kbd>
         </button>
-        <button className="btn btn-primary" onClick={() => handleCreateBill(false)} disabled={saving || items.length === 0}>
+        <button className="btn btn-primary" onClick={() => handleCreateBill(false, true)} disabled={saving || items.length === 0}>
           {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save & Send
         </button>
       </div>
