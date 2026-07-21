@@ -165,11 +165,11 @@ export default function CreateBillPage() {
           break;
         case 'w':
           e.preventDefault();
-          handleWhatsAppDirectly();
+          handleWhatsAppDirectly(window.open('about:blank', '_blank'));
           break;
         case 'p':
           e.preventDefault();
-          handlePrintDirectly();
+          handlePrintDirectly(window.open('about:blank', '_blank'));
           break;
       }
     }
@@ -373,12 +373,10 @@ export default function CreateBillPage() {
     return `https://wa.me/91${cleanPhone.replace(/^91/, '')}?text=${encodeURIComponent(message)}`;
   }
 
-  async function handleWhatsAppDirectly() {
+  async function handleWhatsAppDirectly(newTab: Window | null) {
     let billToUse = billResult;
-    let newTab: Window | null = null;
     
     if (!billToUse) {
-      newTab = window.open('about:blank', '_blank'); // Open synchronously to bypass blocker
       billToUse = await handleCreateBill(false);
       if (!billToUse) {
         if (newTab) newTab.close();
@@ -395,12 +393,10 @@ export default function CreateBillPage() {
     logWhatsAppSendAction(billToUse.id, billToUse.customerPhone);
   }
 
-  async function handlePrintDirectly() {
+  async function handlePrintDirectly(newTab: Window | null) {
     let billToUse = billResult;
-    let newTab: Window | null = null;
     
     if (!billToUse) {
-      newTab = window.open('about:blank', '_blank'); // Open synchronously to bypass blocker
       billToUse = await handleCreateBill(false);
       if (!billToUse) {
         if (newTab) newTab.close();
@@ -671,10 +667,10 @@ export default function CreateBillPage() {
           </>
         ) : (
           <>
-            <button className="btn" onClick={handlePrintDirectly} disabled={saving || items.length === 0} title="Print (Alt+P)">
+            <button className="btn" onClick={() => handlePrintDirectly(window.open('about:blank', '_blank'))} disabled={saving || items.length === 0} title="Print (Alt+P)">
                <Printer size={14} /> Print
             </button>
-            <button className="btn btn-primary" onClick={handleWhatsAppDirectly} disabled={saving || items.length === 0} style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)">
+            <button className="btn btn-primary" onClick={() => handleWhatsAppDirectly(window.open('about:blank', '_blank'))} disabled={saving || items.length === 0} style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)">
                <MessageSquare size={14} /> Send WhatsApp
             </button>
           </>
