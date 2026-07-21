@@ -378,7 +378,7 @@ export default function CreateBillPage() {
 
     const cleanPhone = billToUse.customerPhone.replace(/\D/g, '');
     const waUrl = `https://wa.me/91${cleanPhone.replace(/^91/, '')}?text=${encodeURIComponent(message)}`;
-    window.location.href = waUrl;
+    window.open(waUrl, '_blank');
     logWhatsAppSendAction(billToUse.id, billToUse.customerPhone);
   }
 
@@ -388,7 +388,7 @@ export default function CreateBillPage() {
       billToUse = await handleCreateBill(false);
       if (!billToUse) return;
     }
-    window.location.href = `${billToUse.billUrl}?print=1`;
+    window.open(`${billToUse.billUrl}?print=1`, '_blank');
   }
 
   // Clear form
