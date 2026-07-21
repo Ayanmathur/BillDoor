@@ -114,7 +114,10 @@ export async function addCatalogItemAction(data: z.infer<typeof catalogItemSchem
       buffer_after_min: parsed.data.bufferAfterMin || 0,
     });
 
-  if (error) return { error: 'Failed to add item. Try again.' };
+  if (error) {
+    console.error('Catalog Add Error:', error);
+    return { error: `Failed to add item. Try again. (${error.message})` };
+  }
   return {};
 }
 
