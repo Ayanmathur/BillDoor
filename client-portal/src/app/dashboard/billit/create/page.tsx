@@ -353,6 +353,26 @@ export default function CreateBillPage() {
     return result.bill;
   }
 
+  function getWhatsAppUrl(billToUse: any) {
+    if (!billToUse) return '#';
+    const appUrl = billToUse.billUrl.split('/bill/')[0];
+    const reviewLink = clientSlug ? `${appUrl}/review/${clientSlug}` : '';
+    let message: string;
+    if (billWhatsAppTemplate) {
+      message = billWhatsAppTemplate
+        .replace(/\{customer_name\}/g, billToUse.customerName)
+        .replace(/\{business_name\}/g, businessName)
+        .replace(/\{bill_link\}/g, billToUse.billUrl)
+        .replace(/\{bill_number\}/g, billToUse.billNumber || '')
+        .replace(/\{grand_total\}/g, Number(billToUse.grandTotal).toLocaleString('en-IN'))
+        .replace(/\{review_link\}/g, reviewLink);
+    } else {
+      message = `Hi ${billToUse.customerName}, here is your bill from ${businessName}.\nAmount: ₹${Number(billToUse.grandTotal).toLocaleString('en-IN')}.\nView Bill:\n${billToUse.billUrl}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n${reviewLink}\n\nThankYou!`;
+    }
+    const cleanPhone = billToUse.customerPhone.replace(/\D/g, '');
+    return `https://wa.me/91${cleanPhone.replace(/^91/, '')}?text=${encodeURIComponent(message)}`;
+  }
+
   async function handleWhatsAppDirectly() {
     let billToUse = billResult;
     let newTab: Window | null = null;
@@ -366,24 +386,7 @@ export default function CreateBillPage() {
       }
     }
 
-    const appUrl = billToUse.billUrl.split('/bill/')[0];
-    const reviewLink = clientSlug ? `${appUrl}/review/${clientSlug}` : '';
-
-    let message: string;
-    if (billWhatsAppTemplate) {
-      message = billWhatsAppTemplate
-        .replace(/\{customer_name\}/g, billToUse.customerName)
-        .replace(/\{business_name\}/g, businessName)
-        .replace(/\{bill_link\}/g, billToUse.billUrl)
-        .replace(/\{bill_number\}/g, billToUse.billNumber || '')
-        .replace(/\{grand_total\}/g, Number(billToUse.grandTotal).toLocaleString('en-IN'))
-        .replace(/\{review_link\}/g, reviewLink);
-    } else {
-      message = `Hi ${billToUse.customerName}, here is your bill from ${businessName}.\nAmount: ₹${Number(billToUse.grandTotal).toLocaleString('en-IN')}.\nView Bill:\n${billToUse.billUrl}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n${reviewLink}\n\nThankYou!`;
-    }
-
-    const cleanPhone = billToUse.customerPhone.replace(/\D/g, '');
-    const waUrl = `https://wa.me/91${cleanPhone.replace(/^91/, '')}?text=${encodeURIComponent(message)}`;
+    const waUrl = getWhatsAppUrl(billToUse);
     if (newTab) {
       newTab.location.href = waUrl;
     } else {
@@ -650,12 +653,25 @@ export default function CreateBillPage() {
              <Plus size={14} /> New Bill
           </button>
         </div>
-        <button className="btn" onClick={handlePrintDirectly} disabled={saving || items.length === 0} title="Print (Alt+P)">
-           <Printer size={14} /> Print
-        </button>
-        <button className="btn btn-primary" onClick={handleWhatsAppDirectly} disabled={saving || items.length === 0} style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)">
-           <MessageSquare size={14} /> Send WhatsApp
-        </button>
+        {billResult ? (
+          <>
+            <a href={`${billResult.billUrl}?print=1`} target="_blank" rel="noopener noreferrer" className="btn" title="Print (Alt+P)">
+               <Printer size={14} /> Print
+            </a>
+            <a href={getWhatsAppUrl(billResult)} target="_blank" rel="noopener noreferrer" onClick={() => logWhatsAppSendAction(billResult.id, billResult.customerPhone)} className="btn btn-primary" style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)">
+               <MessageSquare size={14} /> Send WhatsApp
+            </a>
+          </>
+        ) : (
+          <>
+            <button className="btn" onClick={handlePrintDirectly} disabled={saving || items.length === 0} title="Print (Alt+P)">
+               <Printer size={14} /> Print
+            </button>
+            <button className="btn btn-primary" onClick={handleWhatsAppDirectly} disabled={saving || items.length === 0} style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)">
+               <MessageSquare size={14} /> Send WhatsApp
+            </button>
+          </>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
           {billResult && (
             <span style={{ fontWeight: 'var(--weight-bold)', color: 'var(--color-success)', fontFamily: 'monospace', display: 'flex', alignItems: 'center' }}>
