@@ -433,11 +433,7 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
 
         {/* Print/Download — opens in new tab so WhatsApp send is not interrupted */}
         <div className="bill-actions">
-          <button className="review-btn" onClick={() => {
-            const url = new URL(window.location.href);
-            url.searchParams.set('print', '1');
-            window.open(url.toString(), '_blank');
-          }} style={{ fontSize: 12 }}>
+          <button className="review-btn" onClick={() => window.print()} style={{ fontSize: 12 }}>
             <Printer size={14} /> Print / Save PDF
           </button>
         </div>
