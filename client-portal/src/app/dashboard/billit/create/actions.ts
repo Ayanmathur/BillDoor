@@ -652,3 +652,38 @@ export async function fetchDistinctGstRatesAction() {
 
   return { rates: uniqueRates };
 }
+
+// ============================================================
+// Preview next bill number (does not consume sequence)
+// ============================================================
+export async function previewNextBillNumberAction() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: client } = await supabase.from('clients').select('has_gst').eq('id', user.id).single();
+  if (!client) return null;
+
+  if (client.has_gst) {
+    const today = new Date();
+    // Use IST for accurate FY boundary
+    const istTime = new Date(today.getTime() + (5.5 * 60 * 60 * 1000));
+    let fyStart = istTime.getUTCFullYear() % 100;
+    if (istTime.getUTCMonth() < 3) fyStart -= 1; // Before April
+    const fyEnd = fyStart + 1;
+    const fy = `${fyStart.toString().padStart(2, '0')}${fyEnd.toString().padStart(2, '0')}`;
+    
+    const { data: seq } = await supabase.from('bill_gst_sequences')
+      .select('last_number').eq('client_id', user.id).eq('financial_year', fy).single();
+    const nextNum = (seq?.last_number || 0) + 1;
+    return `INV-${fy}-${nextNum.toString().padStart(4, '0')}`;
+  } else {
+    const today = new Date();
+    const istTime = new Date(today.getTime() + (5.5 * 60 * 60 * 1000));
+    const todayStr = istTime.toISOString().split('T')[0].replace(/-/g, '');
+    const { data: seq } = await supabase.from('bill_sequences')
+      .select('last_number').eq('client_id', user.id).eq('date_prefix', todayStr).single();
+    const nextNum = (seq?.last_number || 0) + 1;
+    return `BILL-${todayStr}-${nextNum.toString().padStart(3, '0')}`;
+  }
+}

@@ -25,6 +25,7 @@ import {
   createBillAction,
   logWhatsAppSendAction,
   fetchBillSettingsAction,
+  previewNextBillNumberAction,
 } from './actions';
 import './../billit.css';
 
@@ -84,7 +85,9 @@ export default function CreateBillPage() {
 
   // Bill result
   const [saving, setSaving] = useState(false);
+  const isCreatingRef = useRef(false);
   const [billResult, setBillResult] = useState<any>(null);
+  const [previewBillNumber, setPreviewBillNumber] = useState<string>('');
   const [error, setError] = useState('');
 
   // Barcode scan detection
@@ -93,20 +96,23 @@ export default function CreateBillPage() {
   const barcodeTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    async function loadSettings() {
-      const result = await fetchBillSettingsAction();
-      if (result.settings) {
-        setBarcodeEnabled(result.settings.barcode_enabled || false);
-        setBusinessName(result.settings.business_name || '');
-        setClientSlug(result.settings.slug || '');
-        setHasGst(result.settings.has_gst || false);
-        setBillWhatsAppTemplate(result.settings.bill_whatsapp_template || '');
-        if (result.settings.reward_settings && result.settings.reward_settings.enabled === false) {
+    async function init() {
+      const [{ settings }, preview] = await Promise.all([
+        fetchBillSettingsAction(),
+        previewNextBillNumberAction()
+      ]);
+      if (settings) {
+        setBarcodeEnabled(settings.barcode_enabled || false);
+        setBusinessName(settings.business_name || '');
+        setClientSlug(settings.slug || '');
+        setHasGst(settings.has_gst || false);
+        setBillWhatsAppTemplate(settings.bill_whatsapp_template || '');
+        if (settings.reward_settings && settings.reward_settings.enabled === false) {
           setRewardEnabled(false);
         }
       }
     }
-    loadSettings();
+    init();
 
     // Check media query for mobile calculator portal
     const mql = window.matchMedia('(max-width: 768px) and (orientation: portrait)');
@@ -320,10 +326,14 @@ export default function CreateBillPage() {
 
   // Create bill
   async function handleCreateBill(asDraft = false) {
+    if (isCreatingRef.current) return billResult; // Prevent duplicate execution
+    
     if (!phone || !customerName || items.length === 0) {
       setError('Fill in customer phone, name, and at least one item.');
       return null;
     }
+    
+    isCreatingRef.current = true;
     setSaving(true); setError('');
 
     const result = await createBillAction({
@@ -347,9 +357,15 @@ export default function CreateBillPage() {
       asDraft,
     });
 
-    if (result.error) { setError(result.error); setSaving(false); return null; }
+    if (result.error) { 
+      setError(result.error); 
+      setSaving(false); 
+      isCreatingRef.current = false;
+      return null; 
+    }
     setBillResult(result.bill);
     setSaving(false);
+    isCreatingRef.current = false; // Allow further saves if they start a new bill (wait, handleClear handles new bill)
     return result.bill;
   }
 
@@ -417,6 +433,8 @@ export default function CreateBillPage() {
     setPhone(''); setCustomerName(''); setCustomerFound(false); setItems([]);
     setRewardCode(''); setRewardValid(null); setRewardError('');
     setExtraCharges(0); setExtraChargesNote(''); setBillResult(null); setError('');
+    isCreatingRef.current = false;
+    previewNextBillNumberAction().then(p => { if (p) setPreviewBillNumber(p); });
   }
 
   return (
@@ -650,9 +668,10 @@ export default function CreateBillPage() {
           </button>
         </div>
 
-        {billResult && (
-          <span style={{ fontWeight: 'var(--weight-bold)', color: 'var(--color-success)', fontFamily: 'monospace', display: 'flex', alignItems: 'center', marginRight: 'var(--space-1)' }}>
-            <Check size={16} style={{ marginRight: 4 }} /> {billResult.billNumber}
+        {(billResult || previewBillNumber) && (
+          <span style={{ fontWeight: 'var(--weight-bold)', color: billResult ? 'var(--color-success)' : '#888', fontFamily: 'monospace', display: 'flex', alignItems: 'center', marginRight: 'var(--space-1)' }}>
+            {billResult ? <Check size={16} style={{ marginRight: 4 }} /> : <span style={{ fontSize: 12, marginRight: 4 }}>NEW</span>} 
+            {billResult ? billResult.billNumber : previewBillNumber}
           </span>
         )}
 
