@@ -2,12 +2,13 @@
 // HARD RULE: name + price only. No photos, no categories, no custom branding, no multi-page.
 // Want more? "Request from Orbitex Services" footer handles that upsell.
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, use } from 'react';
 import { Search, MessageCircle, Loader2, Package, ShoppingBag } from 'lucide-react';
 import { fetchCatalogAction } from './actions';
 import './catalog.css';
 
-export default function CatalogPage({ params }: { params: { slug: string } }) {
+export default function CatalogPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
   const [data, setData] = useState<{ business?: any; items?: any[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +17,7 @@ export default function CatalogPage({ params }: { params: { slug: string } }) {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetchCatalogAction(params.slug);
+        const res = await fetchCatalogAction(slug);
         if (res.error) {
           setError(res.error);
         } else {
@@ -29,7 +30,7 @@ export default function CatalogPage({ params }: { params: { slug: string } }) {
       }
     }
     load();
-  }, [params.slug]);
+  }, [slug]);
 
   if (loading) {
     return (

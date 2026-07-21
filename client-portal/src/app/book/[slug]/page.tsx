@@ -7,7 +7,7 @@
  * Same overlap guard and customer upsert as staff-side booking.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import {
   Calendar, Clock, User, Phone, Loader2, Check, ArrowRight,
   MessageCircle, MapPin, FileText,
@@ -39,8 +39,8 @@ interface SlotOption {
   end: string;
 }
 
-export default function BookingPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default function BookingPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
 
   // State
   const [loading, setLoading] = useState(true);
