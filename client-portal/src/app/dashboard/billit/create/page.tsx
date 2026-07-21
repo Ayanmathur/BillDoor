@@ -644,7 +644,7 @@ export default function CreateBillPage() {
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: 'var(--space-4)' }}>
+      <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: 'var(--space-4)', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 'var(--space-2)', marginRight: 'auto' }}>
           <button className="btn" onClick={handleClear} style={{ padding: '0 var(--space-2)' }} title="Clear (Alt+C)">
              <X size={14} />
@@ -653,6 +653,13 @@ export default function CreateBillPage() {
              <Plus size={14} /> New Bill
           </button>
         </div>
+
+        {billResult && (
+          <span style={{ fontWeight: 'var(--weight-bold)', color: 'var(--color-success)', fontFamily: 'monospace', display: 'flex', alignItems: 'center', marginRight: 'var(--space-1)' }}>
+            <Check size={16} style={{ marginRight: 4 }} /> {billResult.billNumber}
+          </span>
+        )}
+
         {billResult ? (
           <>
             <a href={`${billResult.billUrl}?print=1`} target="_blank" rel="noopener noreferrer" className="btn" title="Print (Alt+P)">
@@ -672,16 +679,10 @@ export default function CreateBillPage() {
             </button>
           </>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          {billResult && (
-            <span style={{ fontWeight: 'var(--weight-bold)', color: 'var(--color-success)', fontFamily: 'monospace', display: 'flex', alignItems: 'center' }}>
-              <Check size={16} style={{ marginRight: 4 }} /> {billResult.billNumber}
-            </span>
-          )}
-          <button className="btn btn-primary" onClick={() => handleCreateBill(false)} disabled={saving || items.length === 0} title="Save (Alt+S)">
-            {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save
-          </button>
-        </div>
+        
+        <button className="btn btn-primary" onClick={() => handleCreateBill(false)} disabled={saving || items.length === 0} title="Save (Alt+S)">
+          {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save
+        </button>
       </div>
 
       {/* Calculator Widget */}
