@@ -355,9 +355,15 @@ export default function CreateBillPage() {
 
   async function handleWhatsAppDirectly() {
     let billToUse = billResult;
+    let newTab: Window | null = null;
+    
     if (!billToUse) {
+      newTab = window.open('about:blank', '_blank'); // Open synchronously to bypass blocker
       billToUse = await handleCreateBill(false);
-      if (!billToUse) return;
+      if (!billToUse) {
+        if (newTab) newTab.close();
+        return;
+      }
     }
 
     const appUrl = billToUse.billUrl.split('/bill/')[0];
@@ -378,17 +384,33 @@ export default function CreateBillPage() {
 
     const cleanPhone = billToUse.customerPhone.replace(/\D/g, '');
     const waUrl = `https://wa.me/91${cleanPhone.replace(/^91/, '')}?text=${encodeURIComponent(message)}`;
-    window.open(waUrl, '_blank');
+    if (newTab) {
+      newTab.location.href = waUrl;
+    } else {
+      window.open(waUrl, '_blank');
+    }
     logWhatsAppSendAction(billToUse.id, billToUse.customerPhone);
   }
 
   async function handlePrintDirectly() {
     let billToUse = billResult;
+    let newTab: Window | null = null;
+    
     if (!billToUse) {
+      newTab = window.open('about:blank', '_blank'); // Open synchronously to bypass blocker
       billToUse = await handleCreateBill(false);
-      if (!billToUse) return;
+      if (!billToUse) {
+        if (newTab) newTab.close();
+        return;
+      }
     }
-    window.open(`${billToUse.billUrl}?print=1`, '_blank');
+    
+    const printUrl = `${billToUse.billUrl}?print=1`;
+    if (newTab) {
+      newTab.location.href = printUrl;
+    } else {
+      window.open(printUrl, '_blank');
+    }
   }
 
   // Clear form
@@ -634,9 +656,16 @@ export default function CreateBillPage() {
         <button className="btn btn-primary" onClick={handleWhatsAppDirectly} disabled={saving || items.length === 0} style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)">
            <MessageSquare size={14} /> Send WhatsApp
         </button>
-        <button className="btn btn-primary" onClick={() => handleCreateBill(false)} disabled={saving || items.length === 0} title="Save (Alt+S)">
-          {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          {billResult && (
+            <span style={{ fontWeight: 'var(--weight-bold)', color: 'var(--color-success)', fontFamily: 'monospace', display: 'flex', alignItems: 'center' }}>
+              <Check size={16} style={{ marginRight: 4 }} /> {billResult.billNumber}
+            </span>
+          )}
+          <button className="btn btn-primary" onClick={() => handleCreateBill(false)} disabled={saving || items.length === 0} title="Save (Alt+S)">
+            {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save
+          </button>
+        </div>
       </div>
 
       {/* Calculator Widget */}
