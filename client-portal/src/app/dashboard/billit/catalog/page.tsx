@@ -164,10 +164,10 @@ export default function CatalogPage() {
     const svg = document.createElementNS(svgNs, 'svg');
     JsBarcode(svg, item.barcode_value, {
       format: 'CODE128',
-      width: 2,
-      height: 50,
+      width: 1.8,
+      height: 40,
       displayValue: true,
-      fontSize: 12,
+      fontSize: 11,
       font: 'monospace',
       margin: 4,
     });
@@ -187,14 +187,14 @@ export default function CatalogPage() {
       <head>
         <title>Print Labels — ${item.name}</title>
         <style>
-          @page { size: A4; margin: 10mm; }
+          @page { size: A4; margin: 5mm; }
           body { margin: 0; font-family: Arial, sans-serif; background: #fff; }
           .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(6, 1fr);
-            height: 277mm; /* A4 height approx 297mm - 20mm margin */
-            row-gap: 5mm;
+            grid-template-rows: repeat(8, 1fr);
+            height: 287mm; /* A4 height approx 297mm - 10mm margins */
+            row-gap: 3mm;
             column-gap: 5mm;
           }
           .label {
@@ -207,22 +207,23 @@ export default function CatalogPage() {
             text-align: center;
             box-sizing: border-box;
             page-break-inside: avoid;
+            overflow: hidden;
           }
           .label-name { 
-            font-size: 14pt; 
+            font-size: 11pt; 
             font-weight: bold; 
-            margin-bottom: 2mm; 
+            margin-bottom: 1mm; 
             white-space: nowrap; 
             overflow: hidden; 
             text-overflow: ellipsis; 
-            max-width: 90%; 
+            max-width: 95%; 
           }
           .label-price { 
-            font-size: 12pt; 
+            font-size: 9pt; 
             color: #333; 
-            margin-bottom: 2mm; 
+            margin-bottom: 1mm; 
           }
-          svg { max-width: 90%; height: auto; }
+          svg { max-width: 90%; max-height: 22mm; height: auto; }
           @media print {
             .label { border: none; }
           }
@@ -230,7 +231,7 @@ export default function CatalogPage() {
       </head>
       <body>
         <div class="grid">
-          ${Array(12).fill(labelHtml).join('')}
+          ${Array(16).fill(labelHtml).join('')}
         </div>
         <script>
           window.onload = function() { 
