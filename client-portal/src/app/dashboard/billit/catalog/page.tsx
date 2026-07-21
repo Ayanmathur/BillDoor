@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  Plus, Search, Edit3, Trash2, Package, Loader2, X, Save, Barcode, Printer,
+  Plus, Search, Edit3, Trash2, Package, Loader2, X, Save, Barcode, Printer, Download
 } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
 import './../billit.css';
@@ -199,6 +199,33 @@ export default function CatalogPage() {
       </html>
     `);
     printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+  }
+
+  function handleDownloadBarcode(item: CatalogItem) {
+    if (!item.barcode_value) return;
+    const svgNs = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNs, 'svg');
+    JsBarcode(svg, item.barcode_value, {
+      format: 'CODE128',
+      width: 2,
+      height: 60,
+      displayValue: true,
+      fontSize: 14,
+      font: 'monospace',
+      margin: 10,
+    });
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `barcode-${item.barcode_value}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   const filtered = search
@@ -355,7 +382,10 @@ export default function CatalogPage() {
                     <div className="action-row">
                       <button className="action-btn" title="Edit" onClick={() => startEdit(item)}><Edit3 size={14} /></button>
                       {item.barcode_value && (
-                        <button className="action-btn" title="Print Label" onClick={() => handlePrintLabel(item)}><Printer size={14} /></button>
+                        <>
+                          <button className="action-btn" title="Download Barcode" onClick={() => handleDownloadBarcode(item)}><Download size={14} /></button>
+                          <button className="action-btn" title="Print Label" onClick={() => handlePrintLabel(item)}><Printer size={14} /></button>
+                        </>
                       )}
                       <button className="action-btn danger" title="Delete" onClick={() => handleDelete(item.id)}><Trash2 size={14} /></button>
                     </div>
