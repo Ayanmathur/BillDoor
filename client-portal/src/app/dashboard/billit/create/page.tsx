@@ -164,16 +164,12 @@ export default function CreateBillPage() {
           handleClear();
           break;
         case 'w':
-          if (billResult) {
-            e.preventDefault();
-            handleWhatsAppSend();
-          }
+          e.preventDefault();
+          handleWhatsAppDirectly();
           break;
         case 'p':
-          if (billResult) {
-            e.preventDefault();
-            window.open(`${billResult.billUrl}?print=1`, '_blank');
-          }
+          e.preventDefault();
+          handlePrintDirectly();
           break;
       }
     }
@@ -268,10 +264,12 @@ export default function CreateBillPage() {
   }
 
   function updateItem(id: string, field: string, value: any) {
+    setBillResult(null);
     setItems(prev => prev.map(i => i.id === id ? { ...i, [field]: value } : i));
   }
 
   function removeItem(id: string) {
+    setBillResult(null);
     setItems(prev => prev.filter(i => i.id !== id));
   }
 
@@ -324,7 +322,7 @@ export default function CreateBillPage() {
   async function handleCreateBill(asDraft = false) {
     if (!phone || !customerName || items.length === 0) {
       setError('Fill in customer phone, name, and at least one item.');
-      return;
+      return null;
     }
     setSaving(true); setError('');
 
@@ -349,36 +347,48 @@ export default function CreateBillPage() {
       asDraft,
     });
 
-    if (result.error) { setError(result.error); setSaving(false); return; }
+    if (result.error) { setError(result.error); setSaving(false); return null; }
     setBillResult(result.bill);
     setSaving(false);
+    return result.bill;
   }
 
-  // WhatsApp send — use saved template or fall back to default
-  function handleWhatsAppSend() {
-    if (!billResult) return;
-    const appUrl = billResult.billUrl.split('/bill/')[0];
+  async function handleWhatsAppDirectly() {
+    let billToUse = billResult;
+    if (!billToUse) {
+      billToUse = await handleCreateBill(false);
+      if (!billToUse) return;
+    }
+
+    const appUrl = billToUse.billUrl.split('/bill/')[0];
     const reviewLink = clientSlug ? `${appUrl}/review/${clientSlug}` : '';
 
     let message: string;
     if (billWhatsAppTemplate) {
-      // Use saved template with placeholder replacement
       message = billWhatsAppTemplate
-        .replace(/\{customer_name\}/g, billResult.customerName)
+        .replace(/\{customer_name\}/g, billToUse.customerName)
         .replace(/\{business_name\}/g, businessName)
-        .replace(/\{bill_link\}/g, billResult.billUrl)
-        .replace(/\{bill_number\}/g, billResult.billNumber || '')
-        .replace(/\{grand_total\}/g, Number(billResult.grandTotal).toLocaleString('en-IN'))
+        .replace(/\{bill_link\}/g, billToUse.billUrl)
+        .replace(/\{bill_number\}/g, billToUse.billNumber || '')
+        .replace(/\{grand_total\}/g, Number(billToUse.grandTotal).toLocaleString('en-IN'))
         .replace(/\{review_link\}/g, reviewLink);
     } else {
-      // Default fallback
-      message = `Hi ${billResult.customerName}, here is your bill from ${businessName}.\nAmount: ₹${Number(billResult.grandTotal).toLocaleString('en-IN')}.\nView Bill:\n${billResult.billUrl}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n${reviewLink}\n\nThankYou!`;
+      message = `Hi ${billToUse.customerName}, here is your bill from ${businessName}.\nAmount: ₹${Number(billToUse.grandTotal).toLocaleString('en-IN')}.\nView Bill:\n${billToUse.billUrl}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n${reviewLink}\n\nThankYou!`;
     }
 
-    const cleanPhone = billResult.customerPhone.replace(/\D/g, '');
+    const cleanPhone = billToUse.customerPhone.replace(/\D/g, '');
     const waUrl = `https://wa.me/91${cleanPhone.replace(/^91/, '')}?text=${encodeURIComponent(message)}`;
     window.location.href = waUrl;
-    logWhatsAppSendAction(billResult.id, billResult.customerPhone);
+    logWhatsAppSendAction(billToUse.id, billToUse.customerPhone);
+  }
+
+  async function handlePrintDirectly() {
+    let billToUse = billResult;
+    if (!billToUse) {
+      billToUse = await handleCreateBill(false);
+      if (!billToUse) return;
+    }
+    window.location.href = `${billToUse.billUrl}?print=1`;
   }
 
   // Clear form
@@ -386,38 +396,6 @@ export default function CreateBillPage() {
     setPhone(''); setCustomerName(''); setCustomerFound(false); setItems([]);
     setRewardCode(''); setRewardValid(null); setRewardError('');
     setExtraCharges(0); setExtraChargesNote(''); setBillResult(null); setError('');
-  }
-
-  // Bill created state
-  if (billResult) {
-    return (
-      <div style={{ maxWidth: 480, margin: '0 auto' }}>
-        <div className="settings-section" style={{ textAlign: 'center' }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--color-success-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--space-3)', color: 'var(--color-success)' }}>
-            <Check size={28} />
-          </div>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--text-xl)', marginBottom: 'var(--space-1)' }}>Bill Created</h3>
-          <p style={{ fontFamily: 'monospace', fontSize: 'var(--text-md)', fontWeight: 'var(--weight-semibold)', color: 'var(--color-accent)', marginBottom: 'var(--space-1)' }}>{billResult.billNumber}</p>
-          <p style={{ fontSize: 'var(--text-lg)', fontWeight: 'var(--weight-bold)' }}>₹{Number(billResult.grandTotal).toLocaleString('en-IN')}</p>
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)' }}>{billResult.customerName} · {billResult.customerPhone}</p>
-
-          <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={handleWhatsAppSend}>
-              <MessageSquare size={16} /> Send on WhatsApp <kbd className="shortcut-hint">Alt+W</kbd>
-            </button>
-            <a href={billResult.billUrl} target="_blank" rel="noopener noreferrer" className="quick-action-btn" style={{ textDecoration: 'none' }}>
-              View Bill
-            </a>
-            <button className="quick-action-btn" onClick={() => window.open(`${billResult.billUrl}?print=1`, '_blank')}>
-              <Printer size={14} /> Print <kbd className="shortcut-hint">Alt+P</kbd>
-            </button>
-            <button className="quick-action-btn" onClick={handleClear}>
-              <Plus size={14} /> New Bill <kbd className="shortcut-hint">Alt+C</kbd>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -641,13 +619,21 @@ export default function CreateBillPage() {
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-        <button className="quick-action-btn" onClick={handleClear}><X size={14} /> Clear <kbd className="shortcut-hint">Alt+C</kbd></button>
-        <button className="quick-action-btn" onClick={() => handleCreateBill(true)} disabled={saving || items.length === 0} style={{ color: '#d97706' }}>
-          <Save size={14} /> Save as Draft <kbd className="shortcut-hint">Alt+D</kbd>
+      <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: 'var(--space-4)' }}>
+        <button className="btn" onClick={handleClear} style={{ padding: '0 var(--space-2)' }} title="Clear (Alt+C)">
+           <X size={14} />
         </button>
-        <button className="btn btn-primary" onClick={() => handleCreateBill(false)} disabled={saving || items.length === 0}>
-          {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save & Send
+        <button className="btn" onClick={handleClear} title="New Bill (Alt+N)">
+           <Plus size={14} /> New Bill
+        </button>
+        <button className="btn" onClick={handlePrintDirectly} disabled={saving || items.length === 0} title="Print (Alt+P)">
+           <Printer size={14} /> Print
+        </button>
+        <button className="btn btn-primary" onClick={handleWhatsAppDirectly} disabled={saving || items.length === 0} style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)">
+           <MessageSquare size={14} /> Send WhatsApp
+        </button>
+        <button className="btn btn-primary" onClick={() => handleCreateBill(false)} disabled={saving || items.length === 0} title="Save (Alt+S)">
+          {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save
         </button>
       </div>
 

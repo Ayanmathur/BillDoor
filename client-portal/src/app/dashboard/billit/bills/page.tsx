@@ -166,10 +166,10 @@ export default function BillsPage() {
                             </button>
                             {bill.billSlug && (
                               <>
-                                <a href={`/bill/${bill.billSlug}`} target="_blank" rel="noopener noreferrer" className="bills-action-btn" title="View Bill">
+                                <a href={`/bill/${bill.billSlug}`} className="bills-action-btn" title="View Bill">
                                   <ExternalLink size={16} />
                                 </a>
-                                <a href={`/bill/${bill.billSlug}?print=1`} target="_blank" rel="noopener noreferrer" className="bills-action-btn" title="Print Bill">
+                                <a href={`/bill/${bill.billSlug}?print=1`} className="bills-action-btn" title="Print Bill">
                                   <Printer size={16} />
                                 </a>
                                 <button className="bills-action-btn" title="Resend on WhatsApp" onClick={() => handleResendWhatsApp(bill)}>
@@ -193,7 +193,7 @@ export default function BillsPage() {
                           </>
                         )}
                         {bill.status === 'voided' && bill.billSlug && (
-                          <a href={`/bill/${bill.billSlug}`} target="_blank" rel="noopener noreferrer" className="bills-action-btn" title="View Bill">
+                          <a href={`/bill/${bill.billSlug}`} className="bills-action-btn" title="View Bill">
                             <ExternalLink size={16} />
                           </a>
                         )}
