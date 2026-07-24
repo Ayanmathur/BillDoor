@@ -18,7 +18,7 @@ import {
   Settings, Trash2, UserPen, RotateCcw, Plus, ChevronDown, ChevronUp,
   AlertTriangle, Clock, Activity, Sparkles, LogOut, Inbox, CalendarPlus,
   Phone, CheckCircle, XCircle, Eye, EyeOff, ScrollText, CreditCard, Link2, X,
-  Image as ImageIcon,
+  Image as ImageIcon, SlidersHorizontal, Layers,
 } from 'lucide-react';
 import {
   generateLicenseKeyAction,
@@ -60,6 +60,17 @@ type Inquiry = {
   updated_at: string;
 };
 
+const MODULE_DEFINITIONS = [
+  { key: 'review_flow', code: 'RF', name: 'Review Flow', category: 'Core Module', isQuickTool: false, desc: 'Google review collection, private feedback loop & QR cards' },
+  { key: 'billit', code: 'BL', name: 'Billit Billing & Invoicing', category: 'Core Module', isQuickTool: false, desc: 'Digital bills, catalog items, customer history & GST reports' },
+  { key: 'appointer', code: 'AP', name: 'Appointer Scheduling', category: 'Core Module', isQuickTool: false, desc: 'Resource timelines, staff schedules & online booking' },
+  { key: 'whatsapp_auto', code: 'WA', name: 'WhatsApp Automation', category: 'Core Module', isQuickTool: false, desc: 'WhatsApp bill delivery, custom templates & auto notifications' },
+  { key: 'gst_calculator', code: 'GC', name: 'GST Calculator', category: 'Quick Tool', isQuickTool: true, desc: 'Quick rate-wise GST & tax calculation tool' },
+  { key: 'catalog_viewer', code: 'CV', name: 'Digital Catalog Page', category: 'Quick Tool', isQuickTool: true, desc: 'Public digital catalog page (/catalog/{slug}) & menu view' },
+  { key: 'business_card', code: 'BC', name: 'Digital Business Card', category: 'Quick Tool', isQuickTool: true, desc: 'Public digital business card page (/card/{slug}) & vCard download' },
+  { key: 'ai_assistant', code: 'AI', name: 'AI Business Assistant', category: 'Quick Tool', isQuickTool: true, desc: 'Floating read-only AI chat assistant on Dashboard and Services' },
+];
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'clients' | 'keys' | 'inquiries'>('clients');
@@ -83,6 +94,9 @@ export default function AdminDashboard() {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [paymentCopied, setPaymentCopied] = useState(false);
+
+  // Full Module Selection Table modal state
+  const [moduleModal, setModuleModal] = useState<{ clientId: string; clientName: string } | null>(null);
 
   // Key generation state
   const [keygenMobile, setKeygenMobile] = useState('');
@@ -498,33 +512,38 @@ export default function AdminDashboard() {
                     </td>
                     <td>{getStatusBadge(client)}</td>
                     <td>
-                      <div className="module-toggles">
-                        {['review_flow', 'billit', 'appointer', 'whatsapp_auto'].map((mod) => (
-                          <label key={mod} className="module-toggle">
-                            <input type="checkbox" checked={client.modules_enabled?.[mod] ?? false}
-                              onChange={() => handleToggleModule(client.id, client.modules_enabled || {}, mod)}
-                              disabled={actionLoading === client.id} />
-                            {mod === 'review_flow' ? 'RF' : mod === 'billit' ? 'BL' : mod === 'appointer' ? 'AP' : 'WA'}
-                          </label>
-                        ))}
-                      </div>
-                      <div className="module-toggles" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid var(--color-border)' }}>
-                        <span style={{ fontSize: '10px', color: 'var(--color-text-tertiary)', marginRight: '4px' }}>QT:</span>
-                        {[{ key: 'gst_calculator', label: 'GC' }, { key: 'catalog_viewer', label: 'CV' }, { key: 'business_card', label: 'BC' }, { key: 'ai_assistant', label: 'AI' }].map((tool) => (
-                          <label key={tool.key} className="module-toggle">
-                            <input type="checkbox"
-                              checked={((client.modules_enabled as any)?.quick_tools || {})?.[tool.key] ?? false}
-                              onChange={async () => {
-                                setActionLoading(client.id);
-                                const current = ((client.modules_enabled as any)?.quick_tools || {});
-                                await toggleQuickToolsAction({ clientId: client.id, tool: tool.key, enabled: !(current[tool.key] ?? false) });
-                                await loadData();
-                                setActionLoading(null);
-                              }}
-                              disabled={actionLoading === client.id} />
-                            {tool.label}
-                          </label>
-                        ))}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
+                          {MODULE_DEFINITIONS.map(def => {
+                            const isEnabled = def.isQuickTool
+                              ? (((client.modules_enabled as any)?.quick_tools || {})[def.key] ?? false)
+                              : (client.modules_enabled?.[def.key] ?? false);
+                            return (
+                              <span
+                                key={def.key}
+                                title={`${def.name} (${def.category}): ${isEnabled ? 'Enabled' : 'Disabled'}`}
+                                style={{
+                                  fontSize: '10px',
+                                  fontWeight: 600,
+                                  padding: '1px 5px',
+                                  borderRadius: 'var(--radius-sm)',
+                                  background: isEnabled ? (def.isQuickTool ? 'var(--color-info-subtle)' : 'var(--color-success-subtle)') : 'var(--color-bg-tertiary)',
+                                  color: isEnabled ? (def.isQuickTool ? 'var(--color-info)' : 'var(--color-success)') : 'var(--color-text-tertiary)',
+                                  border: `1px solid ${isEnabled ? 'transparent' : 'var(--color-border)'}`,
+                                }}
+                              >
+                                {def.code}
+                              </span>
+                            );
+                          })}
+                        </div>
+                        <button
+                          className="btn btn-secondary"
+                          style={{ fontSize: '11px', padding: '2px 6px', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                          onClick={() => setModuleModal({ clientId: client.id, clientName: client.business_name })}
+                        >
+                          <SlidersHorizontal size={12} /> Configure Table →
+                        </button>
                       </div>
                     </td>
                     <td>
@@ -817,6 +836,109 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Full Module & Quick Tool Selection Table Modal */}
+      {moduleModal && (() => {
+        const client = clients.find(c => c.id === moduleModal.clientId);
+        if (!client) return null;
+        const modules = client.modules_enabled || {};
+        const quickTools = (modules as any)?.quick_tools || {};
+
+        return (
+          <div className="modal-overlay" onClick={() => setModuleModal(null)}>
+            <div className="modal-content" style={{ maxWidth: '750px', width: '90%' }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <SlidersHorizontal size={20} color="var(--color-accent)" />
+                  Configure Access — {moduleModal.clientName}
+                </h3>
+                <button className="action-btn" onClick={() => setModuleModal(null)}><X size={18} /></button>
+              </div>
+
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)' }}>
+                Select modules and quick tools to enable or disable for this client. Changes take effect immediately.
+              </p>
+
+              <div style={{ overflowX: 'auto', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+                <table className="table" style={{ width: '100%', margin: 0, fontSize: 'var(--text-sm)' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--color-bg-secondary)' }}>
+                      <th style={{ width: '60px' }}>Code</th>
+                      <th>Full Module / Tool Name</th>
+                      <th style={{ width: '110px' }}>Category</th>
+                      <th>Description</th>
+                      <th style={{ width: '110px', textAlign: 'center' }}>Access</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {MODULE_DEFINITIONS.map(def => {
+                      const isEnabled = def.isQuickTool
+                        ? (quickTools[def.key] ?? false)
+                        : (modules[def.key] ?? false);
+
+                      return (
+                        <tr key={def.key}>
+                          <td>
+                            <span className="badge" style={{
+                              background: isEnabled ? 'var(--color-accent-subtle)' : 'var(--color-bg-tertiary)',
+                              color: isEnabled ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+                              fontWeight: 'var(--weight-bold)',
+                              padding: '2px 6px',
+                            }}>
+                              {def.code}
+                            </span>
+                          </td>
+                          <td>
+                            <strong>{def.name}</strong>
+                          </td>
+                          <td>
+                            <span className="badge" style={{
+                              background: def.isQuickTool ? 'var(--color-info-subtle)' : 'var(--color-success-subtle)',
+                              color: def.isQuickTool ? 'var(--color-info)' : 'var(--color-success)',
+                              fontSize: '10px',
+                            }}>
+                              {def.category}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+                            {def.desc}
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <label className="module-toggle" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              <input
+                                type="checkbox"
+                                checked={isEnabled}
+                                disabled={actionLoading === client.id}
+                                onChange={async () => {
+                                  setActionLoading(client.id);
+                                  if (def.isQuickTool) {
+                                    await toggleQuickToolsAction({ clientId: client.id, tool: def.key, enabled: !isEnabled });
+                                  } else {
+                                    await handleToggleModule(client.id, modules, def.key);
+                                  }
+                                  await loadData();
+                                  setActionLoading(null);
+                                }}
+                              />
+                              <span style={{ fontSize: 'var(--text-xs)', fontWeight: isEnabled ? 600 : 400, color: isEnabled ? 'var(--color-success)' : 'var(--color-text-tertiary)' }}>
+                                {isEnabled ? 'Enabled' : 'Disabled'}
+                              </span>
+                            </label>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--space-4)' }}>
+                <button className="btn btn-primary" onClick={() => setModuleModal(null)}>Done</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
