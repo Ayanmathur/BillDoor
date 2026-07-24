@@ -16,14 +16,17 @@ CREATE INDEX IF NOT EXISTS idx_aq_client_id ON assistant_queries(client_id);
 
 ALTER TABLE assistant_queries ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Client can view own assistant queries" ON assistant_queries;
 CREATE POLICY "Client can view own assistant queries"
   ON assistant_queries FOR SELECT
   USING (client_id = (select auth.uid()));
 
+DROP POLICY IF EXISTS "Client can insert own assistant queries" ON assistant_queries;
 CREATE POLICY "Client can insert own assistant queries"
   ON assistant_queries FOR INSERT
   WITH CHECK (client_id = (select auth.uid()));
 
+DROP POLICY IF EXISTS "Admin can manage all assistant queries" ON assistant_queries;
 CREATE POLICY "Admin can manage all assistant queries"
   ON assistant_queries FOR ALL
   USING (public.is_admin());

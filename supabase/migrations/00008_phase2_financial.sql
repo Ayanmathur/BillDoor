@@ -20,18 +20,21 @@ CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(client_id, expense_date
 
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Client can manage own expenses" ON expenses;
 CREATE POLICY "Client can manage own expenses"
   ON expenses FOR ALL
   USING (client_id = (select auth.uid()));
 
+DROP POLICY IF EXISTS "Admin can manage all expenses" ON expenses;
 CREATE POLICY "Admin can manage all expenses"
   ON expenses FOR ALL
   USING (public.is_admin());
 
+DROP TRIGGER IF EXISTS trg_expenses_updated ON expenses;
 CREATE TRIGGER trg_expenses_updated
   BEFORE UPDATE ON expenses
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- 2. HSN/SAC code on catalog_items (optional, additive)
+-- 2. HSN/SAC code on catalog_items
 ALTER TABLE catalog_items
   ADD COLUMN IF NOT EXISTS hsn_sac_code TEXT;

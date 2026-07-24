@@ -22,10 +22,12 @@ CREATE INDEX IF NOT EXISTS idx_cis_client_id ON catalog_import_staging(client_id
 
 ALTER TABLE catalog_import_staging ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Client can manage own import staging" ON catalog_import_staging;
 CREATE POLICY "Client can manage own import staging"
   ON catalog_import_staging FOR ALL
   USING (client_id = (select auth.uid()));
 
+DROP POLICY IF EXISTS "Admin can manage all import staging" ON catalog_import_staging;
 CREATE POLICY "Admin can manage all import staging"
   ON catalog_import_staging FOR ALL
   USING (public.is_admin());
