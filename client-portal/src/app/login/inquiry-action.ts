@@ -74,3 +74,25 @@ export async function submitInquiryAction(data: {
 
   return { whatsappUrl };
 }
+
+export async function getAdminWhatsAppUrlAction(intent: 'forgot_password' | 'general' = 'forgot_password') {
+  try {
+    const supabase = await createAdminClient();
+    const { data: settings } = await supabase
+      .from('platform_settings')
+      .select('admin_whatsapp_number')
+      .single();
+
+    const fallback = process.env.ADMIN_WHATSAPP_NUMBER ? `91${process.env.ADMIN_WHATSAPP_NUMBER.replace(/^91/, '')}` : '919422880355';
+    const adminPhone = settings?.admin_whatsapp_number || fallback;
+    const cleanPhone = adminPhone.replace(/^\+?91/, '');
+
+    const msg = intent === 'forgot_password'
+      ? 'Hi, I forgot my BillDoor password. Can you please reset it?'
+      : 'Hi, I need assistance with my BillDoor account.';
+
+    return { whatsappUrl: `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(msg)}` };
+  } catch {
+    return { whatsappUrl: `https://wa.me/919422880355?text=${encodeURIComponent('Hi, I forgot my BillDoor password. Can you please reset it?')}` };
+  }
+}

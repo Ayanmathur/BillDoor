@@ -21,6 +21,7 @@ export async function fetchExpensesAction(filters?: { from?: string; to?: string
     .from('expenses')
     .select('*')
     .eq('client_id', user.id)
+    .is('deleted_at', null)
     .order('expense_date', { ascending: false });
 
   if (filters?.from) query = query.gte('expense_date', filters.from);
@@ -82,9 +83,10 @@ export async function deleteExpenseAction(id: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Unauthorized' };
 
+  // Soft delete per security & DB rules
   const { error } = await supabase
     .from('expenses')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
     .eq('client_id', user.id);
 
@@ -95,21 +97,24 @@ export async function deleteExpenseAction(id: string) {
 export async function fetchExpenseSummaryAction(from: string, to: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Unauthorized', summary: {} };
+  if (!user) return { error: 'Unauthorized', summary: {}, totalExpenses: 0 };
 
   const { data, error } = await supabase
     .from('expenses')
     .select('amount, category')
     .eq('client_id', user.id)
+    .is('deleted_at', null)
     .gte('expense_date', from)
     .lte('expense_date', to);
 
-  if (error) return { error: 'Failed to fetch summary', summary: {} };
+  if (error) return { error: 'Failed to fetch summary', summary: {}, totalExpenses: 0 };
 
   const summary = (data || []).reduce((acc: Record<string, number>, curr) => {
     acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
     return acc;
   }, {});
 
-  return { summary };
+  const totalExpenses = Object.values(summary).reduce((a, b) => a + b, 0);
+
+  return { summary, totalExpenses };
 }

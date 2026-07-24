@@ -3,13 +3,17 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/server';
 
-const SERVICE_TYPES = ['website', 'seo', 'ads', 'branding', 'support', 'qr_menu_design', 'business_card_design'] as const;
+const SERVICE_TYPES = ['website', 'seo', 'ads', 'branding', 'social_media_management', 'support', 'qr_menu_design', 'business_card_design'] as const;
 
 // Fetch admin WhatsApp number from platform_settings (using service role)
 // Fallback: always resolves to 919422880355 if DB value is missing/empty
 export async function fetchAdminWhatsAppAction() {
   const FALLBACK_ADMIN_PHONE = '919422880355';
   try {
+    const supabaseUser = await createClient();
+    const { data: { user } } = await supabaseUser.auth.getUser();
+    if (!user) return { phone: FALLBACK_ADMIN_PHONE };
+
     const supabase = await createAdminClient();
     const { data } = await supabase
       .from('platform_settings')

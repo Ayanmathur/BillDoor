@@ -638,15 +638,15 @@
 /* Checked */
 .toggle-switch > input:checked {
   right: -10px;
-  background-color: #85b8b7;
+  background-color: var(--color-accent-subtle);
 }
 
 .toggle-switch > input:checked + .toggle-slider::before {
-  background-color: #85b8b7;
+  background-color: var(--color-accent-subtle);
 }
 
 .toggle-switch > input:checked + .toggle-slider::after {
-  background-color: #018786;
+  background-color: var(--color-accent);
   transform: translateX(16px);
 }
 /* Hover, Focus */

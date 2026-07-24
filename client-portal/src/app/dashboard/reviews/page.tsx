@@ -184,12 +184,12 @@ export default function ReviewsDashboard() {
               <code style={{ fontSize: 'var(--text-sm)', background: 'var(--color-bg-primary)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-sm)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {linkInfo?.reviewUrl || '...'}
               </code>
-              <button className="btn" onClick={handleCopyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: '#0d9488', color: 'white', border: 'none' }}>
+              <button className="btn" onClick={handleCopyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
                 {copied ? <Check size={16} /> : <Copy size={16} />}
                 {copied ? 'Copied!' : 'Copy'}
               </button>
               {linkInfo?.reviewUrl && (
-                <a href={linkInfo.reviewUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: '#0d9488', color: 'white', border: 'none' }}>
+                <a href={linkInfo.reviewUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
                   <ExternalLink size={16} />
                   Open
                 </a>

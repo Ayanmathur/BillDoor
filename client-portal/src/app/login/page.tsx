@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import { DoorOpen, Eye, EyeOff, X, Send, Loader2, ArrowLeft, Receipt, Star, CalendarClock, Store, Cake, Scissors, Stethoscope, GraduationCap, Building2, Utensils, Heart } from 'lucide-react';
 import { validateLogin } from '@/shared/validation';
 import { loginAction } from './actions';
-import { submitInquiryAction } from './inquiry-action';
+import { submitInquiryAction, getAdminWhatsAppUrlAction } from './inquiry-action';
 import './login.css';
 
 // Minimal, elegant background pattern of abstract business icons
@@ -283,7 +283,10 @@ export default function LoginPage() {
             </a>
             <button
               type="button"
-              onClick={() => window.location.href = 'https://wa.me/919422880355?text=Hi%2C%20I%20forgot%20my%20BillDoor%20password%2E%20Can%20you%20please%20reset%20it%3F'}
+              onClick={async () => {
+                const res = await getAdminWhatsAppUrlAction('forgot_password');
+                window.location.href = res.whatsappUrl;
+              }}
               className="login-link"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }}
             >

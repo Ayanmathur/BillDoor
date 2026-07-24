@@ -430,7 +430,7 @@ export default function AdminDashboard() {
         <button className={`admin-tab ${activeTab === 'inquiries' ? 'active' : ''}`} onClick={() => setActiveTab('inquiries')}>
           <Inbox size={14} style={{ marginRight: 4, verticalAlign: -2 }} /> Inquiries
           {newInquiriesCount > 0 && (
-            <span style={{ marginLeft: 6, background: 'var(--color-accent)', color: 'white', borderRadius: 'var(--radius-full)', padding: '1px 6px', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)' }}>
+            <span style={{ marginLeft: 6, background: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', borderRadius: 'var(--radius-full)', padding: '1px 6px', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)' }}>
               {newInquiriesCount}
             </span>
           )}
@@ -486,7 +486,7 @@ export default function AdminDashboard() {
                                 </span>
                               )}
                               {vt && daysLeft > 0 && daysLeft <= 15 && (
-                                <span style={{ color: 'hsl(38 90% 50%)', fontWeight: 'var(--weight-bold)', fontSize: '10px' }}>
+                                <span style={{ color: 'var(--color-warning)', fontWeight: 'var(--weight-bold)', fontSize: '10px' }}>
                                   {daysLeft}d left
                                 </span>
                               )}

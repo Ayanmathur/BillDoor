@@ -369,11 +369,11 @@ export default function BillitSettingsPage() {
                   readOnly 
                   style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }} 
                 />
-                <button className="btn" onClick={copyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: '#0d9488', color: 'white', border: 'none' }}>
+                <button className="btn" onClick={copyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
                   {copied ? <Check size={16} /> : <Copy size={16} />}
                   {copied ? 'Copied!' : 'Copy'}
                 </button>
-                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: '#0d9488', color: 'white', border: 'none' }}>
+                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
                   <ExternalLink size={16} />
                   Open
                 </a>

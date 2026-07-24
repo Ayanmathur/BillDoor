@@ -371,7 +371,7 @@ export default function ServicesPage() {
       </div>
 
       {/* Orbitex Official Channels & Directory */}
-      <div style={{ marginTop: 'var(--space-6)', padding: 'var(--space-4)', background: '#fff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+      <div style={{ marginTop: 'var(--space-6)', padding: 'var(--space-4)', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h3 style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', margin: 0, color: 'var(--color-text-primary)' }}>
             Orbitex Digital Network

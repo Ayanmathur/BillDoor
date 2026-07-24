@@ -292,23 +292,23 @@
 }
 
 .service-badge.new {
-  background: #F3F4F6;
-  color: #4B5563;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
 }
 
 .service-badge.requested {
-  background: #FEF3C7;
-  color: #D97706;
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
 }
 
 .service-badge.in-progress {
-  background: #DBEAFE;
-  color: #2563EB;
+  background: var(--color-info-subtle);
+  color: var(--color-info);
 }
 
 .service-badge.done {
-  background: #D1FAE5;
-  color: #059669;
+  background: var(--color-success-subtle);
+  color: var(--color-success);
 }
 
 /* Support Banner */

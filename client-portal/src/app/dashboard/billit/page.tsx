@@ -7,7 +7,7 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { Plus, Package, Users, FileText, Settings } from 'lucide-react';
+import { Plus, Package, Users, FileText, Settings, DollarSign, TrendingUp, FileSpreadsheet, LayoutTemplate } from 'lucide-react';
 
 export default function BillitPage() {
   const router = useRouter();
@@ -17,6 +17,10 @@ export default function BillitPage() {
     { label: 'Bills', icon: <FileText size={20} />, route: '/dashboard/billit/bills', desc: 'View all bills & drafts' },
     { label: 'Catalog', icon: <Package size={20} />, route: '/dashboard/billit/catalog', desc: 'Products & services' },
     { label: 'Customers', icon: <Users size={20} />, route: '/dashboard/billit/customers', desc: 'Search customers & history' },
+    { label: 'Expense Log', icon: <DollarSign size={20} />, route: '/dashboard/billit/expenses', desc: 'Track & log business expenses' },
+    { label: 'Reports & Net', icon: <TrendingUp size={20} />, route: '/dashboard/billit/reports', desc: 'Revenue, expenses & net estimate' },
+    { label: 'GST Summary', icon: <FileSpreadsheet size={20} />, route: '/dashboard/billit/reports/gst-summary', desc: 'Rate-wise GST breakdown & XLSX' },
+    { label: 'Bill Templates', icon: <LayoutTemplate size={20} />, route: '/dashboard/billit/settings/bill-templates', desc: 'Customize WhatsApp templates' },
     { label: 'Settings', icon: <Settings size={20} />, route: '/dashboard/billit/settings', desc: 'Barcode & preferences' },
   ];
 
