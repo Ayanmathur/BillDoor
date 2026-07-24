@@ -76,7 +76,7 @@ const SERVICES = [
 ];
 
 export default function ServicesPage() {
-  const [adminPhone, setAdminPhone] = useState('');
+  const [adminPhone, setAdminPhone] = useState('919422880355');
   const [clientWebsite, setClientWebsite] = useState<string | null>(null);
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,43 +178,48 @@ export default function ServicesPage() {
 
   const handleAction = async (serviceId: string, title: string) => {
     const status = getRequestStatus(serviceId);
+    const targetPhone = adminPhone || '919422880355';
+    const cleanPhone = targetPhone.replace(/[^0-9]/g, '');
 
     // Priority Support: direct WhatsApp, no service_request record
     if (serviceId === 'support') {
-      if (adminPhone) {
-        const msg = encodeURIComponent(`Hi, I need priority support for my account.`);
-        window.open(`https://wa.me/${adminPhone}?text=${msg}`, '_blank');
-      } else {
-        alert('Admin WhatsApp number is not configured.');
-      }
+      const msg = encodeURIComponent(`Hi, I need priority support for my account.`);
+      const waUrl = `https://wa.me/${cleanPhone}?text=${msg}`;
+      const win = window.open(waUrl, '_blank');
+      if (!win) window.location.href = waUrl;
       return;
     }
     
     if (!status || status === 'done') {
+      // Pre-open window synchronously to bypass popup blockers
+      const waWin = window.open('about:blank', '_blank');
+      
       setActionLoading(serviceId);
       const res = await createServiceRequestAction({ serviceType: serviceId });
       setActionLoading(null);
       
+      const msg = encodeURIComponent(`Hi, I would like to request the ${title} service.`);
+      const waUrl = `https://wa.me/${cleanPhone}?text=${msg}`;
+
       if (res.success) {
         const reqRes = await fetchServiceRequestsAction();
         if (reqRes.requests) setRequests(reqRes.requests);
         
-        if (adminPhone) {
-          const msg = encodeURIComponent(`Hi, I would like to request the ${title} service.`);
-          window.open(`https://wa.me/${adminPhone}?text=${msg}`, '_blank');
+        if (waWin) {
+          waWin.location.href = waUrl;
         } else {
-          alert('Service requested successfully! However, the admin WhatsApp number is not configured for chat.');
+          window.location.href = waUrl;
         }
       } else {
+        if (waWin) waWin.close();
         alert(res.error || 'Failed to create request');
       }
     } else {
-      if (adminPhone) {
-        const msg = encodeURIComponent(`Hi, I am following up on my ${title} service request.`);
-        window.open(`https://wa.me/${adminPhone}?text=${msg}`, '_blank');
-      } else {
-        alert('Admin WhatsApp number is not configured.');
-      }
+      // Message button (already requested, following up with admin)
+      const msg = encodeURIComponent(`Hi, I am following up on my ${title} service request.`);
+      const waUrl = `https://wa.me/${cleanPhone}?text=${msg}`;
+      const win = window.open(waUrl, '_blank');
+      if (!win) window.location.href = waUrl;
     }
   };
 
@@ -357,11 +362,11 @@ export default function ServicesPage() {
         </div>
         <button 
           onClick={() => {
-            if (adminPhone) {
-              window.open(`https://wa.me/${adminPhone}?text=Hi, I need support with my account.`, '_blank');
-            } else {
-              alert('Admin WhatsApp number is not configured.');
-            }
+            const targetPhone = adminPhone || '919422880355';
+            const cleanPhone = targetPhone.replace(/[^0-9]/g, '');
+            const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent('Hi, I need support with my account.')}`;
+            const win = window.open(waUrl, '_blank');
+            if (!win) window.location.href = waUrl;
           }}
           className="btn-support-chat"
         >
