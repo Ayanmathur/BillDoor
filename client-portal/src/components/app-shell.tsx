@@ -134,12 +134,14 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
 
       {/* Sidebar */}
       <nav className="sidebar" role="navigation" aria-label="Main navigation">
-        <Link href="/dashboard" className="sidebar-brand" style={{ padding: collapsed ? 'var(--space-4) 0' : 'var(--space-4)', display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start' }}>
-          {collapsed ? (
-            <img src="/logo-icon.png" alt="BillDoor Logo" style={{ height: '32px', width: 'auto' }} />
-          ) : (
-            <img src={theme === 'dark' ? "/logo-dark.png" : "/logo-light.png"} alt="BillDoor Logo" style={{ height: '28px', width: 'auto' }} />
-          )}
+        <Link href="/dashboard" className="sidebar-brand" style={{ padding: collapsed ? 'var(--space-4) 0' : 'var(--space-4)', display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start', alignItems: 'center' }}>
+          <img
+            src={collapsed
+              ? (theme === 'dark' ? "/favicon.png" : "/logo-icon.png")
+              : (theme === 'dark' ? "/logo-dark.png" : "/logo-light.png")}
+            alt="BillDoor Logo"
+            style={{ height: collapsed ? '34px' : '36px', width: 'auto', objectFit: 'contain' }}
+          />
         </Link>
 
         <div className="sidebar-divider" />

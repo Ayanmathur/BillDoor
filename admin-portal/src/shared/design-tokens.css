@@ -322,10 +322,14 @@ a:hover {
 }
 
 .sidebar-logo {
-  height: 28px;
+  height: 36px;
   width: auto;
   flex-shrink: 0;
   transition: opacity var(--duration-normal) var(--ease-default);
+}
+
+.sidebar.collapsed .sidebar-logo {
+  height: 34px;
 }
 
 .sidebar-logo-text {
