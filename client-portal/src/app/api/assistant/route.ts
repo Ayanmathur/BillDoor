@@ -32,14 +32,19 @@ export async function POST(req: Request) {
       rateLimits.set(clientId, { count: 1, timestamp: now });
     }
 
-    const { query } = await req.json();
+    const body = await req.json();
+    const query = body.query;
+
+    if (!query || typeof query !== 'string') {
+      return NextResponse.json({ response: 'Please enter a valid message.' });
+    }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ response: 'AI assistant is not configured yet. Please contact admin.' });
+      return NextResponse.json({ response: 'AI assistant is not configured yet. Please contact admin to set GEMINI_API_KEY.' });
     }
 
-    const systemInstruction = "You are BillDoor Assistant, a helpful read-only business assistant. You help business owners look up customer information, bill details, revenue summaries, expenses, and appointments. You can only READ data, never create/modify/delete anything. Keep responses concise and link to the relevant pages when possible. If asked about something outside your capabilities, politely redirect. Format currency in INR (Rs). Never reveal internal implementation details.";
+    const systemInstruction = "You are BillDoor Assistant, a helpful read-only business assistant for the BillDoor merchant platform. You assist business owners with looking up customer info, bill details, revenue summaries, expenses, and appointments. You can ONLY read data using the provided tools — never attempt to create, modify, or delete data. Keep answers concise, polite, and format currency in INR (Rs).";
 
     const toolDeclarations = [
       {
@@ -91,7 +96,11 @@ export async function POST(req: Request) {
       },
       {
         name: "check_upsell_opportunities",
-        description: "Checks review trend, module usage, service request history to suggest Orbitex services. Max 1 per conversation."
+        description: "Checks review trend, module usage, service request history to suggest Orbitex services.",
+        parameters: {
+          type: "OBJECT",
+          properties: {},
+        }
       }
     ];
 
@@ -108,15 +117,19 @@ export async function POST(req: Request) {
             contents,
             tools: [{ functionDeclarations: toolDeclarations }],
             generationConfig: {
-              temperature: 0.1,
+              temperature: 0.2,
+              maxOutputTokens: 1000,
             },
           }),
         }
       );
+
       if (!response.ok) {
-        console.error('Gemini API error:', response.status);
-        throw new Error('Gemini API error');
+        const errorText = await response.text();
+        console.error('Gemini API error status:', response.status, 'body:', errorText);
+        throw new Error(`Gemini API error: ${response.status}`);
       }
+
       return response.json();
     };
 
@@ -127,84 +140,92 @@ export async function POST(req: Request) {
 
     if (part?.functionCall) {
       const { name, args } = part.functionCall;
-      let functionResponseData: any = { error: "Unknown tool" };
+      const safeArgs = args || {};
+      let functionResponseData: any = { status: "no data found" };
 
-      // Helpers for DB tools
-      if (name === 'get_customer') {
-        const search = args.search;
-        const { data } = await supabase
-          .from('customers')
-          .select('name, phone, total_visits, total_spent, last_visit')
-          .eq('client_id', clientId)
-          .or(`phone.ilike.%${search}%,name.ilike.%${search}%`)
-          .limit(5);
-        functionResponseData = { customers: data || [] };
-      } else if (name === 'get_bill') {
-        const { data } = await supabase
-          .from('bills')
-          .select('*')
-          .eq('client_id', clientId)
-          .eq('bill_number', args.bill_number)
-          .single();
-        functionResponseData = { bill: data || null };
-      } else if (name === 'get_revenue_summary') {
-        let gte = new Date();
-        gte.setHours(0,0,0,0);
-        if (args.period === 'week') gte.setDate(gte.getDate() - 7);
-        if (args.period === 'month') gte.setMonth(gte.getMonth() - 1);
-        if (args.period === 'year') gte.setFullYear(gte.getFullYear() - 1);
-        
-        const { data } = await supabase
-          .from('bills')
-          .select('grand_total')
-          .eq('client_id', clientId)
-          .gte('created_at', gte.toISOString());
-        
-        const total = (data || []).reduce((sum, b) => sum + Number(b.grand_total || 0), 0);
-        functionResponseData = { total_revenue: total, count: (data || []).length };
-      } else if (name === 'get_expense_summary') {
-        let gte = new Date();
-        gte.setHours(0,0,0,0);
-        if (args.period === 'week') gte.setDate(gte.getDate() - 7);
-        if (args.period === 'month') gte.setMonth(gte.getMonth() - 1);
-        if (args.period === 'year') gte.setFullYear(gte.getFullYear() - 1);
+      try {
+        if (name === 'get_customer') {
+          const search = String(safeArgs.search || '').trim();
+          const { data } = await supabase
+            .from('customers')
+            .select('name, phone, total_visits, total_spent, last_visit')
+            .eq('client_id', clientId)
+            .or(`phone.ilike.%${search}%,name.ilike.%${search}%`)
+            .limit(5);
+          functionResponseData = { customers: data || [] };
+        } else if (name === 'get_bill') {
+          const billNum = String(safeArgs.bill_number || '').trim();
+          const { data } = await supabase
+            .from('bills')
+            .select('*')
+            .eq('client_id', clientId)
+            .eq('bill_number', billNum)
+            .single();
+          functionResponseData = { bill: data || null };
+        } else if (name === 'get_revenue_summary') {
+          let gte = new Date();
+          gte.setHours(0, 0, 0, 0);
+          if (safeArgs.period === 'week') gte.setDate(gte.getDate() - 7);
+          if (safeArgs.period === 'month') gte.setMonth(gte.getMonth() - 1);
+          if (safeArgs.period === 'year') gte.setFullYear(gte.getFullYear() - 1);
 
-        const { data } = await supabase
-          .from('expenses')
-          .select('amount, category')
-          .eq('client_id', clientId)
-          .gte('created_at', gte.toISOString());
-        
-        const categories: Record<string, number> = {};
-        (data || []).forEach(e => {
-          categories[e.category] = (categories[e.category] || 0) + Number(e.amount);
-        });
-        functionResponseData = { expenses_by_category: categories };
-      } else if (name === 'get_appointment') {
-        let q = supabase.from('appointments').select('*').eq('client_id', clientId);
-        if (args?.date) {
-           let d = new Date(args.date);
-           d.setHours(0,0,0,0);
-           let end = new Date(d);
-           end.setDate(end.getDate() + 1);
-           q = q.gte('start_time', d.toISOString()).lt('start_time', end.toISOString());
+          const { data } = await supabase
+            .from('bills')
+            .select('grand_total')
+            .eq('client_id', clientId)
+            .gte('created_at', gte.toISOString());
+
+          const total = (data || []).reduce((sum, b) => sum + Number(b.grand_total || 0), 0);
+          functionResponseData = { total_revenue: total, count: (data || []).length, period: safeArgs.period || 'today' };
+        } else if (name === 'get_expense_summary') {
+          let gte = new Date();
+          gte.setHours(0, 0, 0, 0);
+          if (safeArgs.period === 'week') gte.setDate(gte.getDate() - 7);
+          if (safeArgs.period === 'month') gte.setMonth(gte.getMonth() - 1);
+          if (safeArgs.period === 'year') gte.setFullYear(gte.getFullYear() - 1);
+
+          const dateStr = gte.toISOString().split('T')[0];
+
+          const { data } = await supabase
+            .from('expenses')
+            .select('amount, category')
+            .eq('client_id', clientId)
+            .gte('expense_date', dateStr);
+
+          const categories: Record<string, number> = {};
+          let totalExpense = 0;
+          (data || []).forEach(e => {
+            const amt = Number(e.amount || 0);
+            categories[e.category] = (categories[e.category] || 0) + amt;
+            totalExpense += amt;
+          });
+          functionResponseData = { total_expense: totalExpense, categories, period: safeArgs.period || 'today' };
+        } else if (name === 'get_appointment') {
+          let q = supabase.from('appointments').select('*').eq('client_id', clientId);
+          if (safeArgs.date) {
+            let d = new Date(safeArgs.date);
+            d.setHours(0, 0, 0, 0);
+            let end = new Date(d);
+            end.setDate(end.getDate() + 1);
+            q = q.gte('start_time', d.toISOString()).lt('start_time', end.toISOString());
+          }
+          if (safeArgs.customer_name) {
+            q = q.ilike('customer_name', `%${safeArgs.customer_name}%`);
+          }
+          const { data } = await q.limit(10);
+          functionResponseData = { appointments: data || [] };
+        } else if (name === 'check_upsell_opportunities') {
+          functionResponseData = { suggestion: "Consider checking Orbitex Services tab to upgrade your online visibility or custom branding!" };
         }
-        if (args?.customer_name) {
-           q = q.ilike('customer_name', `%${args.customer_name}%`);
-        }
-        const { data } = await q.limit(10);
-        functionResponseData = { appointments: data || [] };
-      } else if (name === 'check_upsell_opportunities') {
-        // Mocked B4 upsell layer as per instructions
-        functionResponseData = { suggestion: "Consider setting up a custom domain with Orbitex Services to boost your brand visibility!" };
+      } catch (err: any) {
+        console.error('Tool execution error:', err);
+        functionResponseData = { error: err.message || 'Tool execution failed' };
       }
 
-      // Add the model's function call to history
+      // Format response back to Gemini model
       requestContents.push(candidate.content);
-      
-      // Add the function response
       requestContents.push({
-        role: 'function',
+        role: 'user',
         parts: [{
           functionResponse: {
             name: name,
@@ -213,25 +234,38 @@ export async function POST(req: Request) {
         }]
       });
 
-      // Call Gemini again for final generation
-      result = await makeGeminiRequest(requestContents);
-      candidate = result.candidates?.[0];
-      part = candidate?.content?.parts?.[0];
+      try {
+        result = await makeGeminiRequest(requestContents);
+        candidate = result.candidates?.[0];
+        part = candidate?.content?.parts?.[0];
+      } catch (err: any) {
+        console.error('Gemini 2nd turn error:', err);
+        // Fallback text if second turn fails
+        finalText = `Found result for ${name}: ${JSON.stringify(functionResponseData)}`;
+      }
     }
 
-    finalText = part?.text?.trim() || "I couldn't generate a response. Please try again.";
+    if (!finalText) {
+      finalText = part?.text?.trim() || "I am your read-only BillDoor Assistant. Ask me about your bills, revenue, expenses, or customers!";
+    }
 
-    // Log the query and response
-    await supabase.from('assistant_queries').insert([{
-      client_id: clientId,
-      query: query,
-      response: finalText,
-    }]);
+    // Safely log query to assistant_queries (fail silently if table doesn't exist yet)
+    try {
+      await supabase.from('assistant_queries').insert([{
+        client_id: clientId,
+        query: query,
+        response: finalText,
+      }]);
+    } catch {
+      // Ignored
+    }
 
     return NextResponse.json({ response: finalText });
 
   } catch (error: any) {
-    console.error('Assistant error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('Assistant handler error:', error);
+    return NextResponse.json({
+      response: "I encountered an error looking up that information. Please ensure GEMINI_API_KEY is configured in .env.local."
+    });
   }
 }

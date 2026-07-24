@@ -3,12 +3,11 @@
 /**
  * Billit — Module Landing Page
  *
- * Quick-nav to Create Bill, Catalog, and Customers.
- * Doubles as a bill history / recent bills view.
+ * Quick-nav to Create Bill, Bills history, Catalog, Customers, Expense Log, Reports & GST.
  */
 
 import { useRouter } from 'next/navigation';
-import { Plus, Package, Users, FileText, Settings } from 'lucide-react';
+import { Plus, Package, Users, FileText, Settings, Wallet, BarChart3, FileSpreadsheet } from 'lucide-react';
 
 export default function BillitPage() {
   const router = useRouter();
@@ -16,9 +15,12 @@ export default function BillitPage() {
   const actions = [
     { label: 'Create Bill', icon: <Plus size={20} />, route: '/dashboard/billit/create', desc: 'New invoice for a customer', accent: true },
     { label: 'Bills', icon: <FileText size={20} />, route: '/dashboard/billit/bills', desc: 'View all bills & drafts' },
-    { label: 'Catalog', icon: <Package size={20} />, route: '/dashboard/billit/catalog', desc: 'Products & services' },
+    { label: 'Catalog', icon: <Package size={20} />, route: '/dashboard/billit/catalog', desc: 'Products, services & HSN' },
     { label: 'Customers', icon: <Users size={20} />, route: '/dashboard/billit/customers', desc: 'Search customers & history' },
-    { label: 'Settings', icon: <Settings size={20} />, route: '/dashboard/billit/settings', desc: 'Barcode & preferences' },
+    { label: 'Expense Log', icon: <Wallet size={20} />, route: '/dashboard/billit/expenses', desc: 'Track business expenses' },
+    { label: 'Reports & Revenue', icon: <BarChart3 size={20} />, route: '/dashboard/billit/reports', desc: 'Revenue periods & Net estimate' },
+    { label: 'GST Summary', icon: <FileSpreadsheet size={20} />, route: '/dashboard/billit/reports/gst-summary', desc: 'Rate-wise GST & XLSX export' },
+    { label: 'Settings', icon: <Settings size={20} />, route: '/dashboard/billit/settings', desc: 'Templates & preferences' },
   ];
 
   return (

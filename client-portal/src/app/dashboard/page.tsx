@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import {
   Star, Receipt, Users, TrendingUp, Eye, Plus,
   CalendarPlus, Loader2, IndianRupee, CreditCard, Copy, Download, Check, QrCode,
+  Wallet, BarChart3, FileSpreadsheet,
 } from 'lucide-react';
 import { fetchDashboardData } from './actions';
 import ChatBubble from '@/components/ai-assistant/chat-bubble';
@@ -103,6 +104,18 @@ export default function DashboardPage() {
           <div className="dash-card-value">{customerCount}</div>
           <div className="dash-card-sub">Unique phone numbers</div>
         </div>
+
+        {/* Expenses & Reports */}
+        <div className="dash-card" onClick={() => router.push('/dashboard/billit/reports')} style={{ cursor: 'pointer' }}>
+          <div className="dash-card-header">
+            <span className="dash-card-label">Expenses & Net</span>
+            <div className="dash-card-icon" style={{ background: 'var(--color-warning-subtle)', color: 'var(--color-warning)' }}>
+              <Wallet size={18} />
+            </div>
+          </div>
+          <div className="dash-card-value">₹{(data?.monthExpenseTotal || 0).toLocaleString('en-IN')}</div>
+          <div className="dash-card-sub">This month expenses · Reports & GST</div>
+        </div>
       </div>
 
       {/* Quick Actions */}
@@ -124,6 +137,15 @@ export default function DashboardPage() {
         </button>
         <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/catalog')}>
           <Receipt size={16} /> Catalog
+        </button>
+        <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/expenses')}>
+          <Wallet size={16} /> Expense Log
+        </button>
+        <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/reports')}>
+          <BarChart3 size={16} /> Reports & Net
+        </button>
+        <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/reports/gst-summary')}>
+          <FileSpreadsheet size={16} /> GST Summary
         </button>
       </div>
 

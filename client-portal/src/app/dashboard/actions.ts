@@ -79,6 +79,17 @@ export async function fetchDashboardData() {
   const todayRevenue = todayBills.reduce((sum, b) => sum + Number(b.grand_total || 0), 0);
   const totalBills = billsResult.count || 0;
 
+  // Monthly Expenses (for Financial Overview card)
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const { data: monthExpenses } = await supabase
+    .from('expenses')
+    .select('amount')
+    .eq('client_id', clientId)
+    .gte('expense_date', startOfMonth);
+
+  const monthExpenseTotal = (monthExpenses || []).reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
   return {
     reviewStats: {
       total: totalReviews,
@@ -93,6 +104,7 @@ export async function fetchDashboardData() {
       todayRevenue,
     },
     customerCount: customersResult.count || 0,
+    monthExpenseTotal,
     pendingServiceRequests: (pendingRequests || []).map((r: Record<string, unknown>) => ({
       id: r.id as string,
       serviceType: r.service_type as string,
