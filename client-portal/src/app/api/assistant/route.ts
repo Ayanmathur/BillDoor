@@ -44,25 +44,47 @@ export async function POST(req: Request) {
       return NextResponse.json({ response: 'AI assistant is not configured yet. Please contact admin to set GEMINI_API_KEY.' });
     }
 
-    const systemInstruction = "You are BillDoor Assistant, a helpful read-only business assistant for the BillDoor merchant platform. You assist business owners with looking up customer info, bill details, revenue summaries, expenses, and appointments. You can ONLY read data using the provided tools — never attempt to create, modify, or delete data. Keep answers concise, polite, and format currency in INR (Rs).";
+    const systemInstruction = `You are BillDoor Assistant, an intelligent, read-only AI business assistant for the BillDoor merchant platform.
+
+YOUR SCOPE & CAPABILITIES:
+You assist business owners ONLY with their specific client business data and platform features:
+1. 👥 Customer Details: Search customer profiles, phone numbers, visit frequency, spending, and last visit dates.
+2. 📄 Bills & Invoices: Look up bills by number or recent history, check grand total, payment status, and provide links.
+3. 🏷️ Products & Catalog: Search catalog items by name/category, check unit prices, GST %, and stock buffer alerts.
+4. 💰 Revenue & Net Summary: Provide total revenue, bill counts, and average bill amounts (today/week/month/year).
+5. 📊 Expenses Log: Summarize operating expenses by category (rent, salaries, supplies, utilities, marketing).
+6. 📅 Appointments & Staff: Look up appointment schedules, staff timelines, and queue status.
+7. 🔗 Feature Navigation & Links: Provide direct navigation links to platform features and settings (e.g. Create Bill, Expense Log, GST Export, QR Cards, WhatsApp, Settings).
+8. 🚀 Orbitex Services: Suggest digital growth services (websites, SEO, ad campaigns, branding, QR menu design) with links to /dashboard/services.
+
+STRICT GUARDRAILS:
+- You must ONLY answer questions related to the merchant's business data and BillDoor features. Do NOT answer generic off-topic questions.
+- If data is not found, an error occurs, or parameters are missing, start by stating: "Sorry, I encountered an error looking up that information. Please try rephrasing your question or specifying details like the customer's name, phone number, or bill number." then present the specific client functions you can assist with.
+- Format currency in INR (₹). Always include markdown links for features (e.g. [Create Bill](/dashboard/billit/create), [Expense Log](/dashboard/billit/expenses), [GST Summary](/dashboard/billit/reports/gst-summary), [Orbitex Services](/dashboard/services)).`;
 
     const toolDeclarations = [
       {
         name: "get_customer",
-        description: "Searches customers by phone or partial name",
+        description: "Searches customers by phone or name, or lists recent customer profiles",
         parameters: {
           type: "OBJECT",
-          properties: { search: { type: "STRING" } },
-          required: ["search"]
+          properties: { search: { type: "STRING", description: "Optional name or phone number" } },
         }
       },
       {
         name: "get_bill",
-        description: "Fetches bill details by bill number",
+        description: "Fetches bill details by bill number or recent bill history",
         parameters: {
           type: "OBJECT",
-          properties: { bill_number: { type: "STRING" } },
-          required: ["bill_number"]
+          properties: { bill_number: { type: "STRING", description: "Optional bill number" } },
+        }
+      },
+      {
+        name: "search_catalog",
+        description: "Searches catalog products and services by name or category",
+        parameters: {
+          type: "OBJECT",
+          properties: { search: { type: "STRING", description: "Optional product or category search query" } },
         }
       },
       {
@@ -76,7 +98,7 @@ export async function POST(req: Request) {
       },
       {
         name: "get_expense_summary",
-        description: "Returns total expenses by category",
+        description: "Returns total expenses by category for a period",
         parameters: {
           type: "OBJECT",
           properties: { period: { type: "STRING", enum: ["today", "week", "month", "year"] } },
@@ -95,8 +117,16 @@ export async function POST(req: Request) {
         }
       },
       {
+        name: "get_feature_links",
+        description: "Provides direct navigation links to BillDoor features and settings",
+        parameters: {
+          type: "OBJECT",
+          properties: { feature: { type: "STRING", description: "Target feature (create_bill, expenses, reports, gst, catalog, appointer, reviews, qr_links, services, whatsapp, settings)" } },
+        }
+      },
+      {
         name: "check_upsell_opportunities",
-        description: "Checks review trend, module usage, service request history to suggest Orbitex services.",
+        description: "Suggests Orbitex services for business growth with redirect links",
         parameters: {
           type: "OBJECT",
           properties: {},
@@ -185,6 +215,26 @@ export async function POST(req: Request) {
           } else {
             functionResponseData = { bills: data || [] };
           }
+        } else if (name === 'search_catalog') {
+          const search = String(safeArgs.search || '').trim();
+          let query = supabase
+            .from('catalog_items')
+            .select('name, price, gst_percent, category, buffer_stock, is_active')
+            .eq('client_id', clientId)
+            .order('name', { ascending: true })
+            .limit(10);
+
+          if (search) {
+            query = query.or(`name.ilike.%${search}%,category.ilike.%${search}%`);
+          }
+
+          const { data, error } = await query;
+          if (error) {
+            console.error('search_catalog query error:', error);
+            functionResponseData = { error: error.message };
+          } else {
+            functionResponseData = { catalog_items: data || [] };
+          }
         } else if (name === 'get_revenue_summary') {
           let gte = new Date();
           gte.setHours(0, 0, 0, 0);
@@ -254,8 +304,32 @@ export async function POST(req: Request) {
           } else {
             functionResponseData = { appointments: data || [] };
           }
+        } else if (name === 'get_feature_links') {
+          const feature = String(safeArgs.feature || '').toLowerCase().trim();
+          const links: Record<string, { label: string; url: string; desc: string }> = {
+            'create_bill': { label: 'Create Bill', url: '/dashboard/billit/create', desc: 'Create and send a new digital bill' },
+            'bills': { label: 'Bills History', url: '/dashboard/billit/bills', desc: 'View past bills, drafts, and sent status' },
+            'catalog': { label: 'Catalog Items', url: '/dashboard/billit/catalog', desc: 'Manage your products, services, prices & GST' },
+            'expenses': { label: 'Expense Log', url: '/dashboard/billit/expenses', desc: 'Track and log business operating expenses' },
+            'reports': { label: 'Revenue & Reports', url: '/dashboard/billit/reports', desc: 'View revenue totals, expenses & net profit estimates' },
+            'gst': { label: 'GST Summary', url: '/dashboard/billit/reports/gst-summary', desc: 'Rate-wise GST breakdown & XLSX report export' },
+            'appointer': { label: 'Appointments & Staff', url: '/dashboard/appointer', desc: 'Resource timelines, queue & appointment booking' },
+            'reviews': { label: 'Google Reviews', url: '/dashboard/reviews', desc: 'Google review collection, private feedback & stats' },
+            'qr_links': { label: 'Digital Business Card & QR', url: '/dashboard/settings/qr-links', desc: 'QR cards, digital business card & menu links' },
+            'services': { label: 'Orbitex Services', url: '/dashboard/services', desc: 'Request website design, SEO, ads, branding & support' },
+            'whatsapp': { label: 'WhatsApp Automation', url: '/dashboard/whatsapp', desc: 'WhatsApp bill templates, broadcasts & automation settings' },
+            'settings': { label: 'Business Settings', url: '/dashboard/settings', desc: 'Manage GSTIN, business profile, loyalty & socials' },
+          };
+
+          if (feature && links[feature]) {
+            functionResponseData = { target: links[feature] };
+          } else {
+            functionResponseData = { available_features: Object.values(links) };
+          }
         } else if (name === 'check_upsell_opportunities') {
-          functionResponseData = { suggestion: "Consider checking Orbitex Services tab to upgrade your online visibility or custom branding!" };
+          functionResponseData = {
+            suggestion: "Upgrade your online presence with Orbitex Services! Visit [Orbitex Services](/dashboard/services) to request Custom Websites, SEO Optimization, Digital Marketing, Brand Identity, QR Menu Design, or Social Media Management."
+          };
         }
       } catch (err: any) {
         console.error('Tool execution error:', err);
@@ -280,13 +354,12 @@ export async function POST(req: Request) {
         part = candidate?.content?.parts?.[0];
       } catch (err: any) {
         console.error('Gemini 2nd turn error:', err);
-        // Fallback text if second turn fails
         finalText = `Found result for ${name}: ${JSON.stringify(functionResponseData)}`;
       }
     }
 
     if (!finalText) {
-      finalText = part?.text?.trim() || "I am your read-only BillDoor Assistant. Ask me about your bills, revenue, expenses, or customers!";
+      finalText = part?.text?.trim() || "I am your read-only BillDoor Assistant. I can help you search customers, look up bills, search products, summarize revenue & expenses, check appointments, or navigate features!";
     }
 
     // Safely log query to assistant_queries (fail silently if table doesn't exist yet)
@@ -305,7 +378,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('Assistant handler error:', error);
     return NextResponse.json({
-      response: "Sorry, I encountered an error looking up that information. Please try rephrasing your question or specifying details like the customer's name or phone number."
+      response: "Sorry, I encountered an error looking up that information. Please try rephrasing your question or specifying details like the customer's name, phone number, or bill number.\n\nHere is what I can help you with:\n\n• 👥 **Customer Details**: Search customer profiles, total spent, and visit history\n• 📄 **Bills & Invoices**: Search by bill number or view recent invoices\n• 🏷️ **Products & Catalog**: Search items, prices, and GST rates\n• 💰 **Revenue & Reports**: View total revenue, bill counts, and average bill amounts\n• 📊 **Expense Log**: View business expenses by category (rent, salaries, supplies, utilities)\n• 📅 **Appointments**: Check upcoming/past appointment schedules & queue\n• 🔗 **Feature Links**: Quick navigation to [Create Bill](/dashboard/billit/create), [Expense Log](/dashboard/billit/expenses), [GST Summary](/dashboard/billit/reports/gst-summary), [QR Cards](/dashboard/settings/qr-links), [Orbitex Services](/dashboard/services), or [Settings](/dashboard/settings)"
     });
   }
 }
