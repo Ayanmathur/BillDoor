@@ -45,6 +45,7 @@ export async function fetchBookingInfoAction(slug: string) {
     .select('id, name, business_hours')
     .eq('client_id', client.id)
     .eq('active', true)
+    .eq('bookable_online', true)
     .order('created_at', { ascending: true });
 
   // Fetch services (type='service' catalog items)

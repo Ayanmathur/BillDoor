@@ -19,7 +19,7 @@ export async function fetchResourcesAction() {
 
   const { data, error } = await supabase
     .from('resources')
-    .select('id, name, active, business_hours, created_at')
+    .select('id, name, active, bookable_online, business_hours, created_at')
     .eq('client_id', user.id)
     .order('created_at', { ascending: true });
 
@@ -30,7 +30,7 @@ export async function fetchResourcesAction() {
 // ============================================================
 // Add a new resource
 // ============================================================
-export async function addResourceAction(data: { name: string }) {
+export async function addResourceAction(data: { name: string; bookable_online?: boolean }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Unauthorized.' };
@@ -39,9 +39,12 @@ export async function addResourceAction(data: { name: string }) {
   if (!name || name.length < 1) return { error: 'Resource name is required.' };
   if (name.length > 100) return { error: 'Name too long (max 100 chars).' };
 
+  const insertData: any = { client_id: user.id, name };
+  if (data.bookable_online !== undefined) insertData.bookable_online = data.bookable_online;
+
   const { error } = await supabase
     .from('resources')
-    .insert({ client_id: user.id, name });
+    .insert(insertData);
 
   if (error) return { error: 'Failed to add resource.' };
   return {};
@@ -50,7 +53,7 @@ export async function addResourceAction(data: { name: string }) {
 // ============================================================
 // Update a resource (name, active status)
 // ============================================================
-export async function updateResourceAction(data: { id: string; name?: string; active?: boolean }) {
+export async function updateResourceAction(data: { id: string; name?: string; active?: boolean; bookable_online?: boolean }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Unauthorized.' };
@@ -64,6 +67,7 @@ export async function updateResourceAction(data: { id: string; name?: string; ac
     updates.name = name;
   }
   if (data.active !== undefined) updates.active = data.active;
+  if (data.bookable_online !== undefined) updates.bookable_online = data.bookable_online;
 
   const { error } = await supabase
     .from('resources')

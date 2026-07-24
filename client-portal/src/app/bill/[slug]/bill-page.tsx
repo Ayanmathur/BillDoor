@@ -23,6 +23,7 @@ import {
   Printer, Download, Check, Loader2, Instagram, Facebook, Globe,
   ExternalLink, Linkedin, Twitter, MessageCircle, Gift
 } from 'lucide-react';
+import PoweredByFooter from '@/components/powered-by-footer';
 import { submitInlineReviewAction } from './actions';
 import { generateAiReviewAction } from '../../review/[slug]/actions';
 
@@ -438,7 +439,7 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
           </button>
         </div>
 
-        <div className="bill-powered">Powered by BillDoor · Orbitex</div>
+        <PoweredByFooter />
       </div>
     </div>
   );

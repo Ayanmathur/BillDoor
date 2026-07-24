@@ -16,6 +16,13 @@ export async function fetchDashboardData() {
 
   const clientId = user.id;
 
+  // Fetch client settings for tiles + slug
+  const { data: clientSettings } = await supabase
+    .from('clients')
+    .select('slug, modules_enabled, dashboard_tiles_hidden')
+    .eq('id', clientId)
+    .single();
+
   // Parallel queries for speed
   const [reviewsResult, billsResult, customersResult, todayBillsResult] = await Promise.all([
     // Review stats
@@ -91,5 +98,8 @@ export async function fetchDashboardData() {
       serviceType: r.service_type as string,
       createdAt: r.created_at as string,
     })),
+    clientSlug: clientSettings?.slug || '',
+    modulesEnabled: clientSettings?.modules_enabled || {},
+    dashboardTilesHidden: clientSettings?.dashboard_tiles_hidden || [],
   };
 }

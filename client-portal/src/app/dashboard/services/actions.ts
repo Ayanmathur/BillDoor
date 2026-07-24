@@ -3,17 +3,26 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/server';
 
-const SERVICE_TYPES = ['website', 'seo', 'ads', 'branding', 'support'] as const;
+const SERVICE_TYPES = ['website', 'seo', 'ads', 'branding', 'support', 'qr_menu_design', 'business_card_design'] as const;
 
 // Fetch admin WhatsApp number from platform_settings (using service role)
+// Fallback: always resolves to 919422880355 if DB value is missing/empty
 export async function fetchAdminWhatsAppAction() {
-  const supabase = await createAdminClient();
-  const { data } = await supabase
-    .from('platform_settings')
-    .select('admin_whatsapp_number')
-    .single();
-  const fallback = process.env.ADMIN_WHATSAPP_NUMBER ? `91${process.env.ADMIN_WHATSAPP_NUMBER.replace(/^91/, '')}` : '919422880355';
-  return { phone: data?.admin_whatsapp_number || fallback };
+  const FALLBACK_ADMIN_PHONE = '919422880355';
+  try {
+    const supabase = await createAdminClient();
+    const { data } = await supabase
+      .from('platform_settings')
+      .select('admin_whatsapp_number')
+      .single();
+    const dbPhone = data?.admin_whatsapp_number?.trim();
+    if (dbPhone && dbPhone.length >= 10) {
+      return { phone: dbPhone.replace(/[^0-9]/g, '') };
+    }
+  } catch {
+    // DB error — fall through to hardcoded fallback
+  }
+  return { phone: FALLBACK_ADMIN_PHONE };
 }
 
 // Fetch client's website URL

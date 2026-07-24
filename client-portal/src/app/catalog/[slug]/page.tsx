@@ -4,6 +4,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { Search, MessageCircle, Loader2, Package, ShoppingBag } from 'lucide-react';
+import PoweredByFooter from '@/components/powered-by-footer';
 import { fetchCatalogAction } from './actions';
 import './catalog.css';
 
@@ -123,7 +124,7 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
         <p>
           Want a full online store with photos? Ask {data.business.name} about <a href="https://orbitex.in" target="_blank" rel="noopener noreferrer">Orbitex Services</a>
         </p>
-        <p className="catalog-powered">Powered by BillDoor</p>
+        <PoweredByFooter />
       </div>
     </div>
   );

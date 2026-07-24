@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { fetchClientsAction, resetClientPasswordAction, updateClientDetailsAction } from './actions';
-import { KeyRound, Check, Loader2, X, UserPen } from 'lucide-react';
+import { useState, useEffect, Fragment } from 'react';
+import { fetchClientsAction, resetClientPasswordAction, updateClientDetailsAction, fetchClientFinancialsAction, togglePubliclyListedAction } from './actions';
+import { KeyRound, Check, Loader2, X, UserPen, IndianRupee, Globe } from 'lucide-react';
 import './clients.css';
 
 interface ClientRecord {
@@ -13,6 +13,7 @@ interface ClientRecord {
   google_place_id: string;
   about: string;
   status: string;
+  publicly_listed?: boolean;
   created_at: string;
   deleted_at: string | null;
 }
@@ -28,6 +29,11 @@ export default function ClientsPage() {
   const [editModalClient, setEditModalClient] = useState<ClientRecord | null>(null);
   const [editData, setEditData] = useState({ businessName: '', slug: '', googlePlaceId: '', about: '' });
   const [editing, setEditing] = useState(false);
+
+  // Per-client financials
+  const [financialsClientId, setFinancialsClientId] = useState<string | null>(null);
+  const [financialsData, setFinancialsData] = useState<any>(null);
+  const [financialsLoading, setFinancialsLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -119,12 +125,14 @@ export default function ClientsPage() {
                   <th>Username</th>
                   <th>Business Name</th>
                   <th>Status</th>
+                  <th>Directory</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredClients.map(client => (
-                  <tr key={client.id}>
+                  <Fragment key={client.id}>
+                  <tr>
                     <td>
                       <strong>{client.username}</strong>
                     </td>
@@ -134,6 +142,24 @@ export default function ClientsPage() {
                         {client.status}
                       </span>
                       {client.deleted_at && <span className="badge badge-error" style={{ marginLeft: 8 }}>Deleted</span>}
+                    </td>
+                    <td>
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 'var(--text-xs)' }}>
+                        <input
+                          type="checkbox"
+                          checked={client.publicly_listed ?? false}
+                          onChange={async (e) => {
+                            const val = e.target.checked;
+                            setClients(prev => prev.map(c => c.id === client.id ? { ...c, publicly_listed: val } : c));
+                            const res = await togglePubliclyListedAction(client.id, val);
+                            if (res.error) {
+                              alert(res.error);
+                              setClients(prev => prev.map(c => c.id === client.id ? { ...c, publicly_listed: !val } : c));
+                            }
+                          }}
+                        />
+                        <span>{client.publicly_listed ? 'Public' : 'Hidden'}</span>
+                      </label>
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 8 }}>
@@ -151,9 +177,57 @@ export default function ClientsPage() {
                         >
                           <UserPen size={16} /> Edit
                         </button>
+                        <button
+                          className="btn-icon"
+                          title="View Financials"
+                          onClick={async () => {
+                            if (financialsClientId === client.id) {
+                              setFinancialsClientId(null);
+                              return;
+                            }
+                            setFinancialsClientId(client.id);
+                            setFinancialsLoading(true);
+                            const now = new Date();
+                            const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                            const to = now.toISOString();
+                            const result = await fetchClientFinancialsAction(client.id, from, to);
+                            setFinancialsData(result);
+                            setFinancialsLoading(false);
+                          }}
+                        >
+                          <IndianRupee size={16} /> {financialsClientId === client.id ? 'Hide' : 'Financials'}
+                        </button>
                       </div>
                     </td>
                   </tr>
+                  {financialsClientId === client.id && (
+                    <tr>
+                      <td colSpan={5} style={{ background: 'var(--color-bg-secondary)', padding: '16px', borderTop: 'none' }}>
+                        {financialsLoading ? (
+                          <div style={{ textAlign: 'center' }}><Loader2 size={16} className="spinner" /> Loading...</div>
+                        ) : financialsData?.error ? (
+                          <div style={{ color: 'var(--color-error)' }}>{financialsData.error}</div>
+                        ) : financialsData ? (
+                          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 'var(--text-sm)' }}>
+                            <div>
+                              <div style={{ color: 'var(--color-text-tertiary)', fontSize: 11 }}>Revenue (this month)</div>
+                              <div style={{ fontWeight: 600, color: 'var(--color-success)' }}>₹{financialsData.revenue?.toLocaleString('en-IN')}</div>
+                              <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>{financialsData.billCount} bills</div>
+                            </div>
+                            <div>
+                              <div style={{ color: 'var(--color-text-tertiary)', fontSize: 11 }}>Expenses (this month)</div>
+                              <div style={{ fontWeight: 600, color: 'var(--color-error)' }}>₹{financialsData.expenses?.toLocaleString('en-IN')}</div>
+                            </div>
+                            <div>
+                              <div style={{ color: 'var(--color-text-tertiary)', fontSize: 11 }}>Estimated Net</div>
+                              <div style={{ fontWeight: 600 }}>₹{financialsData.estimatedNet?.toLocaleString('en-IN')}</div>
+                            </div>
+                          </div>
+                        ) : null}
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 ))}
                 {filteredClients.length === 0 && (
                   <tr>

@@ -510,7 +510,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="module-toggles" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid var(--color-border)' }}>
                         <span style={{ fontSize: '10px', color: 'var(--color-text-tertiary)', marginRight: '4px' }}>QT:</span>
-                        {[{ key: 'gst_calculator', label: 'GC' }, { key: 'catalog_viewer', label: 'CV' }].map((tool) => (
+                        {[{ key: 'gst_calculator', label: 'GC' }, { key: 'catalog_viewer', label: 'CV' }, { key: 'business_card', label: 'BC' }, { key: 'ai_assistant', label: 'AI' }].map((tool) => (
                           <label key={tool.key} className="module-toggle">
                             <input type="checkbox"
                               checked={((client.modules_enabled as any)?.quick_tools || {})?.[tool.key] ?? false}

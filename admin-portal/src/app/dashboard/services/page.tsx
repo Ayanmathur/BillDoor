@@ -22,7 +22,9 @@ const serviceTypeMapping: Record<string, string> = {
   ads: 'Digital Marketing',
   branding: 'Brand Identity',
   support: 'Technical Support',
-  social_media_management: 'Social Media Mgmt'
+  social_media_management: 'Social Media Mgmt',
+  qr_menu_design: 'QR Menu Design',
+  business_card_design: 'Business Card Design'
 };
 
 export default function ServicesPage() {

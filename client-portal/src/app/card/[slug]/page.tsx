@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { MapPin, Phone, Globe, Instagram, Linkedin, Twitter, MessageCircle, ExternalLink, Star, Calendar, ShoppingBag, Download, Loader2, User } from 'lucide-react';
+import PoweredByFooter from '@/components/powered-by-footer';
 import { fetchBusinessCardAction } from './actions';
 import './card.css';
 
@@ -176,9 +177,7 @@ END:VCARD`;
         </button>
       </div>
 
-      <div className="card-footer">
-        <p className="card-powered">Powered by BillDoor</p>
-      </div>
+      <PoweredByFooter />
     </div>
   );
 }

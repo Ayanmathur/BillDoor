@@ -11,14 +11,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Star, Receipt, Users, TrendingUp, Eye, Plus,
-  CalendarPlus, Loader2, IndianRupee,
+  CalendarPlus, Loader2, IndianRupee, CreditCard, Copy, Download, Check, QrCode,
 } from 'lucide-react';
 import { fetchDashboardData } from './actions';
+import ChatBubble from '@/components/ai-assistant/chat-bubble';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -124,6 +126,71 @@ export default function DashboardPage() {
           <Receipt size={16} /> Catalog
         </button>
       </div>
+
+      {/* Digital Business Card Tile — two-layer toggle gated */}
+      {data?.clientSlug && !((data?.dashboardTilesHidden || []) as string[]).includes('business_card') && (
+        <div style={{ marginTop: 'var(--space-6)' }}>
+          <h2 style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 'var(--space-3)' }}>
+            <CreditCard size={14} style={{ display: 'inline', verticalAlign: -2, marginRight: 4 }} /> Digital Business Card
+          </h2>
+          <div className="dash-card" style={{ cursor: 'default' }}>
+            <div style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'center', flexWrap: 'wrap' }}>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/card/${data.clientSlug}`)}`}
+                alt="Business Card QR"
+                style={{ width: 100, height: 100, borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}
+              />
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-2)' }}>
+                  {typeof window !== 'undefined' ? `${window.location.origin}/card/${data.clientSlug}` : `/card/${data.clientSlug}`}
+                </div>
+                <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                  <button
+                    className="btn"
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)' }}
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/card/${data.clientSlug}`);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                    {copied ? 'Copied!' : 'Copy Link'}
+                  </button>
+                  <button
+                    className="btn"
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)' }}
+                    onClick={() => {
+                      const url = `${window.location.origin}/card/${data.clientSlug}`;
+                      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`;
+                      fetch(qrUrl).then(r => r.blob()).then(blob => {
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = `business-card-qr-${data.clientSlug}.png`;
+                        a.click();
+                        URL.revokeObjectURL(a.href);
+                      });
+                    }}
+                  >
+                    <Download size={14} /> Download QR
+                  </button>
+                  <button
+                    className="btn"
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)' }}
+                    onClick={() => router.push('/dashboard/settings/qr-links')}
+                  >
+                    <QrCode size={14} /> All QR & Links
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* AI Assistant — two-layer toggle gated */}
+      {!((data?.dashboardTilesHidden || []) as string[]).includes('ai_assistant') && (
+        <ChatBubble />
+      )}
     </div>
   );
 }

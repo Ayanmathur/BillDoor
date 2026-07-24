@@ -16,6 +16,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Star, Copy, RefreshCw, Check, Loader2, ExternalLink, Heart,
 } from 'lucide-react';
+import PoweredByFooter from '@/components/powered-by-footer';
 import {
   submitReviewAction,
   generateAiReviewAction,
@@ -362,9 +363,7 @@ export default function ReviewPage({
           )}
         </div>
 
-        <div className="review-footer">
-          Powered by BillDoor · Orbitex
-        </div>
+        <PoweredByFooter />
       </div>
     </div>
   );

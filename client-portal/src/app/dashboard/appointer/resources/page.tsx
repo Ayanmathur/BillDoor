@@ -16,6 +16,7 @@ interface ResourceRow {
   id: string;
   name: string;
   active: boolean;
+  bookable_online: boolean;
   business_hours: Record<string, { open: string; close: string } | null> | null;
   created_at: string;
 }
@@ -71,6 +72,14 @@ export default function ResourcesPage() {
   async function handleToggleActive(id: string, active: boolean) {
     setSaving(true);
     const result = await updateResourceAction({ id, active: !active });
+    if (result.error) setError(result.error);
+    else await load();
+    setSaving(false);
+  }
+
+  async function handleToggleBookableOnline(id: string, current: boolean) {
+    setSaving(true);
+    const result = await updateResourceAction({ id, bookable_online: !current });
     if (result.error) setError(result.error);
     else await load();
     setSaving(false);
@@ -204,7 +213,14 @@ export default function ResourcesPage() {
                     <span style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-md)' }}>{r.name}</span>
                     {!r.active && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginLeft: 'var(--space-2)' }}>(Inactive)</span>}
                   </div>
-                  <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                  <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginRight: 'var(--space-4)' }}>
+                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>Bookable Online</span>
+                      <label className="toggle-switch">
+                        <input type="checkbox" checked={r.bookable_online ?? true} onChange={() => handleToggleBookableOnline(r.id, r.bookable_online ?? true)} disabled={saving} />
+                        <span className="toggle-slider"></span>
+                      </label>
+                    </div>
                     <button
                       className="btn"
                       onClick={() => { setEditId(r.id); setEditName(r.name); }}

@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  Plus, Search, Edit3, Trash2, Package, Loader2, X, Save, Barcode, Printer, Download
+  Plus, Search, Edit3, Trash2, Package, Loader2, X, Save, Barcode, Printer, Download, FileSpreadsheet
 } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
 import './../billit.css';
@@ -33,6 +33,7 @@ interface CatalogItem {
   barcode_value: string | null;
   barcode_auto_generated: boolean;
   buffer_after_min: number;
+  hsn_sac_code: string | null;
 }
 
 export default function CatalogPage() {
@@ -56,6 +57,7 @@ export default function CatalogPage() {
   const [formDesc, setFormDesc] = useState('');
   const [formBarcode, setFormBarcode] = useState('');
   const [formBuffer, setFormBuffer] = useState('0');
+  const [formHsnSac, setFormHsnSac] = useState('');
 
   const loadItems = useCallback(async () => {
     const result = await fetchCatalogAction(search || undefined);
@@ -68,7 +70,7 @@ export default function CatalogPage() {
   function resetForm() {
     setFormName(''); setFormType('product'); setFormPrice(''); setFormUnit('');
     setFormGst('0'); setFormDiscountType('₹'); setFormDiscountValue('0'); setFormFinalPrice('');
-    setFormDesc(''); setFormBarcode(''); setFormBuffer('0'); setEditingId(null);
+    setFormDesc(''); setFormBarcode(''); setFormBuffer('0'); setFormHsnSac(''); setEditingId(null);
     setShowForm(false); setError('');
   }
 
@@ -84,6 +86,7 @@ export default function CatalogPage() {
     setFormDesc(item.description || '');
     setFormBarcode(item.barcode_value || '');
     setFormBuffer(String(item.buffer_after_min || 0));
+    setFormHsnSac(item.hsn_sac_code || '');
     setShowForm(true);
     
     // Calc initial final price
@@ -134,6 +137,7 @@ export default function CatalogPage() {
       description: formDesc || undefined,
       barcodeValue: formBarcode || undefined,
       bufferAfterMin: Number(formBuffer) || 0,
+      hsnSacCode: formHsnSac || undefined,
     };
 
     const result = editingId
@@ -278,6 +282,36 @@ export default function CatalogPage() {
     URL.revokeObjectURL(url);
   }
 
+  async function handleExportCSV() {
+    const result = await fetchCatalogAction();
+    if (!result.items || result.items.length === 0) {
+      alert('No items to export.');
+      return;
+    }
+    const allItems = result.items as CatalogItem[];
+
+    const headers = ['Name', 'Price', 'Unit', 'GST%', 'HSN/SAC Code', 'Barcode', 'Active'];
+    const rows = allItems.map(i => [
+      `"${i.name.replace(/"/g, '""')}"`,
+      i.price,
+      i.unit || '',
+      i.gst_percent,
+      i.hsn_sac_code || '',
+      i.barcode_value || '',
+      'Yes'
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'catalog_export.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   const filtered = search
     ? items.filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
     : items;
@@ -293,10 +327,15 @@ export default function CatalogPage() {
               style={{ paddingLeft: 34, fontSize: 'var(--text-sm)' }} />
           </div>
         </div>
-        <button className="btn-add-item" onClick={() => { resetForm(); setShowForm(true); }}>
-          <span className="btn-add-text">Add Item</span>
-          <span className="btn-add-icon"><Plus size={18} /></span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <button className="btn" onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', height: '40px', padding: '0 var(--space-4)', borderRadius: 'var(--radius-full)' }}>
+            <FileSpreadsheet size={16} /> Export CSV
+          </button>
+          <button className="btn-add-item" onClick={() => { resetForm(); setShowForm(true); }}>
+            <span className="btn-add-text">Add Item</span>
+            <span className="btn-add-icon"><Plus size={18} /></span>
+          </button>
+        </div>
       </div>
 
       {/* Add/Edit Form */}
@@ -385,6 +424,12 @@ export default function CatalogPage() {
                 <input className="input-field" type="number" min="0" value={formBuffer} onChange={(e) => setFormBuffer(e.target.value)} />
               </div>
             )}
+          </div>
+          <div className="settings-row full">
+            <div className="input-group">
+              <label className="input-label">HSN/SAC Code</label>
+              <input className="input-field" value={formHsnSac} onChange={(e) => setFormHsnSac(e.target.value)} placeholder="Optional" />
+            </div>
           </div>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving} style={{ marginTop: 'var(--space-2)' }}>
             {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} {editingId ? 'Update' : 'Add'}

@@ -17,6 +17,7 @@ import {
   fetchAvailableSlotsAction,
   createPublicBookingAction,
 } from './actions';
+import PoweredByFooter from '@/components/powered-by-footer';
 import './booking.css';
 
 interface Service {
@@ -255,7 +256,7 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
         <div className="booking-header">
           <h1>{businessName}</h1>
           <p>Book an appointment online</p>
-          <div className="booking-powered">Powered by BillDoor</div>
+          <PoweredByFooter />
         </div>
 
         {error && <div className="booking-error">{error}</div>}

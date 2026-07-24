@@ -20,7 +20,7 @@ export async function fetchClientsAction() {
 
   const { data, error } = await supabase
     .from('clients')
-    .select('id, username, business_name, slug, google_place_id, about, status, created_at, deleted_at')
+    .select('id, username, business_name, slug, google_place_id, about, status, publicly_listed, created_at, deleted_at')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -130,6 +130,82 @@ export async function updateClientDetailsAction(data: {
     action: AUDIT_ACTIONS.BUSINESS_SETTINGS_UPDATED,
     metadata: { reason: 'Admin updated client details', targetClientId: data.clientId, updates: data },
   });
+
+  return { success: true };
+}
+
+// ============================================================
+// Per-client financial overview (read-only, admin only)
+// ============================================================
+export async function fetchClientFinancialsAction(clientId: string, from: string, to: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized' };
+
+  const { data: adminUser } = await supabase
+    .from('admin_users')
+    .select('id')
+    .eq('id', user.id)
+    .single();
+  if (!adminUser) return { error: 'Unauthorized' };
+
+  const { createAdminClient } = await import('@/lib/supabase/server');
+  const admin = await createAdminClient();
+
+  // Revenue: bills in the date range
+  const { data: bills } = await admin
+    .from('bills')
+    .select('grand_total, created_at')
+    .eq('client_id', clientId)
+    .gte('created_at', from)
+    .lte('created_at', to);
+
+  const totalRevenue = (bills || []).reduce((sum, b) => sum + Number(b.grand_total || 0), 0);
+  const billCount = (bills || []).length;
+
+  // Expenses: in the date range
+  const { data: expenses } = await admin
+    .from('expenses')
+    .select('amount, category')
+    .eq('client_id', clientId)
+    .gte('expense_date', from.split('T')[0])
+    .lte('expense_date', to.split('T')[0]);
+
+  const totalExpenses = (expenses || []).reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const expensesByCategory: Record<string, number> = {};
+  for (const e of (expenses || [])) {
+    expensesByCategory[e.category] = (expensesByCategory[e.category] || 0) + Number(e.amount || 0);
+  }
+
+  return {
+    revenue: totalRevenue,
+    billCount,
+    expenses: totalExpenses,
+    expensesByCategory,
+    estimatedNet: totalRevenue - totalExpenses,
+  };
+}
+
+export async function togglePubliclyListedAction(clientId: string, publiclyListed: boolean) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized' };
+
+  const { data: adminUser } = await supabase
+    .from('admin_users')
+    .select('id')
+    .eq('id', user.id)
+    .single();
+  if (!adminUser) return { error: 'Unauthorized' };
+
+  const { error } = await supabase
+    .from('clients')
+    .update({ publicly_listed: publiclyListed })
+    .eq('id', clientId);
+
+  if (error) {
+    return { error: 'Failed to update client directory status' };
+  }
 
   return { success: true };
 }

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   Globe, Monitor, Search, BarChart3, Palette, Share2,
   HeadphonesIcon, MessageCircle, Calendar, ExternalLink, 
-  Check, Clock, Loader2, Plus 
+  Check, Clock, Loader2, Plus, QrCode, Contact
 } from 'lucide-react';
 import { 
   fetchAdminWhatsAppAction, 
@@ -13,6 +13,7 @@ import {
   createServiceRequestAction,
   fetchPortfolioItemsAction
 } from './actions';
+import ChatBubble from '@/components/ai-assistant/chat-bubble';
 
 declare global {
   interface Window {
@@ -59,6 +60,18 @@ const SERVICES = [
     title: 'Technical Support',
     description: 'Priority assistance for your digital infrastructure.',
     icon: Monitor,
+  },
+  {
+    id: 'qr_menu_design',
+    title: 'QR Menu Design',
+    description: 'Custom designed digital QR menus for your business.',
+    icon: QrCode,
+  },
+  {
+    id: 'business_card_design',
+    title: 'Business Card Design',
+    description: 'Professional business card designs for your team.',
+    icon: Contact,
   }
 ];
 
@@ -356,6 +369,28 @@ export default function ServicesPage() {
           Chat on WhatsApp
         </button>
       </div>
+
+      {/* Orbitex Official Channels & Directory */}
+      <div style={{ marginTop: 'var(--space-6)', padding: 'var(--space-4)', background: '#fff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h3 style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', margin: 0, color: 'var(--color-text-primary)' }}>
+            Orbitex Digital Network
+          </h3>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', margin: '2px 0 0' }}>
+            Visit orbitex.in or browse our public merchant directory
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <a href="https://orbitex.in" target="_blank" rel="noopener noreferrer" className="btn" style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Globe size={14} /> orbitex.in <ExternalLink size={12} />
+          </a>
+          <a href="/directory" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Share2 size={14} /> View Client Directory
+          </a>
+        </div>
+      </div>
+
+      <ChatBubble />
     </div>
   );
 }
