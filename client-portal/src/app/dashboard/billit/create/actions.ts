@@ -456,13 +456,13 @@ export async function fetchBillSettingsAction() {
 
   const { data: client } = await supabase
     .from('clients')
-    .select('business_name, slug, barcode_enabled, has_gst, gst_number, reward_settings')
+    .select('business_name, slug, barcode_enabled, has_gst, gst_number, reward_settings, billit_auto_select_template, modules_enabled')
     .eq('id', user.id)
     .single();
 
   if (!client) return { error: 'Client not found.', settings: null };
 
-  // Fetch the billit WhatsApp template
+  // Fetch the legacy billit WhatsApp template (always — this is the fallback)
   const { data: template } = await supabase
     .from('whatsapp_templates')
     .select('content')
@@ -473,10 +473,41 @@ export async function fetchBillSettingsAction() {
     .limit(1)
     .single();
 
+  // If auto-select is on, also fetch the first-visit and repeat-visit defaults
+  let firstVisitTemplate: string | null = null;
+  let repeatVisitTemplate: string | null = null;
+
+  if (client.billit_auto_select_template) {
+    const { data: firstVisit } = await supabase
+      .from('whatsapp_bill_templates')
+      .select('content')
+      .eq('client_id', user.id)
+      .eq('is_default_first_visit', true)
+      .limit(1)
+      .single();
+
+    const { data: repeatVisit } = await supabase
+      .from('whatsapp_bill_templates')
+      .select('content')
+      .eq('client_id', user.id)
+      .eq('is_default_repeat_visit', true)
+      .limit(1)
+      .single();
+
+    firstVisitTemplate = firstVisit?.content || null;
+    repeatVisitTemplate = repeatVisit?.content || null;
+  }
+
+  const modules = (client.modules_enabled || {}) as Record<string, any>;
+
   return {
     settings: {
       ...client,
       bill_whatsapp_template: template?.content || null,
+      billit_auto_select_template: client.billit_auto_select_template ?? false,
+      first_visit_template: firstVisitTemplate,
+      repeat_visit_template: repeatVisitTemplate,
+      appointer_enabled: modules.appointer === true,
     },
   };
 }

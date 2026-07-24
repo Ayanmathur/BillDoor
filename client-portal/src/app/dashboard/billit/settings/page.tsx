@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Barcode, Save, Loader2, Check, Link as LinkIcon, MessageSquare, Copy, ExternalLink, Percent, Tag, Send } from 'lucide-react';
+import { ArrowLeft, Barcode, Save, Loader2, Check, Link as LinkIcon, MessageSquare, Copy, ExternalLink, Percent, Tag, Send, FileText, Link2 } from 'lucide-react';
 import {
   fetchBillitSettingsAction,
   updateBillitSettingsAction,
@@ -41,6 +41,9 @@ export default function BillitSettingsPage() {
   const [savingBillTemplate, setSavingBillTemplate] = useState(false);
   const [billTemplateError, setBillTemplateError] = useState('');
 
+  // Auto-select template toggle
+  const [autoSelectTemplate, setAutoSelectTemplate] = useState(false);
+
   useEffect(() => {
     async function load() {
       const result = await fetchBillitSettingsAction();
@@ -52,6 +55,7 @@ export default function BillitSettingsPage() {
         setSlug(result.settings.slug || '');
         setCatalogTemplate(result.settings.whatsapp_catalog_template || "Hi! I'm interested in {item_name}. Is it available?");
         setCatalogViewerEnabled(result.settings.modules_enabled?.quick_tools?.catalog_viewer === true);
+        setAutoSelectTemplate(result.settings.billit_auto_select_template ?? false);
       }
       setLoading(false);
     }
@@ -75,7 +79,8 @@ export default function BillitSettingsPage() {
       barcodeEnabled,
       defaultGst,
       defaultDiscountType,
-      defaultDiscountValue
+      defaultDiscountValue,
+      billitAutoSelectTemplate: autoSelectTemplate,
     });
     if (result.error) setError(result.error);
     else flash();
@@ -307,6 +312,44 @@ export default function BillitSettingsPage() {
         >
           {savingBillTemplate ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Template
         </button>
+      </div>
+
+      {/* Auto-select Template by Visit Type */}
+      <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
+        <h3 className="settings-section-title">
+          <FileText size={18} /> Multi-Template Settings
+        </h3>
+
+        <div className="toggle-field">
+          <div>
+            <div className="toggle-field-label">Auto-select template by visit type</div>
+            <div className="toggle-field-desc">
+              When enabled, first-visit customers get your &quot;first visit&quot; default template,
+              repeat customers get your &quot;repeat visit&quot; default. When off, uses the single template above.
+            </div>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={autoSelectTemplate}
+              onChange={(e) => setAutoSelectTemplate(e.target.checked)}
+            />
+            <span className="toggle-slider" />
+          </label>
+        </div>
+
+        <div style={{ marginTop: 'var(--space-3)' }}>
+          <button
+            className="btn"
+            onClick={() => router.push('/dashboard/billit/settings/bill-templates')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)' }}
+          >
+            <Link2 size={16} /> Manage Multiple Templates →
+          </button>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-2)' }}>
+            Create and manage visit-type templates, set defaults for first-visit and repeat customers.
+          </p>
+        </div>
       </div>
 
       {catalogViewerEnabled && (

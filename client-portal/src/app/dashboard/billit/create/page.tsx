@@ -58,6 +58,14 @@ export default function CreateBillPage() {
   const [hasGst, setHasGst] = useState(false);
   const [billWhatsAppTemplate, setBillWhatsAppTemplate] = useState('');
 
+  // Multi-template (Step 2/3)
+  const [autoSelectTemplate, setAutoSelectTemplate] = useState(false);
+  const [firstVisitTemplate, setFirstVisitTemplate] = useState<string | null>(null);
+  const [repeatVisitTemplate, setRepeatVisitTemplate] = useState<string | null>(null);
+  const [appointerEnabled, setAppointerEnabled] = useState(false);
+  const [customerTotalVisits, setCustomerTotalVisits] = useState<number | null>(null);
+  const [manualTemplateOverride, setManualTemplateOverride] = useState<string | null>(null);
+
   // Customer
   const [phone, setPhone] = useState('');
   const [customerName, setCustomerName] = useState('');
@@ -107,6 +115,11 @@ export default function CreateBillPage() {
         setClientSlug(settings.slug || '');
         setHasGst(settings.has_gst || false);
         setBillWhatsAppTemplate(settings.bill_whatsapp_template || '');
+        // Multi-template state (defaults to off — no change for existing clients)
+        setAutoSelectTemplate(settings.billit_auto_select_template ?? false);
+        setFirstVisitTemplate(settings.first_visit_template ?? null);
+        setRepeatVisitTemplate(settings.repeat_visit_template ?? null);
+        setAppointerEnabled(settings.appointer_enabled ?? false);
         if (settings.reward_settings && settings.reward_settings.enabled === false) {
           setRewardEnabled(false);
         }
@@ -206,8 +219,10 @@ export default function CreateBillPage() {
     if (result.customer) {
       setCustomerName(result.customer.name);
       setCustomerFound(true);
+      setCustomerTotalVisits(result.customer.total_visits ?? 0);
     } else {
       setCustomerFound(false);
+      setCustomerTotalVisits(null);
     }
     setLookingUp(false);
   }
@@ -388,15 +403,62 @@ export default function CreateBillPage() {
     if (!billToUse) return '#';
     const appUrl = billToUse.billUrl.split('/bill/')[0];
     const reviewLink = clientSlug ? `${appUrl}/review/${clientSlug}` : '';
+    const appointmentLink = (appointerEnabled && clientSlug) ? `${appUrl}/book/${clientSlug}` : '';
+
+    // Determine which template to use:
+    // 1. Manual override ("Use this template" button) takes priority
+    // 2. Auto-select by visit type (if enabled and defaults are set)
+    // 3. Fallback: legacy single template from whatsapp_templates
+    let chosenTemplate: string | null = manualTemplateOverride;
+
+    if (!chosenTemplate && autoSelectTemplate) {
+      // total_visits was already incremented by createBillAction, so:
+      // - If customer was new (total_visits was 0), it's now 1 → first visit
+      // - If customer already had visits, it's > 1 → repeat visit
+      const visitsBeforeBill = customerTotalVisits ?? 0;
+      const isFirstVisit = visitsBeforeBill === 0;
+      if (isFirstVisit && firstVisitTemplate) {
+        chosenTemplate = firstVisitTemplate;
+      } else if (!isFirstVisit && repeatVisitTemplate) {
+        chosenTemplate = repeatVisitTemplate;
+      }
+      // If no matching default template is set, fall through to legacy
+    }
+
+    // Final fallback: legacy single template
+    if (!chosenTemplate) {
+      chosenTemplate = billWhatsAppTemplate;
+    }
+
     let message: string;
-    if (billWhatsAppTemplate) {
-      message = billWhatsAppTemplate
+    if (chosenTemplate) {
+      message = chosenTemplate
         .replace(/\{customer_name\}/g, billToUse.customerName)
         .replace(/\{business_name\}/g, businessName)
         .replace(/\{bill_link\}/g, billToUse.billUrl)
         .replace(/\{bill_number\}/g, billToUse.billNumber || '')
         .replace(/\{grand_total\}/g, Number(billToUse.grandTotal).toLocaleString('en-IN'))
         .replace(/\{review_link\}/g, reviewLink);
+
+      // {appointment_link} fallback rule:
+      // If Appointer is ON → replace with actual link.
+      // If Appointer is OFF → fall back to {review_link} if present in template,
+      //   otherwise drop the entire line containing {appointment_link}.
+      if (appointmentLink) {
+        message = message.replace(/\{appointment_link\}/g, appointmentLink);
+      } else {
+        // Appointer is off — apply fallback
+        if (chosenTemplate.includes('{review_link}')) {
+          // Template already has {review_link} rendered, replace appointment link with review link
+          message = message.replace(/\{appointment_link\}/g, reviewLink);
+        } else {
+          // No {review_link} in template either — drop lines containing {appointment_link}
+          message = message
+            .split('\n')
+            .filter(line => !line.includes('{appointment_link}'))
+            .join('\n');
+        }
+      }
     } else {
       message = `Hi ${billToUse.customerName}, here is your bill from ${businessName}.\nAmount: ₹${Number(billToUse.grandTotal).toLocaleString('en-IN')}.\nView Bill:\n${billToUse.billUrl}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n${reviewLink}\n\nThankYou!`;
     }
@@ -448,6 +510,7 @@ export default function CreateBillPage() {
     setPhone(''); setCustomerName(''); setCustomerFound(false); setItems([]);
     setRewardCode(''); setRewardValid(null); setRewardError('');
     setExtraCharges(0); setExtraChargesNote(''); setBillResult(null); setError('');
+    setCustomerTotalVisits(null); setManualTemplateOverride(null);
     isCreatingRef.current = false;
     previewNextBillNumberAction().then(p => { if (p) setPreviewBillNumber(p); });
   }

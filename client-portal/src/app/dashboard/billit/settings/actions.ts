@@ -8,7 +8,7 @@ export async function fetchBillitSettingsAction() {
 
   const { data } = await supabase
     .from('clients')
-    .select('barcode_enabled, barcode_settings, slug, whatsapp_catalog_template, modules_enabled, bill_settings')
+    .select('barcode_enabled, barcode_settings, slug, whatsapp_catalog_template, modules_enabled, bill_settings, billit_auto_select_template')
     .eq('id', user.id)
     .single();
 
@@ -20,21 +20,27 @@ export async function updateBillitSettingsAction(data: {
   defaultGst: number;
   defaultDiscountType: string;
   defaultDiscountValue: number;
+  billitAutoSelectTemplate?: boolean;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Unauthorized.' };
 
+  const updatePayload: Record<string, unknown> = {
+    barcode_enabled: data.barcodeEnabled,
+    bill_settings: {
+      default_gst: data.defaultGst,
+      default_discount_type: data.defaultDiscountType,
+      default_discount_value: data.defaultDiscountValue,
+    },
+  };
+  if (data.billitAutoSelectTemplate !== undefined) {
+    updatePayload.billit_auto_select_template = data.billitAutoSelectTemplate;
+  }
+
   const { error } = await supabase
     .from('clients')
-    .update({ 
-      barcode_enabled: data.barcodeEnabled,
-      bill_settings: {
-        default_gst: data.defaultGst,
-        default_discount_type: data.defaultDiscountType,
-        default_discount_value: data.defaultDiscountValue
-      }
-    })
+    .update(updatePayload)
     .eq('id', user.id);
 
   if (error) {

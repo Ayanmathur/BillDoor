@@ -66,18 +66,16 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
           <p>Digital Catalog</p>
         </div>
 
-        {(data.items || []).length > 10 && (
-          <div className="catalog-filter-container">
-            <Search size={18} className="catalog-filter-icon" />
-            <input
-              type="text"
-              placeholder="Search items..."
-              className="catalog-filter"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-        )}
+        <div className="catalog-filter-container">
+          <Search size={18} className="catalog-filter-icon" />
+          <input
+            type="text"
+            placeholder="Search items..."
+            className="catalog-filter"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
         {filteredItems.length === 0 ? (
           <div className="catalog-empty">
