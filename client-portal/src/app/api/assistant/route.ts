@@ -146,22 +146,45 @@ export async function POST(req: Request) {
       try {
         if (name === 'get_customer') {
           const search = String(safeArgs.search || '').trim();
-          const { data } = await supabase
+          let query = supabase
             .from('customers')
-            .select('name, phone, total_visits, total_spent, last_visit')
+            .select('name, phone, total_visits, total_spent, last_visit_at, created_at')
             .eq('client_id', clientId)
-            .or(`phone.ilike.%${search}%,name.ilike.%${search}%`)
+            .order('last_visit_at', { ascending: false, nullsFirst: false })
             .limit(5);
-          functionResponseData = { customers: data || [] };
+
+          if (search) {
+            query = query.or(`phone.ilike.%${search}%,name.ilike.%${search}%`);
+          }
+
+          const { data, error } = await query;
+          if (error) {
+            console.error('get_customer query error:', error);
+            functionResponseData = { error: error.message };
+          } else {
+            functionResponseData = { customers: data || [] };
+          }
         } else if (name === 'get_bill') {
           const billNum = String(safeArgs.bill_number || '').trim();
-          const { data } = await supabase
+          let query = supabase
             .from('bills')
-            .select('*')
+            .select('id, bill_number, customer_name, customer_phone, grand_total, payment_status, created_at')
             .eq('client_id', clientId)
-            .eq('bill_number', billNum)
-            .single();
-          functionResponseData = { bill: data || null };
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+          if (billNum) {
+            query = query.ilike('bill_number', `%${billNum}%`);
+          }
+
+          const { data, error } = await query;
+          if (error) {
+            console.error('get_bill query error:', error);
+            functionResponseData = { error: error.message };
+          } else {
+            functionResponseData = { bills: data || [] };
+          }
         } else if (name === 'get_revenue_summary') {
           let gte = new Date();
           gte.setHours(0, 0, 0, 0);
@@ -169,14 +192,20 @@ export async function POST(req: Request) {
           if (safeArgs.period === 'month') gte.setMonth(gte.getMonth() - 1);
           if (safeArgs.period === 'year') gte.setFullYear(gte.getFullYear() - 1);
 
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('bills')
             .select('grand_total')
             .eq('client_id', clientId)
+            .is('deleted_at', null)
             .gte('created_at', gte.toISOString());
 
-          const total = (data || []).reduce((sum, b) => sum + Number(b.grand_total || 0), 0);
-          functionResponseData = { total_revenue: total, count: (data || []).length, period: safeArgs.period || 'today' };
+          if (error) {
+            console.error('get_revenue_summary query error:', error);
+            functionResponseData = { error: error.message };
+          } else {
+            const total = (data || []).reduce((sum, b) => sum + Number(b.grand_total || 0), 0);
+            functionResponseData = { total_revenue: total, count: (data || []).length, period: safeArgs.period || 'today' };
+          }
         } else if (name === 'get_expense_summary') {
           let gte = new Date();
           gte.setHours(0, 0, 0, 0);
@@ -186,20 +215,26 @@ export async function POST(req: Request) {
 
           const dateStr = gte.toISOString().split('T')[0];
 
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('expenses')
             .select('amount, category')
             .eq('client_id', clientId)
+            .is('deleted_at', null)
             .gte('expense_date', dateStr);
 
-          const categories: Record<string, number> = {};
-          let totalExpense = 0;
-          (data || []).forEach(e => {
-            const amt = Number(e.amount || 0);
-            categories[e.category] = (categories[e.category] || 0) + amt;
-            totalExpense += amt;
-          });
-          functionResponseData = { total_expense: totalExpense, categories, period: safeArgs.period || 'today' };
+          if (error) {
+            console.error('get_expense_summary query error:', error);
+            functionResponseData = { error: error.message };
+          } else {
+            const categories: Record<string, number> = {};
+            let totalExpense = 0;
+            (data || []).forEach(e => {
+              const amt = Number(e.amount || 0);
+              categories[e.category] = (categories[e.category] || 0) + amt;
+              totalExpense += amt;
+            });
+            functionResponseData = { total_expense: totalExpense, categories, period: safeArgs.period || 'today' };
+          }
         } else if (name === 'get_appointment') {
           let q = supabase.from('appointments').select('*').eq('client_id', clientId);
           if (safeArgs.date) {
@@ -212,8 +247,13 @@ export async function POST(req: Request) {
           if (safeArgs.customer_name) {
             q = q.ilike('customer_name', `%${safeArgs.customer_name}%`);
           }
-          const { data } = await q.limit(10);
-          functionResponseData = { appointments: data || [] };
+          const { data, error } = await q.order('start_time', { ascending: true }).limit(10);
+          if (error) {
+            console.error('get_appointment query error:', error);
+            functionResponseData = { error: error.message };
+          } else {
+            functionResponseData = { appointments: data || [] };
+          }
         } else if (name === 'check_upsell_opportunities') {
           functionResponseData = { suggestion: "Consider checking Orbitex Services tab to upgrade your online visibility or custom branding!" };
         }
@@ -265,7 +305,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('Assistant handler error:', error);
     return NextResponse.json({
-      response: "I encountered an error looking up that information. Please ensure GEMINI_API_KEY is configured in .env.local."
+      response: "Sorry, I encountered an error looking up that information. Please try rephrasing your question or specifying details like the customer's name or phone number."
     });
   }
 }
