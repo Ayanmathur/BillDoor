@@ -130,27 +130,27 @@ export default function ExpensesPage() {
           <h3 style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', marginBottom: 'var(--space-3)' }}>
             {editId ? 'Edit Expense' : 'New Expense'}
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
-            <div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', marginBottom: 'var(--space-4)', alignItems: 'flex-start' }}>
+            <div style={{ width: 160 }}>
               <label style={{ display: 'block', fontSize: 'var(--text-xs)', marginBottom: 'var(--space-1)' }}>Date</label>
-              <input type="date" className="input-field" value={formData.expenseDate} onChange={(e) => setFormData({...formData, expenseDate: e.target.value})} />
+              <input type="date" className="input-field" value={formData.expenseDate} onChange={(e) => setFormData({...formData, expenseDate: e.target.value})} style={{ width: '100%' }} />
             </div>
-            <div>
+            <div style={{ width: 160 }}>
               <label style={{ display: 'block', fontSize: 'var(--text-xs)', marginBottom: 'var(--space-1)' }}>Amount (₹)</label>
               <div style={{ position: 'relative' }}>
                 <IndianRupee size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-tertiary)' }} />
-                <input type="number" className="input-field" value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} style={{ paddingLeft: 30 }} />
+                <input type="number" className="input-field" value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} style={{ paddingLeft: 30, width: '100%' }} placeholder="0.00" />
               </div>
             </div>
-            <div>
+            <div style={{ width: 180, marginLeft: 'auto' }}>
               <label style={{ display: 'block', fontSize: 'var(--text-xs)', marginBottom: 'var(--space-1)' }}>Category</label>
-              <select className="input-field" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}>
+              <select className="input-field" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} style={{ width: '100%' }}>
                 {CATEGORIES.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
               </select>
             </div>
-            <div style={{ gridColumn: '1 / -1' }}>
+            <div style={{ width: '100%' }}>
               <label style={{ display: 'block', fontSize: 'var(--text-xs)', marginBottom: 'var(--space-1)' }}>Note (Optional)</label>
-              <input type="text" className="input-field" value={formData.note} onChange={(e) => setFormData({...formData, note: e.target.value})} placeholder="What was this for?" />
+              <input type="text" className="input-field" value={formData.note} onChange={(e) => setFormData({...formData, note: e.target.value})} placeholder="What was this for?" style={{ width: '100%' }} />
             </div>
           </div>
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
