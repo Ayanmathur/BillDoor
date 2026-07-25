@@ -33,12 +33,27 @@ export default function ChatBubble() {
     }
   }, [messages, isOpen]);
 
-  const handleSend = async () => {
-    if (!inputValue.trim() || loading) return;
+  const quickActions = [
+    { label: "📊 Today's Revenue", query: "Show today's revenue summary" },
+    { label: '👥 Search Customer', query: 'List my recent customers' },
+    { label: '📄 Recent Bills', query: 'Show my recent bills' },
+    { label: '💰 Expenses', query: 'Show my monthly expenses' },
+    { label: '📅 Appointments', query: "Check today's appointment schedule" },
+    { label: '➕ Create Bill', query: 'How do I create a new bill?' },
+  ];
+
+  const handleQuickClick = (query: string) => {
+    if (loading) return;
+    setInputValue(query);
+    handleSendWithQuery(query);
+  };
+
+  const handleSendWithQuery = async (queryText: string) => {
+    if (!queryText.trim() || loading) return;
 
     const userMessage: Message = {
       role: 'user',
-      content: inputValue,
+      content: queryText,
       timestamp: new Date(),
     };
 
@@ -63,7 +78,7 @@ export default function ChatBubble() {
         ...prev,
         {
           role: 'assistant',
-          content: data.response || 'Sorry, I received an empty response.',
+          content: data.response || 'I checked your business records.',
           timestamp: new Date(),
         },
       ]);
@@ -72,7 +87,7 @@ export default function ChatBubble() {
         ...prev,
         {
           role: 'assistant',
-          content: 'Sorry, I couldn\'t process that. Please try again.',
+          content: 'Something went wrong. Please try asking again in a moment.',
           timestamp: new Date(),
         },
       ]);
@@ -81,16 +96,58 @@ export default function ChatBubble() {
     }
   };
 
+  const handleSend = () => {
+    handleSendWithQuery(inputValue);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSend();
     }
   };
 
+  const renderFormattedContent = (text: string) => {
+    // Simple markdown link parser: [Text](URL)
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = linkRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index));
+      }
+      const label = match[1];
+      const url = match[2];
+      parts.push(
+        <a
+          key={match.index}
+          href={url}
+          onClick={(e) => {
+            if (url.startsWith('/')) {
+              e.preventDefault();
+              window.location.href = url;
+            }
+          }}
+          className="chat-action-link"
+        >
+          {label} →
+        </a>
+      );
+      lastIndex = linkRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+
+    return parts.length > 0 ? parts : text;
+  };
+
   return (
     <>
       {!isOpen && (
-        <button className="chat-bubble-btn" onClick={() => setIsOpen(true)}>
+        <button className="chat-bubble-btn" onClick={() => setIsOpen(true)} title="BillDoor AI Assistant">
           <MessageCircle size={24} />
         </button>
       )}
@@ -110,9 +167,30 @@ export default function ChatBubble() {
           <div className="chat-messages">
             {messages.map((msg, idx) => (
               <div key={idx} className={`chat-msg ${msg.role}`}>
-                {msg.content}
+                {renderFormattedContent(msg.content)}
               </div>
             ))}
+
+            {/* Quick Action Suggestion Boxes */}
+            {messages.length <= 2 && !loading && (
+              <div className="chat-quick-actions">
+                <div style={{ fontSize: 11, fontWeight: 'bold', color: 'var(--color-text-tertiary)', marginBottom: 4 }}>
+                  RECOMMENDED QUICK ACTIONS
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                  {quickActions.map((qa, i) => (
+                    <button
+                      key={i}
+                      className="chat-chip-btn"
+                      onClick={() => handleQuickClick(qa.query)}
+                    >
+                      {qa.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {loading && (
               <div className="chat-msg assistant">
                 <div className="chat-typing">

@@ -220,9 +220,8 @@ RESPONSE CLASSIFICATION RULES:
           const billNum = String(safeArgs.bill_number || '').trim();
           let query = supabase
             .from('bills')
-            .select('id, bill_number, customer_name, customer_phone, grand_total, payment_status, created_at')
+            .select('id, bill_number, grand_total, status, created_at, customer:customers(name, phone)')
             .eq('client_id', clientId)
-            .is('deleted_at', null)
             .order('created_at', { ascending: false })
             .limit(5);
 
@@ -241,13 +240,13 @@ RESPONSE CLASSIFICATION RULES:
           const search = String(safeArgs.search || '').trim();
           let query = supabase
             .from('catalog_items')
-            .select('name, price, gst_percent, category, buffer_stock, is_active')
+            .select('name, price, gst_percent, type, unit, active')
             .eq('client_id', clientId)
             .order('name', { ascending: true })
             .limit(10);
 
           if (search) {
-            query = query.or(`name.ilike.%${search}%,category.ilike.%${search}%`);
+            query = query.ilike('name', `%${search}%`);
           }
 
           const { data, error } = await query;
@@ -268,7 +267,6 @@ RESPONSE CLASSIFICATION RULES:
             .from('bills')
             .select('grand_total')
             .eq('client_id', clientId)
-            .is('deleted_at', null)
             .gte('created_at', gte.toISOString());
 
           if (error) {
@@ -291,7 +289,6 @@ RESPONSE CLASSIFICATION RULES:
             .from('expenses')
             .select('amount, category')
             .eq('client_id', clientId)
-            .is('deleted_at', null)
             .gte('expense_date', dateStr);
 
           if (error) {
@@ -308,18 +305,18 @@ RESPONSE CLASSIFICATION RULES:
             functionResponseData = { total_expense: totalExpense, categories, period: safeArgs.period || 'today' };
           }
         } else if (name === 'get_appointment') {
-          let q = supabase.from('appointments').select('*').eq('client_id', clientId);
+          let q = supabase.from('appointments').select('id, service_name, customer_name, customer_phone, slot_start, slot_end, status').eq('client_id', clientId);
           if (safeArgs.date) {
             let d = new Date(safeArgs.date);
             d.setHours(0, 0, 0, 0);
             let end = new Date(d);
             end.setDate(end.getDate() + 1);
-            q = q.gte('start_time', d.toISOString()).lt('start_time', end.toISOString());
+            q = q.gte('slot_start', d.toISOString()).lt('slot_start', end.toISOString());
           }
           if (safeArgs.customer_name) {
             q = q.ilike('customer_name', `%${safeArgs.customer_name}%`);
           }
-          const { data, error } = await q.order('start_time', { ascending: true }).limit(10);
+          const { data, error } = await q.order('slot_start', { ascending: true }).limit(10);
           if (error) {
             console.error('get_appointment query error:', error);
             functionResponseData = { error: error.message };
