@@ -44,23 +44,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ response: 'AI assistant is not configured yet. Please contact admin to set GEMINI_API_KEY.' });
     }
 
-    const systemInstruction = `You are BillDoor Assistant, an intelligent, read-only AI business assistant for the BillDoor merchant platform.
+    const systemInstruction = `You are BillDoor Assistant, a read-only AI business assistant for the BillDoor merchant platform.
 
 YOUR SCOPE & CAPABILITIES:
 You assist business owners ONLY with their specific client business data and platform features:
-1. 👥 Customer Details: Search customer profiles, phone numbers, visit frequency, spending, and last visit dates.
-2. 📄 Bills & Invoices: Look up bills by number or recent history, check grand total, payment status, and provide links.
-3. 🏷️ Products & Catalog: Search catalog items by name/category, check unit prices, GST %, and stock buffer alerts.
-4. 💰 Revenue & Net Summary: Provide total revenue, bill counts, and average bill amounts (today/week/month/year).
-5. 📊 Expenses Log: Summarize operating expenses by category (rent, salaries, supplies, utilities, marketing).
-6. 📅 Appointments & Staff: Look up appointment schedules, staff timelines, and queue status.
-7. 🔗 Feature Navigation & Links: Provide direct navigation links to platform features and settings (e.g. Create Bill, Expense Log, GST Export, QR Cards, WhatsApp, Settings).
-8. 🚀 Orbitex Services: Suggest digital growth services (websites, SEO, ad campaigns, branding, QR menu design) with links to /dashboard/services.
+- 👥 Customers (get_customer): Search customer profiles, visits, spending, and last visit date.
+- 📄 Bills & Invoices (get_bill): Look up bills by number or recent history with payment status and totals.
+- 🏷️ Products & Catalog (search_catalog): Search products, unit prices, GST %, and stock alerts.
+- 💰 Revenue Summary (get_revenue_summary): View revenue, bill count, and average bill amount.
+- 📊 Expense Log (get_expense_summary): View operating expenses by category (rent, salary, utilities, etc.).
+- 📅 Appointments (get_appointment): View appointment schedules and staff timelines.
+- 🔗 Feature Navigation (get_feature_links): Direct links to platform pages (Create Bill, Expenses, GST Summary, QR Cards, Services, Settings).
+- 🚀 Orbitex Services (check_upsell_opportunities): Suggest digital services with links to /dashboard/services.
 
-STRICT GUARDRAILS:
-- You must ONLY answer questions related to the merchant's business data and BillDoor features. Do NOT answer generic off-topic questions.
-- If data is not found, an error occurs, or parameters are missing, start by stating: "Sorry, I encountered an error looking up that information. Please try rephrasing your question or specifying details like the customer's name, phone number, or bill number." then present the specific client functions you can assist with.
-- Format currency in INR (₹). Always include markdown links for features (e.g. [Create Bill](/dashboard/billit/create), [Expense Log](/dashboard/billit/expenses), [GST Summary](/dashboard/billit/reports/gst-summary), [Orbitex Services](/dashboard/services)).`;
+RESPONSE CLASSIFICATION RULES:
+
+1. ZERO RESULTS FOUND (Case 1):
+   If a tool execution returns empty data (0 matches), state plainly what was searched and suggest trying exact details (e.g. phone number, full name, or bill number). Do NOT apologize with "error" language and do NOT output a full feature menu.
+
+2. OUT OF SCOPE / UNMAPPED INTENT (Case 2):
+   If the user asks an off-topic question or something outside your tool set (trivia, general knowledge, coding, weather), respond plainly without saying "error" or "sorry":
+   "That's outside what I can look up right now — I can search your customers, bills, catalog items, revenue/expense summaries, and appointments. Want me to check one of those instead?"
+
+3. FORMATTING & LINK DISCIPLINE:
+   - Format currency in INR (₹).
+   - Only include markdown links when directly relevant to the user's specific request (e.g. [Create Bill](/dashboard/billit/create)). Never output an unrequested list of generic links.`;
 
     const toolDeclarations = [
       {
@@ -192,7 +200,7 @@ STRICT GUARDRAILS:
             console.error('get_customer query error:', error);
             functionResponseData = { error: error.message };
           } else {
-            functionResponseData = { customers: data || [] };
+            functionResponseData = { customers: data || [], searched: search };
           }
         } else if (name === 'get_bill') {
           const billNum = String(safeArgs.bill_number || '').trim();
@@ -213,7 +221,7 @@ STRICT GUARDRAILS:
             console.error('get_bill query error:', error);
             functionResponseData = { error: error.message };
           } else {
-            functionResponseData = { bills: data || [] };
+            functionResponseData = { bills: data || [], searched_bill_number: billNum };
           }
         } else if (name === 'search_catalog') {
           const search = String(safeArgs.search || '').trim();
@@ -233,7 +241,7 @@ STRICT GUARDRAILS:
             console.error('search_catalog query error:', error);
             functionResponseData = { error: error.message };
           } else {
-            functionResponseData = { catalog_items: data || [] };
+            functionResponseData = { catalog_items: data || [], searched: search };
           }
         } else if (name === 'get_revenue_summary') {
           let gte = new Date();
@@ -359,7 +367,7 @@ STRICT GUARDRAILS:
     }
 
     if (!finalText) {
-      finalText = part?.text?.trim() || "I am your read-only BillDoor Assistant. I can help you search customers, look up bills, search products, summarize revenue & expenses, check appointments, or navigate features!";
+      finalText = part?.text?.trim() || "That's outside what I can look up right now — I can search your customers, bills, catalog items, revenue/expense summaries, and appointments. Want me to check one of those instead?";
     }
 
     // Safely log query to assistant_queries (fail silently if table doesn't exist yet)
@@ -378,7 +386,7 @@ STRICT GUARDRAILS:
   } catch (error: any) {
     console.error('Assistant handler error:', error);
     return NextResponse.json({
-      response: "Sorry, I encountered an error looking up that information. Please try rephrasing your question or specifying details like the customer's name, phone number, or bill number.\n\nHere is what I can help you with:\n\n• 👥 **Customer Details**: Search customer profiles, total spent, and visit history\n• 📄 **Bills & Invoices**: Search by bill number or view recent invoices\n• 🏷️ **Products & Catalog**: Search items, prices, and GST rates\n• 💰 **Revenue & Reports**: View total revenue, bill counts, and average bill amounts\n• 📊 **Expense Log**: View business expenses by category (rent, salaries, supplies, utilities)\n• 📅 **Appointments**: Check upcoming/past appointment schedules & queue\n• 🔗 **Feature Links**: Quick navigation to [Create Bill](/dashboard/billit/create), [Expense Log](/dashboard/billit/expenses), [GST Summary](/dashboard/billit/reports/gst-summary), [QR Cards](/dashboard/settings/qr-links), [Orbitex Services](/dashboard/services), or [Settings](/dashboard/settings)"
+      response: "Something went wrong on my end trying to fetch that. Try again in a moment — if it keeps happening, this is worth flagging to Orbitex support."
     });
   }
 }
