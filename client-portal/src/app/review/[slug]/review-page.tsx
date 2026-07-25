@@ -63,10 +63,50 @@ export default function ReviewPage({
 
   const initials = businessName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
-  // Google review URL
-  const googleReviewUrl = googlePlaceId
-    ? `https://search.google.com/local/writereview?placeid=${googlePlaceId}`
-    : `https://www.google.com/search?q=${encodeURIComponent(businessName + ' reviews')}`;
+  // Google review URL logic
+  const getGoogleReviewUrl = () => {
+    if (!googlePlaceId || !googlePlaceId.trim()) {
+      return `https://www.google.com/search?q=${encodeURIComponent(businessName + ' reviews')}`;
+    }
+    const cleanId = googlePlaceId.trim();
+    if (cleanId.startsWith('http://') || cleanId.startsWith('https://')) {
+      return cleanId;
+    }
+    return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(cleanId)}`;
+  };
+
+  const googleReviewUrl = getGoogleReviewUrl();
+
+  // Robust Clipboard Copy helper (native API + execCommand fallback)
+  const copyTextToClipboard = async (text: string) => {
+    let success = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        success = true;
+      }
+    } catch {
+      // Fallback below
+    }
+
+    if (!success) {
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        success = document.execCommand('copy');
+        document.body.removeChild(textArea);
+      } catch {
+        success = false;
+      }
+    }
+    return success;
+  };
 
   // Countdown logic
   const startCountdown = useCallback(() => {
@@ -76,7 +116,6 @@ export default function ReviewPage({
       setCountdown(prev => {
         if (prev <= 1) {
           if (countdownRef.current) clearInterval(countdownRef.current);
-          // Redirect to Google in the same tab to avoid popup blockers
           logGoogleReviewClickAction({ sessionId: sessionId || '', event: 'redirected' });
           window.location.href = googleReviewUrl;
           return 0;
@@ -129,17 +168,12 @@ export default function ReviewPage({
       if (aiResult.draft) {
         setAiDraft(aiResult.draft);
         setPreviousDrafts([aiResult.draft]);
-        try {
-          await navigator.clipboard.writeText(aiResult.draft);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 3000);
-        } catch (e) {
-          // Ignore clipboard errors
-        }
+        const isCopied = await copyTextToClipboard(aiResult.draft);
+        setCopied(isCopied);
+        setTimeout(() => setCopied(false), 4000);
         startCountdown();
       }
       setAiLoading(false);
-
     }
   }
 
@@ -148,7 +182,6 @@ export default function ReviewPage({
     setLoading(true);
     const result = await submitReviewAction({ clientId, stars, feedbackText, sessionId: sessionId || undefined });
     if (result.sessionId) setSessionId(result.sessionId);
-
 
     setStage('thank_you');
     setLoading(false);
@@ -173,13 +206,9 @@ export default function ReviewPage({
     if (result.draft) {
       setAiDraft(result.draft);
       setPreviousDrafts(prev => [...prev, result.draft!]);
-      try {
-        await navigator.clipboard.writeText(result.draft);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 3000);
-      } catch (e) {
-        // Ignore clipboard errors
-      }
+      const isCopied = await copyTextToClipboard(result.draft);
+      setCopied(isCopied);
+      setTimeout(() => setCopied(false), 4000);
       startCountdown(); // Restart countdown after new draft
     }
     setAiLoading(false);
@@ -187,17 +216,16 @@ export default function ReviewPage({
 
   // Copy draft + instant redirect
   async function handleCopyDraft() {
-    await navigator.clipboard.writeText(aiDraft);
+    await copyTextToClipboard(aiDraft);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
 
-    // Redirect immediately after copy (same tab to avoid popup blocker)
+    // Redirect immediately to Google (same tab)
     pauseCountdown();
     if (googleReviewUrl) {
       logGoogleReviewClickAction({ sessionId: sessionId || '', event: 'copied' });
       setTimeout(() => {
         window.location.href = googleReviewUrl;
-      }, 500);
+      }, 300);
     }
   }
 

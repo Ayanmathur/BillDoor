@@ -187,12 +187,21 @@ export default function BillsPage() {
       const encoded = encodeURIComponent(message);
       const phone = bill.customerPhone ? bill.customerPhone.replace(/\D/g, '') : '';
       const cleanPhone = phone ? `91${phone.replace(/^91/, '')}` : '';
-      const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
+      
+      const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const waUrl = isMobile
+        ? (cleanPhone ? `whatsapp://send?phone=${cleanPhone}&text=${encoded}` : `whatsapp://send?text=${encoded}`)
+        : (cleanPhone ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encoded}` : `https://api.whatsapp.com/send?text=${encoded}`);
 
-      if (waWin && !waWin.closed) {
-        waWin.location.href = waUrl;
-      } else {
+      if (isMobile) {
+        if (waWin && !waWin.closed) waWin.close();
         window.location.href = waUrl;
+      } else {
+        if (waWin && !waWin.closed) {
+          waWin.location.href = waUrl;
+        } else {
+          window.open(waUrl, '_blank');
+        }
       }
     } catch {
       if (waWin && !waWin.closed) waWin.close();
