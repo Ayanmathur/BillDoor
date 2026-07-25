@@ -877,14 +877,6 @@ interface CameraBarcodeModalProps {
 function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
   const [manualBarcode, setManualBarcode] = useState('');
   const [scanFeedback, setScanFeedback] = useState<{ text: string; isError?: boolean } | null>(null);
-  const [zoom, setZoom] = useState(1);
-  const [minZoom] = useState(1);
-  const [maxZoom] = useState(4);
-  const [torchSupported, setTorchSupported] = useState(false);
-  const [torchOn, setTorchOn] = useState(false);
-  const [isFocusPulse, setIsFocusPulse] = useState(false);
-
-  const activeTrackRef = useRef<MediaStreamTrack | null>(null);
   const lastScanTimeRef = useRef<{ code: string; time: number }>({ code: '', time: 0 });
 
   // Body scroll lock on mount
@@ -908,46 +900,6 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
     }
   };
 
-  const applyZoomValue = (value: number) => {
-    const newZoom = Math.min(Math.max(value, minZoom), maxZoom);
-    setZoom(newZoom);
-    // Also try hardware zoom as progressive enhancement
-    const track = activeTrackRef.current;
-    if (track && typeof track.applyConstraints === 'function') {
-      try {
-        track.applyConstraints({
-          advanced: [{ zoom: newZoom, focusMode: 'continuous' } as any],
-        } as any);
-      } catch (err) {}
-    }
-  };
-
-  const toggleTorch = () => {
-    const track = activeTrackRef.current;
-    if (track && typeof track.applyConstraints === 'function') {
-      const nextTorch = !torchOn;
-      try {
-        track.applyConstraints({
-          advanced: [{ torch: nextTorch } as any],
-        } as any);
-        setTorchOn(nextTorch);
-      } catch (err) {}
-    }
-  };
-
-  const handleTapToFocus = () => {
-    setIsFocusPulse(true);
-    setTimeout(() => setIsFocusPulse(false), 800);
-    const track = activeTrackRef.current;
-    if (track && typeof track.applyConstraints === 'function') {
-      try {
-        track.applyConstraints({
-          advanced: [{ focusMode: 'continuous' } as any],
-        } as any);
-      } catch {}
-    }
-  };
-
   useEffect(() => {
     let scanner: Html5Qrcode | null = null;
     let isMounted = true;
@@ -960,31 +912,23 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
         scanner = new Html5Qrcode('camera-scanner-view', {
           formatsToSupport: [
             Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
             Html5QrcodeSupportedFormats.CODE_39,
             Html5QrcodeSupportedFormats.CODE_93,
+            Html5QrcodeSupportedFormats.EAN_13,
             Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
             Html5QrcodeSupportedFormats.QR_CODE,
           ],
           verbose: false,
         });
 
         await scanner.start(
+          { facingMode: 'environment' },
           {
-            facingMode: 'environment',
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            fps: 15,
+            qrbox: { width: 280, height: 140 },
           },
-          {
-            fps: 20,
-            qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-              const w = Math.min(viewfinderWidth * 0.95, 380);
-              const h = Math.min(viewfinderHeight * 0.75, 200);
-              return { width: Math.max(w, 260), height: Math.max(h, 110) };
-            },
-          } as any,
           (decodedText) => {
             if (decodedText && decodedText.trim()) {
               const clean = decodedText.trim();
@@ -998,20 +942,6 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
           },
           () => {}
         );
-
-        // Detect camera capabilities (Torch)
-        if (scanner) {
-          try {
-            const track = (scanner as any).getRunningTrack?.() || null;
-            if (track) {
-              activeTrackRef.current = track;
-              const capabilities = track.getCapabilities?.() || {};
-              if (capabilities.torch) {
-                setTorchSupported(true);
-              }
-            }
-          } catch (e) {}
-        }
       } catch (err) {
         console.error('Camera scanner start error:', err);
       }
@@ -1029,7 +959,6 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
           }
         } catch {}
       }
-      activeTrackRef.current = null;
     };
   }, []);
 
@@ -1038,106 +967,10 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
       <div className="void-modal" style={{ maxWidth: 440, width: '92%', textAlign: 'center', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)' }}><Camera size={16} /> Live Camera Barcode Scanner</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {torchSupported && (
-              <button
-                type="button"
-                className="bills-action-btn"
-                onClick={toggleTorch}
-                title={torchOn ? 'Turn Flash Off' : 'Turn Flash On'}
-                style={{ color: torchOn ? '#f59e0b' : 'inherit' }}
-              >
-                <Zap size={16} />
-              </button>
-            )}
-            <button className="bills-action-btn" onClick={onClose}><X size={18} /></button>
-          </div>
+          <button className="bills-action-btn" onClick={onClose}><X size={18} /></button>
         </div>
 
-        <div
-          onClick={handleTapToFocus}
-          title="Tap to focus"
-          style={{
-            width: '100%',
-            height: 230,
-            background: '#000',
-            borderRadius: 'var(--radius-md)',
-            overflow: 'hidden',
-            cursor: 'pointer',
-            position: 'relative',
-            boxShadow: isFocusPulse ? '0 0 0 3px #10b981' : 'none',
-            transition: 'box-shadow 0.2s',
-          }}
-        >
-          <div
-            id="camera-scanner-view"
-            style={{
-              width: '100%',
-              height: '100%',
-              transform: `scale(${zoom})`,
-              transformOrigin: 'center center',
-              transition: 'transform 0.2s ease-out',
-            }}
-          />
-        </div>
-
-        {/* Zoom Controls */}
-        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-bg-secondary)', padding: '4px 8px', borderRadius: 'var(--radius-full)' }}>
-            <button
-              type="button"
-              onClick={() => applyZoomValue(zoom - 0.5)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
-              title="Zoom out"
-            >
-              <ZoomOut size={14} />
-            </button>
-            <input
-              type="range"
-              min={minZoom}
-              max={maxZoom}
-              step={0.1}
-              value={zoom}
-              onChange={(e) => applyZoomValue(parseFloat(e.target.value))}
-              style={{ width: 90, accentColor: 'var(--color-accent)', cursor: 'pointer' }}
-            />
-            <button
-              type="button"
-              onClick={() => applyZoomValue(zoom + 0.5)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
-              title="Zoom in"
-            >
-              <ZoomIn size={14} />
-            </button>
-            <span style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--color-text-secondary)', minWidth: 28 }}>
-              {zoom.toFixed(1)}x
-            </span>
-          </div>
-
-          {/* Quick Zoom Presets */}
-          <div style={{ display: 'flex', gap: 4 }}>
-            {[1, 1.5, 2, 3].map((zVal) => (
-              <button
-                key={zVal}
-                type="button"
-                onClick={() => applyZoomValue(zVal)}
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: 'var(--radius-full)',
-                  fontSize: '11px',
-                  fontFamily: 'monospace',
-                  border: '1px solid var(--color-border)',
-                  background: Math.abs(zoom - zVal) < 0.1 ? 'var(--color-accent)' : 'var(--color-bg-secondary)',
-                  color: Math.abs(zoom - zVal) < 0.1 ? '#fff' : 'var(--color-text-secondary)',
-                  cursor: 'pointer',
-                  fontWeight: 'var(--weight-semibold)',
-                }}
-              >
-                {zVal}x
-              </button>
-            ))}
-          </div>
-        </div>
+        <div id="camera-scanner-view" style={{ width: '100%', minHeight: 220, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} />
 
         {scanFeedback && (
           <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 'var(--radius-md)', background: scanFeedback.isError ? 'var(--color-error-subtle, rgba(239,68,68,0.15))' : 'var(--color-success-subtle, rgba(16,185,129,0.15))', color: scanFeedback.isError ? 'var(--color-error, #ef4444)' : 'var(--color-success, #10b981)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)' }}>
@@ -1148,7 +981,7 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
         <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
           <input
             type="text"
-            placeholder="Or type/scan barcode (e.g. BLUEBERR-0003)"
+            placeholder="Or type/scan barcode (e.g. BLU003)"
             value={manualBarcode}
             onChange={(e) => setManualBarcode(e.target.value)}
             onKeyDown={(e) => {
@@ -1176,7 +1009,7 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
-            Tap camera to auto-focus • Pinch/use slider to zoom
+            Continuous multi-scan active
           </span>
           <button className="btn btn-primary" onClick={onClose} style={{ fontSize: 'var(--text-xs)' }}>
             Done / Close Camera
