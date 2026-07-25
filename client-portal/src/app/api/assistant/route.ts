@@ -145,22 +145,36 @@ RESPONSE CLASSIFICATION RULES:
     let requestContents: any[] = [{ role: 'user', parts: [{ text: query }] }];
 
     const makeGeminiRequest = async (contents: any[]) => {
-      const response = await fetch(
+      const payload = {
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+        contents,
+        tools: [{ functionDeclarations: toolDeclarations }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 1000,
+        },
+      };
+
+      let response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: systemInstruction }] },
-            contents,
-            tools: [{ functionDeclarations: toolDeclarations }],
-            generationConfig: {
-              temperature: 0.2,
-              maxOutputTokens: 1000,
-            },
-          }),
+          body: JSON.stringify(payload),
         }
       );
+
+      if (!response.ok) {
+        // Fallback to gemini-1.5-flash if 2.0-flash is unavailable or fails
+        response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          }
+        );
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -362,7 +376,23 @@ RESPONSE CLASSIFICATION RULES:
         part = candidate?.content?.parts?.[0];
       } catch (err: any) {
         console.error('Gemini 2nd turn error:', err);
-        finalText = `Found result for ${name}: ${JSON.stringify(functionResponseData)}`;
+        if (functionResponseData.customers) {
+          const list = functionResponseData.customers;
+          if (list.length === 0) {
+            finalText = `I couldn't find a customer matching '${functionResponseData.searched || ''}'. Try searching with their exact phone number or full name.`;
+          } else {
+            finalText = `Found ${list.length} customer(s):\n` + list.map((c: any) => `• **${c.name}** (${c.phone}) — ${c.total_visits || 0} visits, ₹${c.total_spent || 0} spent`).join('\n');
+          }
+        } else if (functionResponseData.bills) {
+          const list = functionResponseData.bills;
+          if (list.length === 0) {
+            finalText = `I couldn't find any bill matching '${functionResponseData.searched_bill_number || ''}'.`;
+          } else {
+            finalText = `Found ${list.length} bill(s):\n` + list.map((b: any) => `• Bill **${b.bill_number}** for ${b.customer_name || 'Walk-in'} — ₹${b.grand_total} (${b.payment_status})`).join('\n');
+          }
+        } else {
+          finalText = `Found result: ${JSON.stringify(functionResponseData)}`;
+        }
       }
     }
 
