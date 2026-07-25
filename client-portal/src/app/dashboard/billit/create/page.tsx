@@ -923,37 +923,24 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
           verbose: false,
         });
 
-        // Request high-res 1080p stream with ideal continuous focus
-        const cameraConfig = {
-          facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          advanced: [{ focusMode: 'continuous' } as any],
-        };
-
-        const scanConfig = {
-          fps: 20,
-          // Omit qrbox to ensure 100% full-frame uncropped decoding on both iOS Safari & Android Chrome
-        };
-
-        const onDecode = (decodedText: string) => {
-          if (decodedText && decodedText.trim()) {
-            const clean = decodedText.trim();
-            const now = Date.now();
-            if (lastScanTimeRef.current.code === clean && now - lastScanTimeRef.current.time < 1500) {
-              return;
+        await scanner.start(
+          { facingMode: 'environment' },
+          {
+            fps: 15,
+          },
+          (decodedText) => {
+            if (decodedText && decodedText.trim()) {
+              const clean = decodedText.trim();
+              const now = Date.now();
+              if (lastScanTimeRef.current.code === clean && now - lastScanTimeRef.current.time < 1500) {
+                return;
+              }
+              lastScanTimeRef.current = { code: clean, time: now };
+              handleScanCode(clean);
             }
-            lastScanTimeRef.current = { code: clean, time: now };
-            handleScanCode(clean);
-          }
-        };
-
-        try {
-          await scanner.start(cameraConfig as any, scanConfig as any, onDecode, () => {});
-        } catch {
-          // Fallback camera config for devices that reject advanced resolution constraints
-          await scanner.start({ facingMode: 'environment' }, scanConfig as any, onDecode, () => {});
-        }
+          },
+          () => {}
+        );
       } catch (err) {
         console.error('Camera scanner start error:', err);
       }
@@ -1053,7 +1040,7 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
-            Full-frame camera scan active • Any position in view
+            Continuous multi-scan active
           </span>
           <button className="btn btn-primary" onClick={onClose} style={{ fontSize: 'var(--text-xs)' }}>
             Done / Close Camera
