@@ -12,7 +12,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Phone, Search, Plus, Trash2, Send, Printer, Save, Loader2,
+  Phone, Search, Plus, Trash2, Printer, Save, Loader2,
   Gift, Check, X, Barcode, MessageSquare, User, Camera,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
