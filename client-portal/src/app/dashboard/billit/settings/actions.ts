@@ -8,7 +8,7 @@ export async function fetchBillitSettingsAction() {
 
   const { data } = await supabase
     .from('clients')
-    .select('barcode_enabled, barcode_settings, slug, whatsapp_catalog_template, modules_enabled, bill_settings, billit_auto_select_template, default_bill_size, pos_mode_enabled')
+    .select('barcode_enabled, barcode_settings, slug, whatsapp_catalog_template, modules_enabled, bill_settings, billit_auto_select_template')
     .eq('id', user.id)
     .single();
 
@@ -52,12 +52,6 @@ export async function updateBillitSettingsAction(data: {
   };
   if (data.billitAutoSelectTemplate !== undefined) {
     updatePayload.billit_auto_select_template = data.billitAutoSelectTemplate;
-  }
-  if (data.defaultBillSize !== undefined) {
-    updatePayload.default_bill_size = data.defaultBillSize;
-  }
-  if (data.posModeEnabled !== undefined) {
-    updatePayload.pos_mode_enabled = data.posModeEnabled;
   }
 
   const { error } = await supabase

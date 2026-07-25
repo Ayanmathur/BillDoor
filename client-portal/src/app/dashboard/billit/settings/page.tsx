@@ -56,8 +56,8 @@ export default function BillitSettingsPage() {
         setDefaultGst(result.settings.bill_settings?.default_gst ?? 0);
         setDefaultDiscountType(result.settings.bill_settings?.default_discount_type ?? '₹');
         setDefaultDiscountValue(result.settings.bill_settings?.default_discount_value ?? 0);
-        setDefaultBillSize((result.settings.default_bill_size || result.settings.bill_settings?.default_bill_size || '55mm') as '55mm' | '80mm' | 'A4');
-        setPosModeEnabled((result.settings.pos_mode_enabled ?? result.settings.bill_settings?.pos_mode_enabled) === true);
+        setDefaultBillSize((result.settings.bill_settings?.default_bill_size || '55mm') as '55mm' | '80mm' | 'A4');
+        setPosModeEnabled(result.settings.bill_settings?.pos_mode_enabled === true);
         setSlug(result.settings.slug || '');
         setCatalogTemplate(result.settings.whatsapp_catalog_template || "Hi! I'm interested in {item_name}. Is it available?");
         setCatalogViewerEnabled(result.settings.modules_enabled?.quick_tools?.catalog_viewer === true);

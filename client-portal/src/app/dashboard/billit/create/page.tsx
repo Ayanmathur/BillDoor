@@ -143,7 +143,7 @@ export default function CreateBillPage() {
         setClientSlug(settings.slug || '');
         setHasGst(settings.has_gst || false);
         setBillWhatsAppTemplate(settings.bill_whatsapp_template || '');
-        setPosModeEnabled((settings.pos_mode_enabled ?? settings.bill_settings?.pos_mode_enabled) === true);
+        setPosModeEnabled(settings.bill_settings?.pos_mode_enabled === true);
         // Multi-template state (defaults to off — no change for existing clients)
         setAutoSelectTemplate(settings.billit_auto_select_template ?? false);
         setFirstVisitTemplate(settings.first_visit_template ?? null);
