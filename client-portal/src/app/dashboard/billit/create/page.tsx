@@ -758,15 +758,15 @@ export default function CreateBillPage() {
               {cameraBarcodeEnabled && (
                 <button
                   type="button"
-                  onClick={startCameraBarcodeScan}
-                  title="Scan with Camera"
+                  onClick={showCameraScanner ? stopCameraScan : startCameraBarcodeScan}
+                  title={showCameraScanner ? 'Close Camera Scanner' : 'Scan with Camera'}
                   style={{
                     position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-accent)',
+                    background: 'none', border: 'none', cursor: 'pointer', color: showCameraScanner ? 'var(--color-error)' : 'var(--color-accent)',
                     padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  <Camera size={16} />
+                  {showCameraScanner ? <X size={16} /> : <Camera size={16} />}
                 </button>
               )}
             </div>
@@ -775,6 +775,61 @@ export default function CreateBillPage() {
             <Plus size={14} /> Manual
           </button>
         </div>
+
+        {/* Option 3: Inline Embedded Camera Viewfinder */}
+        {showCameraScanner && (
+          <div
+            style={{
+              marginBottom: 'var(--space-4)',
+              padding: 'var(--space-3)',
+              background: 'var(--color-bg-elevated)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-sm)',
+              position: 'sticky',
+              top: 0,
+              zIndex: 5,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Camera size={14} style={{ color: 'var(--color-accent)' }} /> Live Camera Barcode Scanner
+              </span>
+              <button
+                type="button"
+                className="bills-action-btn"
+                onClick={stopCameraScan}
+                style={{ fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 4 }}
+              >
+                <X size={14} /> Close Camera
+              </button>
+            </div>
+
+            <div id="camera-scanner-view" style={{ width: '100%', height: 200, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} />
+
+            {/* Scan Feedback Toast */}
+            {scanFeedback && (
+              <div
+                style={{
+                  marginTop: 8,
+                  padding: '6px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: scanFeedback.isError
+                    ? 'var(--color-error-subtle, rgba(239,68,68,0.15))'
+                    : 'var(--color-success-subtle, rgba(16,185,129,0.15))',
+                  color: scanFeedback.isError
+                    ? 'var(--color-error, #ef4444)'
+                    : 'var(--color-success, #10b981)',
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: 'var(--weight-semibold)',
+                  textAlign: 'center',
+                }}
+              >
+                {scanFeedback.text}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Line items table */}
         {items.length > 0 && (
@@ -930,76 +985,7 @@ export default function CreateBillPage() {
         <StandardCalculatorWidget />
       )}
 
-      {/* Camera Barcode Scanner Modal */}
-      {showCameraScanner && (
-        <div className="void-modal-overlay">
-          <div className="void-modal" style={{ maxWidth: 440, textAlign: 'center' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)' }}><Camera size={16} /> Live Camera Barcode Scanner</h3>
-              <button className="bills-action-btn" onClick={stopCameraScan}><X size={18} /></button>
-            </div>
 
-            <div id="camera-scanner-view" style={{ width: '100%', minHeight: 240, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden', position: 'relative' }} />
-
-            {/* Scan Feedback Banner */}
-            {scanFeedback && (
-              <div
-                style={{
-                  marginTop: 10,
-                  padding: '8px 12px',
-                  borderRadius: 'var(--radius-md)',
-                  background: scanFeedback.isError ? 'var(--color-error-subtle, rgba(239,68,68,0.15))' : 'var(--color-success-subtle, rgba(16,185,129,0.15))',
-                  color: scanFeedback.isError ? 'var(--color-error, #ef4444)' : 'var(--color-success, #10b981)',
-                  fontSize: 'var(--text-xs)',
-                  fontWeight: 'var(--weight-semibold)',
-                  transition: 'all 0.2s',
-                }}
-              >
-                {scanFeedback.text}
-              </div>
-            )}
-
-            {/* Manual Barcode Input & Continuous Add */}
-            <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-              <input
-                type="text"
-                placeholder="Or type/scan barcode (e.g. BLUEBERR-0003)"
-                value={manualBarcode}
-                onChange={(e) => setManualBarcode(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && manualBarcode.trim()) {
-                    handleCameraContinuousScan(manualBarcode.trim());
-                    setManualBarcode('');
-                  }
-                }}
-                className="input-field"
-                style={{ flex: 1, fontSize: 'var(--text-xs)', textTransform: 'uppercase' }}
-              />
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  if (manualBarcode.trim()) {
-                    handleCameraContinuousScan(manualBarcode.trim());
-                    setManualBarcode('');
-                  }
-                }}
-                style={{ fontSize: 'var(--text-xs)' }}
-              >
-                Add Product
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
-                Continuous multi-scan active • Point camera at next item
-              </span>
-              <button className="btn btn-primary" onClick={stopCameraScan} style={{ fontSize: 'var(--text-xs)' }}>
-                Done / Close Camera
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
