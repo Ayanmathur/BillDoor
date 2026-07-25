@@ -122,7 +122,7 @@ export async function fetchReviewLinkAction() {
 
   if (!client) return { error: 'Client not found.', slug: null, logoUrl: null };
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
 
   return {
     slug: client.slug,

@@ -1,17 +1,23 @@
 /* BillDoor — Reviews Dashboard Mobile & Responsive Styles */
 
-.reviews-dashboard-grid {
+.reviews-top-row {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.reviews-link-stats-card {
   margin-bottom: var(--space-5);
-  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .reviews-stats-flex {
   display: flex;
   gap: var(--space-5);
-  margin-top: var(--space-3);
+  margin-top: var(--space-2);
   flex-wrap: wrap;
 }
 
@@ -36,8 +42,8 @@
 }
 
 @media (max-width: 768px) {
-  .reviews-dashboard-grid {
-    grid-template-columns: 1fr;
+  .reviews-top-row {
+    grid-template-columns: 1fr 1fr; /* Keep QR card and Funnel card side-by-side on mobile */
     gap: var(--space-3);
   }
 

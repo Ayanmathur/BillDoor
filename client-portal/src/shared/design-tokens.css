@@ -979,3 +979,27 @@ a:hover {
     display: none;
   }
 }
+
+/* ============================================================
+   Global Mobile View Safeguards
+   - Prevents horizontal scrolling (left-to-right) across software
+   - Enables clean top-to-bottom vertical scrolling
+   ============================================================ */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .shell-content,
+  .main-content,
+  .dashboard-grid,
+  .dash-card {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}

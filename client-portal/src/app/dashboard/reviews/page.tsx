@@ -142,22 +142,22 @@ export default function ReviewsDashboard() {
 
   return (
     <div>
-      {/* Top Section: QR + Link + Stats */}
-      <div className="reviews-dashboard-grid">
+      {/* Row 1: QR Card + Funnel Card in one row */}
+      <div className="reviews-top-row">
         {/* QR Card */}
-        <div className="dash-card" style={{ textAlign: 'center', minWidth: 140, justifyContent: 'center' }}>
+        <div className="dash-card" style={{ textAlign: 'center', justifyContent: 'center' }}>
           {linkInfo?.reviewUrl ? (
             <img
               id="review-qr-img"
               src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(linkInfo.reviewUrl)}&margin=8`}
               alt="Review QR Code"
-              width={120}
-              height={120}
+              width={100}
+              height={100}
               style={{ borderRadius: 'var(--radius-md)', margin: '0 auto var(--space-2)', display: 'block' }}
             />
           ) : (
-            <div style={{ width: 120, height: 120, background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--space-2)' }}>
-              <QrCode size={80} strokeWidth={1} color="var(--color-text-tertiary)" />
+            <div style={{ width: 100, height: 100, background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--space-2)' }}>
+              <QrCode size={60} strokeWidth={1} color="var(--color-text-tertiary)" />
             </div>
           )}
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>Scan to review</span>
@@ -178,63 +178,69 @@ export default function ReviewsDashboard() {
           </button>
         </div>
 
-        {/* Review Link + Stats */}
-        <div className="dash-card" style={{ justifyContent: 'space-between' }}>
-          <div>
-            <span className="dash-card-label">Your Review Link</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-2)', flexWrap: 'wrap' }}>
-              <code style={{ fontSize: 'var(--text-sm)', background: 'var(--color-bg-primary)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-sm)', flex: 1, minWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {linkInfo?.reviewUrl || '...'}
-              </code>
-              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                <button className="btn" onClick={handleCopyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
-                  {copied ? 'Copied!' : 'Copy'}
-                </button>
-                {linkInfo?.reviewUrl && (
-                  <a href={linkInfo.reviewUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
-                    <ExternalLink size={16} />
-                    Open
-                  </a>
-                )}
+        {/* Funnel Card */}
+        <div className="dash-card" style={{ justifyContent: 'center', textAlign: 'center' }}>
+          <span className="dash-card-label">Funnel</span>
+          {stats && stats.total > 0 ? (
+            <>
+              <div style={{ marginTop: 'var(--space-2)', width: '100%' }}>
+                <div style={{ background: 'var(--color-success)', height: 8, borderRadius: 4, width: `${Math.max(10, (stats.positive / stats.total) * 100)}%`, marginBottom: 6 }} />
+                <div style={{ background: 'var(--color-error)', height: 8, borderRadius: 4, width: `${Math.max(10, (stats.negative / stats.total) * 100)}%` }} />
               </div>
-            </div>
-          </div>
-          {stats && (
-            <div className="reviews-stats-flex">
-              <div>
-                <div className="dash-card-value">{stats.avgRating} ★</div>
-                <div className="dash-card-sub">{stats.total} reviews</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-2)' }}>
+                {Math.round((stats.positive / stats.total) * 100)}% positive
               </div>
-              <div>
-                <div className="dash-card-value" style={{ color: 'var(--color-success)' }}>{stats.positive}</div>
-                <div className="dash-card-sub">4-5★</div>
-              </div>
-              <div>
-                <div className="dash-card-value" style={{ color: 'var(--color-error)', fontSize: 'var(--text-lg)' }}>{stats.negative}</div>
-                <div className="dash-card-sub">1-3★</div>
-              </div>
-              {stats.unread > 0 && (
-                <div>
-                  <div className="dash-card-value" style={{ color: 'var(--color-accent)' }}>{stats.unread}</div>
-                  <div className="dash-card-sub">Unread</div>
-                </div>
-              )}
+            </>
+          ) : (
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-2)' }}>
+              No review data yet
             </div>
           )}
         </div>
+      </div>
 
-        {/* Funnel */}
-        {stats && stats.total > 0 && (
-          <div className="dash-card" style={{ minWidth: 140, justifyContent: 'center', textAlign: 'center' }}>
-            <span className="dash-card-label">Funnel</span>
-            <div style={{ marginTop: 'var(--space-2)' }}>
-              <div style={{ background: 'var(--color-success)', height: 8, borderRadius: 4, width: `${Math.max(10, (stats.positive / stats.total) * 100)}%`, marginBottom: 4 }} />
-              <div style={{ background: 'var(--color-error)', height: 8, borderRadius: 4, width: `${Math.max(10, (stats.negative / stats.total) * 100)}%` }} />
+      {/* Row 2: Review Link + Stats Card below */}
+      <div className="dash-card reviews-link-stats-card">
+        <div>
+          <span className="dash-card-label">Your Review Link</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-2)', flexWrap: 'wrap' }}>
+            <code style={{ fontSize: 'var(--text-sm)', background: 'var(--color-bg-primary)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-sm)', flex: '1 1 0%', minWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {linkInfo?.reviewUrl || '...'}
+            </code>
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+              <button className="btn" onClick={handleCopyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+              {linkInfo?.reviewUrl && (
+                <a href={linkInfo.reviewUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
+                  <ExternalLink size={16} />
+                  Open
+                </a>
+              )}
             </div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-2)' }}>
-              {stats.total > 0 ? Math.round((stats.positive / stats.total) * 100) : 0}% positive
+          </div>
+        </div>
+        {stats && (
+          <div className="reviews-stats-flex">
+            <div>
+              <div className="dash-card-value">{stats.avgRating} ★</div>
+              <div className="dash-card-sub">{stats.total} reviews</div>
             </div>
+            <div>
+              <div className="dash-card-value" style={{ color: 'var(--color-success)' }}>{stats.positive}</div>
+              <div className="dash-card-sub">4-5★</div>
+            </div>
+            <div>
+              <div className="dash-card-value" style={{ color: 'var(--color-error)', fontSize: 'var(--text-lg)' }}>{stats.negative}</div>
+              <div className="dash-card-sub">1-3★</div>
+            </div>
+            {stats.unread > 0 && (
+              <div>
+                <div className="dash-card-value" style={{ color: 'var(--color-accent)' }}>{stats.unread}</div>
+                <div className="dash-card-sub">Unread</div>
+              </div>
+            )}
           </div>
         )}
       </div>
