@@ -4,9 +4,9 @@ import { useState, useEffect, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FileText, AlertTriangle, Check, Trash2, Edit, ExternalLink,
-  ChevronLeft, ChevronRight, Loader2, X, Filter, Printer, MessageCircle, Download
+  ChevronLeft, ChevronRight, Loader2, X, Filter, Printer, MessageSquare, Download
 } from 'lucide-react';
-import { fetchBillsAction, voidBillAction, finalizeDraftAction, deleteDraftAction, fetchBillSettingsAction, fetchBillsForBulkDownloadAction } from '../create/actions';
+import { fetchBillsAction, voidBillAction, finalizeDraftAction, deleteDraftAction, fetchBillSettingsAction, fetchBillsForBulkDownloadAction, logWhatsAppSendAction } from '../create/actions';
 import { fetchBillWhatsAppTemplateAction } from '../settings/actions';
 import './bills.css';
 
@@ -97,6 +97,9 @@ export default function BillsPage() {
     setBulkModalOpen(false);
   }
 
+  const [clientSettings, setClientSettings] = useState<any>(null);
+  const [clientTemplate, setClientTemplate] = useState<string | null>(null);
+
   useEffect(() => {
     loadBills();
   }, [filter, page]);
@@ -104,10 +107,21 @@ export default function BillsPage() {
   async function loadBills() {
     setLoading(true);
     const offset = (page - 1) * limit;
-    const result = await fetchBillsAction({ status: filter === 'All' ? undefined : filter.toLowerCase(), limit, offset });
+    const [result, settingsRes, templateRes] = await Promise.all([
+      fetchBillsAction({ status: filter === 'All' ? undefined : filter.toLowerCase(), limit, offset }),
+      fetchBillSettingsAction(),
+      fetchBillWhatsAppTemplateAction(),
+    ]);
+
     if (result.bills) {
       setBills(result.bills);
       setTotalCount(result.total || 0);
+    }
+    if (settingsRes.settings) {
+      setClientSettings(settingsRes.settings);
+    }
+    if (templateRes.template?.content) {
+      setClientTemplate(templateRes.template.content);
     }
     setLoading(false);
   }
@@ -140,66 +154,45 @@ export default function BillsPage() {
     }
   }
 
-  async function handleResendWhatsApp(bill: any) {
-    // Pre-open window synchronously to bypass browser popup blockers
-    const waWin = typeof window !== 'undefined' ? window.open('about:blank', '_blank') : null;
+  function buildWaUrl(bill: any) {
+    const businessName = clientSettings?.business_name || 'our store';
+    const clientSlug = clientSettings?.slug;
+    const modulesEnabled = clientSettings?.modules_enabled || {};
+    const appointerEnabled = modulesEnabled.appointer === true;
 
-    try {
-      const [templateRes, settingsRes] = await Promise.all([
-        fetchBillWhatsAppTemplateAction(),
-        fetchBillSettingsAction()
-      ]);
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const billUrl = `${origin}/bill/${bill.billSlug}`;
+    const reviewLink = clientSlug ? `${origin}/review/${clientSlug}` : '';
+    const appointmentLink = (appointerEnabled && clientSlug) ? `${origin}/book/${clientSlug}` : '';
 
-      const businessName = settingsRes.settings?.business_name || 'our store';
-      const clientSlug = settingsRes.settings?.slug;
-      const modulesEnabled = settingsRes.settings?.modules_enabled || {};
-      const appointerEnabled = modulesEnabled.appointer === true;
+    let message = clientTemplate || `Hi {customer_name}, here is your bill from {business_name}.\nAmount: ₹{grand_total}.\nView Bill:\n{bill_link}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n{review_link}\n\nThankYou!`;
 
-      const origin = window.location.origin;
-      const billUrl = `${origin}/bill/${bill.billSlug}`;
-      const reviewLink = clientSlug ? `${origin}/review/${clientSlug}` : '';
-      const appointmentLink = (appointerEnabled && clientSlug) ? `${origin}/book/${clientSlug}` : '';
+    message = message
+      .replace(/\{customer_name\}/g, bill.customerName || 'Customer')
+      .replace(/\{business_name\}/g, businessName)
+      .replace(/\{bill_link\}/g, billUrl)
+      .replace(/\{bill_number\}/g, bill.billNumber || '')
+      .replace(/\{grand_total\}/g, Number(bill.grandTotal || 0).toLocaleString('en-IN'))
+      .replace(/\{review_link\}/g, reviewLink);
 
-      const rawTemplate = templateRes.template?.content as string | undefined;
-      let message = rawTemplate || `Hi {customer_name}, here is your bill from {business_name}.\nAmount: ₹{grand_total}.\nView Bill:\n{bill_link}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n{review_link}\n\nThankYou!`;
-
-      message = message
-        .replace(/\{customer_name\}/g, bill.customerName || 'Customer')
-        .replace(/\{business_name\}/g, businessName)
-        .replace(/\{bill_link\}/g, billUrl)
-        .replace(/\{bill_number\}/g, bill.billNumber || '')
-        .replace(/\{grand_total\}/g, Number(bill.grandTotal || 0).toLocaleString('en-IN'))
-        .replace(/\{review_link\}/g, reviewLink);
-
-      if (appointmentLink) {
-        message = message.replace(/\{appointment_link\}/g, appointmentLink);
+    if (appointmentLink) {
+      message = message.replace(/\{appointment_link\}/g, appointmentLink);
+    } else {
+      if (clientTemplate && clientTemplate.includes('{review_link}')) {
+        message = message.replace(/\{appointment_link\}/g, reviewLink);
       } else {
-        if (rawTemplate && rawTemplate.includes('{review_link}')) {
-          message = message.replace(/\{appointment_link\}/g, reviewLink);
-        } else {
-          message = message
-            .split('\n')
-            .filter(line => !line.includes('{appointment_link}'))
-            .join('\n');
-        }
+        message = message
+          .split('\n')
+          .filter(line => !line.includes('{appointment_link}'))
+          .join('\n');
       }
-
-      const encoded = encodeURIComponent(message);
-      const phone = bill.customerPhone ? bill.customerPhone.replace(/\D/g, '') : '';
-      const phoneNum = phone ? (phone.startsWith('91') ? phone : `91${phone}`) : '';
-      const waUrl = phoneNum
-        ? `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encoded}`
-        : `https://api.whatsapp.com/send?text=${encoded}`;
-
-      if (waWin && !waWin.closed) {
-        waWin.location.href = waUrl;
-      } else {
-        window.open(waUrl, '_blank', 'noopener,noreferrer');
-      }
-    } catch {
-      if (waWin && !waWin.closed) waWin.close();
-      alert('Failed to load WhatsApp template.');
     }
+
+    const phone = bill.customerPhone ? bill.customerPhone.replace(/\D/g, '') : '';
+    const phoneNum = phone ? (phone.startsWith('91') ? phone : `91${phone}`) : '';
+    return phoneNum
+      ? `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(message)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
   }
 
   const totalPages = Math.ceil(totalCount / limit) || 1;
@@ -279,9 +272,9 @@ export default function BillsPage() {
                                 <a href={`/bill/${bill.billSlug}?print=1`} target="_blank" rel="noopener noreferrer" className="bills-action-btn" title="Print Bill">
                                   <Printer size={16} />
                                 </a>
-                                <button className="bills-action-btn" title="Resend on WhatsApp" onClick={() => handleResendWhatsApp(bill)}>
-                                  <MessageCircle size={16} />
-                                </button>
+                                <a href={buildWaUrl(bill)} target="_blank" rel="noopener noreferrer" className="bills-action-btn" title="Resend on WhatsApp" onClick={() => logWhatsAppSendAction(bill.id, bill.customerPhone)}>
+                                  <MessageSquare size={16} />
+                                </a>
                               </>
                             )}
                           </>
