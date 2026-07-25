@@ -1,0 +1,59 @@
+{
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devPath": "http://localhost:3000",
+    "distDir": "../client-portal/out"
+  },
+  "package": {
+    "productName": "BillDoor",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "Business",
+      "copyright": "Copyright © 2026 Orbitex / BillDoor",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "icon": [
+        "icons/icon.png"
+      ],
+      "identifier": "in.billdoor.desktop",
+      "longDescription": "BillDoor Desktop POS & Business Management Application",
+      "macOS": {
+        "frameworks": [],
+        "minimumSystemVersion": "10.15"
+      },
+      "resources": [],
+      "shortDescription": "BillDoor Desktop App",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 768,
+        "resizable": true,
+        "title": "BillDoor — Desktop Billing & Management",
+        "width": 1280
+      }
+    ]
+  }
+}
