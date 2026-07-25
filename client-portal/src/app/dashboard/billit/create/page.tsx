@@ -923,24 +923,37 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
           verbose: false,
         });
 
-        await scanner.start(
-          { facingMode: 'environment' },
-          {
-            fps: 20,
-          },
-          (decodedText) => {
-            if (decodedText && decodedText.trim()) {
-              const clean = decodedText.trim();
-              const now = Date.now();
-              if (lastScanTimeRef.current.code === clean && now - lastScanTimeRef.current.time < 1500) {
-                return;
-              }
-              lastScanTimeRef.current = { code: clean, time: now };
-              handleScanCode(clean);
+        // Request high-res 1080p stream with ideal continuous focus
+        const cameraConfig = {
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          advanced: [{ focusMode: 'continuous' } as any],
+        };
+
+        const scanConfig = {
+          fps: 20,
+          // Omit qrbox to ensure 100% full-frame uncropped decoding on both iOS Safari & Android Chrome
+        };
+
+        const onDecode = (decodedText: string) => {
+          if (decodedText && decodedText.trim()) {
+            const clean = decodedText.trim();
+            const now = Date.now();
+            if (lastScanTimeRef.current.code === clean && now - lastScanTimeRef.current.time < 1500) {
+              return;
             }
-          },
-          () => {}
-        );
+            lastScanTimeRef.current = { code: clean, time: now };
+            handleScanCode(clean);
+          }
+        };
+
+        try {
+          await scanner.start(cameraConfig as any, scanConfig as any, onDecode, () => {});
+        } catch {
+          // Fallback camera config for devices that reject advanced resolution constraints
+          await scanner.start({ facingMode: 'environment' }, scanConfig as any, onDecode, () => {});
+        }
       } catch (err) {
         console.error('Camera scanner start error:', err);
       }
@@ -969,7 +982,39 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
           <button className="bills-action-btn" onClick={onClose}><X size={18} /></button>
         </div>
 
-        <div id="camera-scanner-view" style={{ width: '100%', minHeight: 280, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} />
+        {/* Camera Viewfinder with Cosmetic Aiming Target Overlay */}
+        <div style={{ position: 'relative', width: '100%', minHeight: 280, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+          <div id="camera-scanner-view" style={{ width: '100%', minHeight: 280 }} />
+          
+          {/* Cosmetic Aiming Guide Overlay (zero effect on pre-decoding crop) */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: '85%',
+                height: 160,
+                border: '2px dashed rgba(255, 255, 255, 0.4)',
+                borderRadius: 12,
+                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.25)',
+                position: 'relative',
+              }}
+            >
+              {/* Corner Accent Markers */}
+              <div style={{ position: 'absolute', top: -2, left: -2, width: 16, height: 16, borderTop: '3px solid var(--color-accent)', borderLeft: '3px solid var(--color-accent)', borderTopLeftRadius: 6 }} />
+              <div style={{ position: 'absolute', top: -2, right: -2, width: 16, height: 16, borderTop: '3px solid var(--color-accent)', borderRight: '3px solid var(--color-accent)', borderTopRightRadius: 6 }} />
+              <div style={{ position: 'absolute', bottom: -2, left: -2, width: 16, height: 16, borderBottom: '3px solid var(--color-accent)', borderLeft: '3px solid var(--color-accent)', borderBottomLeftRadius: 6 }} />
+              <div style={{ position: 'absolute', bottom: -2, right: -2, width: 16, height: 16, borderBottom: '3px solid var(--color-accent)', borderRight: '3px solid var(--color-accent)', borderBottomRightRadius: 6 }} />
+            </div>
+          </div>
+        </div>
 
         {scanFeedback && (
           <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 'var(--radius-md)', background: scanFeedback.isError ? 'var(--color-error-subtle, rgba(239,68,68,0.15))' : 'var(--color-success-subtle, rgba(16,185,129,0.15))', color: scanFeedback.isError ? 'var(--color-error, #ef4444)' : 'var(--color-success, #10b981)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)' }}>
@@ -1008,7 +1053,7 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
-            Continuous multi-scan active
+            Full-frame camera scan active • Any position in view
           </span>
           <button className="btn btn-primary" onClick={onClose} style={{ fontSize: 'var(--text-xs)' }}>
             Done / Close Camera
