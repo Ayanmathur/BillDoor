@@ -972,13 +972,17 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
         });
 
         await scanner.start(
-          { facingMode: 'environment' },
           {
-            fps: 15,
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          {
+            fps: 20,
             qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-              const w = Math.min(viewfinderWidth * 0.9, 360);
-              const h = Math.min(viewfinderHeight * 0.65, 180);
-              return { width: Math.max(w, 240), height: Math.max(h, 100) };
+              const w = Math.min(viewfinderWidth * 0.95, 380);
+              const h = Math.min(viewfinderHeight * 0.75, 200);
+              return { width: Math.max(w, 260), height: Math.max(h, 110) };
             },
           } as any,
           (decodedText) => {
