@@ -8,6 +8,56 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+
+export async function fetchMyShopsAction() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { shops: [], activeShopId: null, canSwitch: false };
+
+  const { data: currentClient } = await supabase
+    .from('clients')
+    .select('id, business_name, slug, parent_owner_id, multi_shop_granted, modules_enabled')
+    .eq('id', user.id)
+    .single();
+
+  if (!currentClient) return { shops: [], activeShopId: null, canSwitch: false };
+
+  const ownerId = (currentClient as any).parent_owner_id || currentClient.id;
+  const adminGranted = (currentClient as any).multi_shop_granted === true;
+  const clientEnabled = ((currentClient.modules_enabled as any)?.multi_shop) === true;
+  const canSwitch = adminGranted && clientEnabled;
+
+  if (!canSwitch) {
+    return {
+      shops: [{ id: currentClient.id, name: currentClient.business_name, slug: currentClient.slug }],
+      activeShopId: currentClient.id,
+      canSwitch: false,
+    };
+  }
+
+  const { data: shops } = await supabase
+    .from('clients')
+    .select('id, business_name, slug')
+    .or(`id.eq.${ownerId},parent_owner_id.eq.${ownerId}`)
+    .eq('status', 'active');
+
+  const cookieStore = await cookies();
+  const activeCookie = cookieStore.get('billdoor_active_shop_id')?.value;
+  const activeShopId = activeCookie && shops?.some(s => s.id === activeCookie) ? activeCookie : currentClient.id;
+
+  return {
+    shops: (shops || []).map(s => ({ id: s.id, name: s.business_name, slug: s.slug })),
+    activeShopId,
+    canSwitch: true,
+  };
+}
+
+export async function setActiveShopAction(shopId: string) {
+  const cookieStore = await cookies();
+  cookieStore.set('billdoor_active_shop_id', shopId, { path: '/', maxAge: 60 * 60 * 24 * 30 });
+  return { success: true };
+}
 
 export async function fetchDashboardData() {
   const supabase = await createClient();

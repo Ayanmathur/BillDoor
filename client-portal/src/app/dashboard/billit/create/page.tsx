@@ -13,7 +13,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Phone, Search, Plus, Trash2, Send, Printer, Save, Loader2,
-  Gift, Check, X, Barcode, MessageSquare, User,
+  Gift, Check, X, Barcode, MessageSquare, User, Camera,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import StandardCalculatorWidget from '@/components/calculator-widget';
@@ -53,10 +53,37 @@ interface SearchResult {
 export default function CreateBillPage() {
   // Settings
   const [barcodeEnabled, setBarcodeEnabled] = useState(false);
+  const [cameraBarcodeEnabled, setCameraBarcodeEnabled] = useState(false);
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const startCameraBarcodeScan = async () => {
+    setShowCameraScanner(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+    } catch {
+      alert('Camera access failed or not permitted.');
+      setShowCameraScanner(false);
+    }
+  };
+
+  const stopCameraScan = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+    }
+    setShowCameraScanner(false);
+  };
+
   const [businessName, setBusinessName] = useState('');
   const [clientSlug, setClientSlug] = useState('');
   const [hasGst, setHasGst] = useState(false);
   const [billWhatsAppTemplate, setBillWhatsAppTemplate] = useState('');
+  const [posModeEnabled, setPosModeEnabled] = useState(false);
 
   // Multi-template (Step 2/3)
   const [autoSelectTemplate, setAutoSelectTemplate] = useState(false);
@@ -82,7 +109,7 @@ export default function CreateBillPage() {
   const [rewardCode, setRewardCode] = useState('');
   const [rewardValid, setRewardValid] = useState<any>(null);
   const [rewardError, setRewardError] = useState('');
-  const [rewardEnabled, setRewardEnabled] = useState(true);
+  const [rewardEnabled, setRewardEnabled] = useState(false);
 
   // Calculator
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
@@ -111,17 +138,19 @@ export default function CreateBillPage() {
       ]);
       if (settings) {
         setBarcodeEnabled(settings.barcode_enabled || false);
+        setCameraBarcodeEnabled(settings.bill_settings?.camera_barcode_enabled === true);
         setBusinessName(settings.business_name || '');
         setClientSlug(settings.slug || '');
         setHasGst(settings.has_gst || false);
         setBillWhatsAppTemplate(settings.bill_whatsapp_template || '');
+        setPosModeEnabled((settings.pos_mode_enabled ?? settings.bill_settings?.pos_mode_enabled) === true);
         // Multi-template state (defaults to off — no change for existing clients)
         setAutoSelectTemplate(settings.billit_auto_select_template ?? false);
         setFirstVisitTemplate(settings.first_visit_template ?? null);
         setRepeatVisitTemplate(settings.repeat_visit_template ?? null);
         setAppointerEnabled(settings.appointer_enabled ?? false);
-        if (settings.reward_settings && settings.reward_settings.enabled === false) {
-          setRewardEnabled(false);
+        if (settings.reward_settings && settings.reward_settings.enabled !== false) {
+          setRewardEnabled(true);
         }
       }
     }
@@ -517,6 +546,26 @@ export default function CreateBillPage() {
 
   return (
     <div style={{ maxWidth: 720 }}>
+      {posModeEnabled && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          background: 'var(--color-accent)',
+          color: 'var(--color-accent-text, #ffffff)',
+          padding: 'var(--space-3) var(--space-4)',
+          borderRadius: 'var(--radius-lg)',
+          marginBottom: 'var(--space-4)',
+          boxShadow: 'var(--shadow-md)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 20,
+        }}>
+          <span style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 'bold', opacity: 0.9 }}>POS Running Total</span>
+          <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 900, fontFamily: 'monospace' }}>₹{grandTotal.toFixed(2)}</span>
+        </div>
+      )}
+
       {error && (
         <div style={{ padding: 'var(--space-3)', background: 'var(--color-error-subtle)', color: 'var(--color-error)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-3)' }}>{error}</div>
       )}
@@ -618,14 +667,28 @@ export default function CreateBillPage() {
             )}
           </div>
           {barcodeEnabled && (
-            <div className="input-group" style={{ flex: '1 1 140px' }}>
-              <input className="input-field" placeholder="Scan barcode..." style={{ paddingLeft: 8, fontSize: 'var(--text-xs)' }}
+            <div className="input-group" style={{ flex: '1 1 160px', position: 'relative' }}>
+              <input className="input-field" placeholder="Scan barcode..." style={{ paddingLeft: 8, paddingRight: cameraBarcodeEnabled ? 32 : 8, fontSize: 'var(--text-xs)' }}
                 onKeyDown={async (e) => {
                   if (e.key === 'Enter') {
                     const val = (e.target as HTMLInputElement).value.trim();
                     if (val) { await handleBarcodeScan(val); (e.target as HTMLInputElement).value = ''; }
                   }
                 }} />
+              {cameraBarcodeEnabled && (
+                <button
+                  type="button"
+                  onClick={startCameraBarcodeScan}
+                  title="Scan with Camera"
+                  style={{
+                    position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-accent)',
+                    padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  <Camera size={16} />
+                </button>
+              )}
             </div>
           )}
           <button className="quick-action-btn" onClick={addManualItem} title="Add manual item">
@@ -739,9 +802,9 @@ export default function CreateBillPage() {
       <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: 'var(--space-4)', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 'var(--space-2)', marginRight: 'auto' }}>
           <button className="btn" onClick={handleClear} style={{ padding: '0 var(--space-2)' }} title="Clear (Alt+C)">
-             <X size={14} />
+             <X size={14} /> {posModeEnabled && <span style={{ fontSize: 10, background: 'var(--color-bg-secondary)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+C</span>}
           </button>
-          <button className="btn" onClick={handleClear} title="New Bill (Alt+N)">
+          <button className="btn" onClick={handleClear} title="New Bill (Alt+C)">
              <Plus size={14} /> New Bill
           </button>
         </div>
@@ -756,24 +819,24 @@ export default function CreateBillPage() {
         {billResult ? (
           <>
             <a href={`${billResult.billUrl}?print=1`} target="_blank" rel="noopener noreferrer" className="btn" title="Print (Alt+P)" onClick={() => { if (billResult.billNumber.startsWith('DRAFT')) handleCreateBill(false); }}>
-               <Printer size={14} /> Print
+               <Printer size={14} /> Print {posModeEnabled && <span style={{ fontSize: 10, background: 'var(--color-bg-secondary)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+P</span>}
             </a>
             <a href={getWhatsAppUrl(billResult)} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)" onClick={() => { logWhatsAppSendAction(billResult.id, billResult.customerPhone); if (billResult.billNumber.startsWith('DRAFT')) handleCreateBill(false); }}>
-               <MessageSquare size={14} /> Send WhatsApp
+               <MessageSquare size={14} /> Send WhatsApp {posModeEnabled && <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+W</span>}
             </a>
           </>
         ) : (
           <>
             <button className="btn" onClick={() => handlePrintDirectly(window.open('about:blank', '_blank'))} disabled={saving || items.length === 0} title="Print (Alt+P)">
-               <Printer size={14} /> Print
+               <Printer size={14} /> Print {posModeEnabled && <span style={{ fontSize: 10, background: 'var(--color-bg-secondary)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+P</span>}
             </button>
             <button className="btn btn-primary" onClick={() => handleWhatsAppDirectly(window.open('about:blank', '_blank'))} disabled={saving || items.length === 0} style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)">
-               <MessageSquare size={14} /> Send WhatsApp
+               <MessageSquare size={14} /> Send WhatsApp {posModeEnabled && <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+W</span>}
             </button>
           </>
         )}
         
-        <button className="btn btn-primary" onClick={() => handleCreateBill(false)} disabled={saving || items.length === 0} title="Save (Alt+S)">
+        <button className="btn btn-primary" onClick={() => handleCreateBill(false)} disabled={saving || items.length === 0} title="Save (Alt+C)">
           {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save
         </button>
       </div>
@@ -785,6 +848,28 @@ export default function CreateBillPage() {
           : null
       ) : (
         <StandardCalculatorWidget />
+      )}
+
+      {/* Camera Barcode Scanner Modal */}
+      {showCameraScanner && (
+        <div className="void-modal-overlay">
+          <div className="void-modal" style={{ maxWidth: 420, textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)' }}><Camera size={16} /> Live Camera Barcode Scanner</h3>
+              <button className="bills-action-btn" onClick={stopCameraScan}><X size={18} /></button>
+            </div>
+            <div style={{ position: 'relative', width: '100%', height: 260, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              <video ref={videoRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} playsInline muted />
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 220, height: 120, border: '2px dashed #00FF00', borderRadius: 8, pointerEvents: 'none' }} />
+            </div>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 12 }}>
+              Point device camera at barcode to scan automatically.
+            </p>
+            <button className="btn btn-secondary" onClick={stopCameraScan} style={{ marginTop: 12 }}>
+              Close Camera
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

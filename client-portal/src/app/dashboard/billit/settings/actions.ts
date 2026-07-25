@@ -8,7 +8,7 @@ export async function fetchBillitSettingsAction() {
 
   const { data } = await supabase
     .from('clients')
-    .select('barcode_enabled, barcode_settings, slug, whatsapp_catalog_template, modules_enabled, bill_settings, billit_auto_select_template')
+    .select('barcode_enabled, barcode_settings, slug, whatsapp_catalog_template, modules_enabled, bill_settings, billit_auto_select_template, default_bill_size, pos_mode_enabled')
     .eq('id', user.id)
     .single();
 
@@ -21,21 +21,43 @@ export async function updateBillitSettingsAction(data: {
   defaultDiscountType: string;
   defaultDiscountValue: number;
   billitAutoSelectTemplate?: boolean;
+  defaultBillSize?: '55mm' | '80mm' | 'A4';
+  posModeEnabled?: boolean;
+  cameraBarcodeEnabled?: boolean;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Unauthorized.' };
 
+  // Fetch current bill_settings to preserve existing keys
+  const { data: currentClient } = await supabase
+    .from('clients')
+    .select('bill_settings')
+    .eq('id', user.id)
+    .single();
+
+  const existingBillSettings = (currentClient?.bill_settings as Record<string, unknown>) || {};
+
   const updatePayload: Record<string, unknown> = {
     barcode_enabled: data.barcodeEnabled,
     bill_settings: {
+      ...existingBillSettings,
       default_gst: data.defaultGst,
       default_discount_type: data.defaultDiscountType,
       default_discount_value: data.defaultDiscountValue,
+      default_bill_size: data.defaultBillSize || '55mm',
+      pos_mode_enabled: data.posModeEnabled ?? false,
+      camera_barcode_enabled: data.cameraBarcodeEnabled ?? false,
     },
   };
   if (data.billitAutoSelectTemplate !== undefined) {
     updatePayload.billit_auto_select_template = data.billitAutoSelectTemplate;
+  }
+  if (data.defaultBillSize !== undefined) {
+    updatePayload.default_bill_size = data.defaultBillSize;
+  }
+  if (data.posModeEnabled !== undefined) {
+    updatePayload.pos_mode_enabled = data.posModeEnabled;
   }
 
   const { error } = await supabase

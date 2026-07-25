@@ -23,6 +23,7 @@ import {
   fetchAudienceAction,
   sendBroadcastAction,
   fetchCampaignHistoryAction,
+  fetchWhatsAppQuotaUsageAction,
 } from './actions';
 import '../whatsapp.css';
 
@@ -58,6 +59,9 @@ export default function BroadcastPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Quota state
+  const [quotaInfo, setQuotaInfo] = useState<{ quota: number; sentCount: number; remaining: number; percentage: number } | null>(null);
+
   // Data
   const [templates, setTemplates] = useState<Template[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<string>('disconnected');
@@ -81,10 +85,11 @@ export default function BroadcastPage() {
 
   useEffect(() => {
     async function load() {
-      const [templatesRes, settingsRes, campaignsRes] = await Promise.all([
+      const [templatesRes, settingsRes, campaignsRes, quotaRes] = await Promise.all([
         fetchBroadcastTemplatesAction(),
         fetchWhatsAppSettingsAction(),
         fetchCampaignHistoryAction(),
+        fetchWhatsAppQuotaUsageAction(),
       ]);
 
       const active = (templatesRes.templates || []).filter(
@@ -93,6 +98,7 @@ export default function BroadcastPage() {
       setTemplates(active);
       setConnectionStatus(settingsRes.config?.connectionStatus || 'disconnected');
       setCampaigns(campaignsRes.campaigns || []);
+      if (quotaRes.quota) setQuotaInfo(quotaRes as any);
       setLoading(false);
     }
     load();
@@ -180,6 +186,44 @@ export default function BroadcastPage() {
       {success && (
         <div style={{ padding: 'var(--space-3)', background: 'var(--color-success-subtle)', color: 'var(--color-success)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-3)' }}>
           <Check size={14} style={{ marginRight: 4 }} /> {success}
+        </div>
+      )}
+
+      {/* Quota Usage Indicator */}
+      {quotaInfo && (
+        <div style={{
+          background: quotaInfo.percentage >= 100 ? 'var(--color-error-subtle)' : quotaInfo.percentage >= 80 ? 'var(--color-warning-subtle)' : 'var(--color-bg-elevated)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-md)',
+          padding: 'var(--space-3)',
+          marginBottom: 'var(--space-4)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Monthly Broadcast Quota: {quotaInfo.sentCount} / {quotaInfo.quota} sent
+            </span>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+              {quotaInfo.remaining} remaining
+            </span>
+          </div>
+          <div style={{ width: '100%', height: 6, background: 'var(--color-border)', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${quotaInfo.percentage}%`,
+              background: quotaInfo.percentage >= 100 ? 'var(--color-error)' : quotaInfo.percentage >= 80 ? 'var(--color-warning)' : 'var(--color-accent)',
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
+          {quotaInfo.percentage >= 100 && (
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-error)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4, fontWeight: 500 }}>
+              <AlertTriangle size={12} /> Broadcast limit reached for this period. Contact support or upgrade plan for higher limit.
+            </div>
+          )}
+          {quotaInfo.percentage >= 80 && quotaInfo.percentage < 100 && (
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-warning)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <AlertTriangle size={12} /> Approaching monthly quota limit ({quotaInfo.remaining} messages left).
+            </div>
+          )}
         </div>
       )}
 

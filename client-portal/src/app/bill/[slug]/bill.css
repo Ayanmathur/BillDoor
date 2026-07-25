@@ -22,6 +22,19 @@
   overflow: hidden;
 }
 
+/* Presentational preview widths based on clients.default_bill_size */
+.bill-container.size-55mm {
+  max-width: 340px; /* 55mm thermal preview width */
+}
+
+.bill-container.size-80mm {
+  max-width: 440px; /* 80mm receipt preview width */
+}
+
+.bill-container.size-a4 {
+  max-width: 780px; /* A4 document preview width */
+}
+
 /* ---- Header ---- */
 .bill-header {
   padding: var(--space-5) var(--space-5) var(--space-4);

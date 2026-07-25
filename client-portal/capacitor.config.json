@@ -1,0 +1,15 @@
+{
+  "appId": "com.billdoor.mobile",
+  "appName": "BillDoor",
+  "webDir": "out",
+  "server": {
+    "url": "https://billdoor-rho.vercel.app",
+    "cleartext": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#1C252E"
+    }
+  }
+}

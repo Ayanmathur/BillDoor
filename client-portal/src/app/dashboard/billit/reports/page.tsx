@@ -197,6 +197,23 @@ export default function ReportsDashboard() {
           </div>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-accent)', fontWeight: 600 }}>View →</span>
         </Link>
+
+        <Link 
+          href="/dashboard/billit/reports/tally-export" 
+          className="settings-section"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', textDecoration: 'none', color: 'inherit' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <div style={{ background: 'var(--color-bg-secondary)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', color: 'var(--color-accent)' }}>
+              <FileSpreadsheet size={20} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)' }}>Tally Sales Export</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>Export sales vouchers formatted for Tally import</div>
+            </div>
+          </div>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-accent)', fontWeight: 600 }}>Export →</span>
+        </Link>
       </div>
     </div>
   );

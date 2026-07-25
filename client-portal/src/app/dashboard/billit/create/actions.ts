@@ -456,7 +456,7 @@ export async function fetchBillSettingsAction() {
 
   const { data: client } = await supabase
     .from('clients')
-    .select('business_name, slug, barcode_enabled, has_gst, gst_number, reward_settings, billit_auto_select_template, modules_enabled')
+    .select('business_name, slug, barcode_enabled, has_gst, gst_number, reward_settings, billit_auto_select_template, modules_enabled, pos_mode_enabled, default_bill_size, bill_settings')
     .eq('id', user.id)
     .single();
 
@@ -760,4 +760,36 @@ export async function previewNextBillNumberAction() {
     const nextNum = (seq?.last_number || 0) + 1;
     return `BILL-${todayStr}-${nextNum.toString().padStart(3, '0')}`;
   }
+}
+
+// ============================================================
+// Fetch bills for Bulk Download (with date range filter)
+// ============================================================
+export async function fetchBillsForBulkDownloadAction(params?: {
+  dateFrom?: string;
+  dateTo?: string;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized.', bills: [], client: null };
+
+  let query = supabase
+    .from('bills')
+    .select('id, bill_number, bill_slug, line_items, subtotal, discount_total, gst_total, extra_charges, extra_charges_note, grand_total, status, void_reason, created_at, customer:customers(name, phone)')
+    .eq('client_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (params?.dateFrom) query = query.gte('created_at', params.dateFrom);
+  if (params?.dateTo) query = query.lte('created_at', params.dateTo + 'T23:59:59');
+
+  const { data: bills, error } = await query;
+  if (error) return { error: 'Failed to fetch bills for bulk download.', bills: [], client: null };
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('business_name, address, phone, has_gst, gst_number, default_bill_size')
+    .eq('id', user.id)
+    .single();
+
+  return { bills: bills || [], client };
 }

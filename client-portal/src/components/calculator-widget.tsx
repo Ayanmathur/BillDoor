@@ -75,13 +75,9 @@ export default function StandardCalculatorWidget({ onClose }: StandardCalculator
   const handleEqual = () => {
     if (!equation) return;
     try {
-      // safe eval using Function
       const fullEquation = equation + display;
-      // replace × with * and ÷ with /
       const safeEq = fullEquation.replace(/×/g, '*').replace(/÷/g, '/');
       const result = new Function('return ' + safeEq)();
-      
-      // format to max 4 decimal places
       const finalResult = Math.round(result * 10000) / 10000;
       setDisplay(String(finalResult));
       setEquation('');
@@ -91,10 +87,68 @@ export default function StandardCalculatorWidget({ onClose }: StandardCalculator
     }
   };
 
+  const handleBackspace = () => {
+    if (display === 'Error' || display.length <= 1) {
+      setDisplay('0');
+    } else {
+      setDisplay(display.slice(0, -1));
+    }
+  };
+
   const handleClear = () => {
     setDisplay('0');
     setEquation('');
   };
+
+  // Quick GST & Discount helpers
+  const handlePlusGst = (gstPercent: number = 18) => {
+    const val = parseFloat(display) || 0;
+    const withGst = val + (val * (gstPercent / 100));
+    setDisplay(String(Math.round(withGst * 100) / 100));
+  };
+
+  const handleMinusDisc = (discPercent: number = 10) => {
+    const val = parseFloat(display) || 0;
+    const afterDisc = val - (val * (discPercent / 100));
+    setDisplay(String(Math.round(afterDisc * 100) / 100));
+  };
+
+  // Global Keyboard Listener when expanded
+  useEffect(() => {
+    if (isMinimized) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't capture keyboard input if user is typing in a form text input/textarea
+      const targetTag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      if (targetTag === 'input' || targetTag === 'textarea' || targetTag === 'select') return;
+
+      if (e.key >= '0' && e.key <= '9') {
+        handleNum(e.key);
+      } else if (e.key === '.') {
+        handleNum('.');
+      } else if (e.key === '+') {
+        handleOp('+');
+      } else if (e.key === '-') {
+        handleOp('-');
+      } else if (e.key === '*') {
+        handleOp('×');
+      } else if (e.key === '/') {
+        e.preventDefault();
+        handleOp('÷');
+      } else if (e.key === 'Enter' || e.key === '=') {
+        e.preventDefault();
+        handleEqual();
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        handleBackspace();
+      } else if (e.key === 'Escape') {
+        handleClear();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMinimized, display, equation]);
 
   return (
     <div 
@@ -129,14 +183,19 @@ export default function StandardCalculatorWidget({ onClose }: StandardCalculator
           
           <div className="calc-keypad">
             <button className="calc-btn calc-btn-clear" onClick={handleClear}>C</button>
+            <button className="calc-btn" onClick={handleBackspace} title="Backspace (Backspace)">⌫</button>
+            <button className="calc-btn" onClick={() => handlePlusGst(18)} title="Add 18% GST">+18%</button>
+            <button className="calc-btn" onClick={() => handleMinusDisc(10)} title="Subtract 10% Disc">-10%</button>
+
             <button className="calc-btn" onClick={() => handleOp('÷')}>÷</button>
             <button className="calc-btn" onClick={() => handleOp('×')}>×</button>
             <button className="calc-btn calc-btn-op" onClick={() => handleOp('-')}>−</button>
+            <button className="calc-btn calc-btn-op" onClick={() => handleOp('+')}>+</button>
 
             <button className="calc-btn" onClick={() => handleNum('7')}>7</button>
             <button className="calc-btn" onClick={() => handleNum('8')}>8</button>
             <button className="calc-btn" onClick={() => handleNum('9')}>9</button>
-            <button className="calc-btn calc-btn-op" onClick={() => handleOp('+')} style={{ gridRow: 'span 2' }}>+</button>
+            <button className="calc-btn calc-btn-equal" onClick={handleEqual} style={{ gridRow: 'span 2' }}>=</button>
 
             <button className="calc-btn" onClick={() => handleNum('4')}>4</button>
             <button className="calc-btn" onClick={() => handleNum('5')}>5</button>
@@ -145,10 +204,9 @@ export default function StandardCalculatorWidget({ onClose }: StandardCalculator
             <button className="calc-btn" onClick={() => handleNum('1')}>1</button>
             <button className="calc-btn" onClick={() => handleNum('2')}>2</button>
             <button className="calc-btn" onClick={() => handleNum('3')}>3</button>
-            <button className="calc-btn calc-btn-equal" onClick={handleEqual} style={{ gridRow: 'span 2' }}>=</button>
-
-            <button className="calc-btn" onClick={() => handleNum('0')} style={{ gridColumn: 'span 2' }}>0</button>
             <button className="calc-btn" onClick={() => handleNum('.')}>.</button>
+
+            <button className="calc-btn" onClick={() => handleNum('0')} style={{ gridColumn: 'span 4' }}>0</button>
           </div>
         </div>
       )}

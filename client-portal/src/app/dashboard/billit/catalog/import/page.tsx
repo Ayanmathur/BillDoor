@@ -177,18 +177,39 @@ export default function MenuImportPage() {
             style={{ display: 'none' }}
           />
 
-          <button
-            className="btn btn-primary"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-          >
-            {uploading ? (
-              <><Loader2 size={16} className="spinner" /> Processing...</>
-            ) : (
-              <><Upload size={16} /> Choose Image</>
-            )}
-          </button>
+          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              className="btn btn-primary"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+              onClick={() => {
+                if (fileRef.current) {
+                  fileRef.current.removeAttribute('capture');
+                  fileRef.current.click();
+                }
+              }}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <><Loader2 size={16} className="spinner" /> Processing...</>
+              ) : (
+                <><Upload size={16} /> Choose Image File</>
+              )}
+            </button>
+
+            <button
+              className="btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)' }}
+              onClick={() => {
+                if (fileRef.current) {
+                  fileRef.current.setAttribute('capture', 'environment');
+                  fileRef.current.click();
+                }
+              }}
+              disabled={uploading}
+            >
+              <Camera size={16} /> Take Photo with Camera
+            </button>
+          </div>
 
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-3)' }}>
             Supported formats: JPEG, PNG, WebP · Max size: 10MB

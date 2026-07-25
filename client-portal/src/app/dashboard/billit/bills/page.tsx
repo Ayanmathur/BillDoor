@@ -4,11 +4,13 @@ import { useState, useEffect, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FileText, AlertTriangle, Check, Trash2, Edit, ExternalLink,
-  ChevronLeft, ChevronRight, Loader2, X, Filter, Printer, MessageCircle
+  ChevronLeft, ChevronRight, Loader2, X, Filter, Printer, MessageCircle, Download
 } from 'lucide-react';
-import { fetchBillsAction, voidBillAction, finalizeDraftAction, deleteDraftAction, fetchBillSettingsAction } from '../create/actions';
+import { fetchBillsAction, voidBillAction, finalizeDraftAction, deleteDraftAction, fetchBillSettingsAction, fetchBillsForBulkDownloadAction } from '../create/actions';
 import { fetchBillWhatsAppTemplateAction } from '../settings/actions';
 import './bills.css';
+
+type BulkDateRange = 'today' | 'week' | 'month' | 'year' | 'custom';
 
 export default function BillsPage() {
   const router = useRouter();
@@ -25,6 +27,75 @@ export default function BillsPage() {
   const [selectedBillNumber, setSelectedBillNumber] = useState('');
   const [voidReason, setVoidReason] = useState('');
   const [voiding, setVoiding] = useState(false);
+
+  // Bulk Download state
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [bulkRange, setBulkRange] = useState<BulkDateRange>('month');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+  const [downloading, setDownloading] = useState(false);
+
+  function getBulkDates() {
+    const now = new Date();
+    switch (bulkRange) {
+      case 'today': {
+        const d = now.toISOString().split('T')[0];
+        return { dateFrom: d, dateTo: d };
+      }
+      case 'week': {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        return { dateFrom: weekAgo, dateTo: now.toISOString().split('T')[0] };
+      }
+      case 'month': {
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        return { dateFrom: monthAgo, dateTo: now.toISOString().split('T')[0] };
+      }
+      case 'year': {
+        const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        return { dateFrom: yearAgo, dateTo: now.toISOString().split('T')[0] };
+      }
+      case 'custom':
+        return { dateFrom: customFrom || undefined, dateTo: customTo || undefined };
+      default:
+        return {};
+    }
+  }
+
+  async function handleBulkDownload() {
+    setDownloading(true);
+    const dates = getBulkDates();
+    const result = await fetchBillsForBulkDownloadAction(dates);
+    if (!result.bills || result.bills.length === 0) {
+      alert('No bills found in the selected date range.');
+      setDownloading(false);
+      return;
+    }
+
+    // Format bills export CSV / printable bundle
+    const headers = ['Bill Number', 'Date', 'Customer Name', 'Phone', 'Status', 'Subtotal', 'Discount', 'GST Total', 'Grand Total'];
+    const rows = result.bills.map((b: any) => [
+      b.bill_number,
+      new Date(b.created_at).toLocaleString('en-IN'),
+      `"${(b.customer?.name || '').replace(/"/g, '""')}"`,
+      b.customer?.phone || '',
+      b.status,
+      b.subtotal || 0,
+      b.discount_total || 0,
+      b.gst_total || 0,
+      b.grand_total || 0,
+    ]);
+
+    const csv = [headers.join(','), ...rows.map((r: any[]) => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoices-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setDownloading(false);
+    setBulkModalOpen(false);
+  }
 
   useEffect(() => {
     loadBills();
@@ -135,14 +206,19 @@ export default function BillsPage() {
     <div className="bills-page">
       <div className="bills-header">
         <h1><FileText size={28} style={{ color: 'var(--color-primary)' }} /> Bills</h1>
-        <div className="bills-filter">
-          <Filter size={16} color="#666" />
-          <select value={filter} onChange={(e) => { setFilter(e.target.value); setPage(1); }}>
-            <option value="All">All</option>
-            <option value="Issued">Issued</option>
-            <option value="Draft">Draft</option>
-            <option value="Voided">Voided</option>
-          </select>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <button className="quick-action-btn" onClick={() => setBulkModalOpen(true)} style={{ fontSize: 'var(--text-xs)' }}>
+            <Download size={14} /> Bulk Download
+          </button>
+          <div className="bills-filter">
+            <Filter size={16} color="#666" />
+            <select value={filter} onChange={(e) => { setFilter(e.target.value); setPage(1); }}>
+              <option value="All">All</option>
+              <option value="Issued">Issued</option>
+              <option value="Draft">Draft</option>
+              <option value="Voided">Voided</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -287,6 +363,56 @@ export default function BillsPage() {
                 onClick={handleVoidConfirm}
               >
                 {voiding ? <Loader2 size={16} className="spinner" /> : 'Confirm Void'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Download Modal (Step 4) */}
+      {bulkModalOpen && (
+        <div className="void-modal-overlay">
+          <div className="void-modal" style={{ maxWidth: 440 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Download size={18} /> Bulk Download Invoices</h3>
+              <button className="bills-action-btn" onClick={() => setBulkModalOpen(false)}><X size={20} /></button>
+            </div>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginBottom: 16 }}>
+              Select a date range to export invoices in bulk.
+            </p>
+            
+            {/* Reused B1 Date Range Selector */}
+            <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap', marginBottom: 16 }}>
+              {(['today', 'week', 'month', 'year', 'custom'] as BulkDateRange[]).map((range) => (
+                <button
+                  key={range}
+                  className={`settings-tab ${bulkRange === range ? 'active' : ''}`}
+                  style={{
+                    padding: 'var(--space-1) var(--space-3)',
+                    fontSize: 'var(--text-xs)',
+                    borderRadius: 'var(--radius-md)',
+                    border: 'none',
+                    background: bulkRange === range ? 'var(--color-accent-subtle)' : 'var(--color-bg-secondary)',
+                  }}
+                  onClick={() => setBulkRange(range)}
+                >
+                  {range === 'today' ? 'Today' : range === 'week' ? 'This Week' : range === 'month' ? 'This Month' : range === 'year' ? 'This Year' : 'Custom'}
+                </button>
+              ))}
+            </div>
+
+            {bulkRange === 'custom' && (
+              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', marginBottom: 16 }}>
+                <input type="date" className="input-field" style={{ padding: 'var(--space-1) var(--space-2)', fontSize: 'var(--text-xs)', flex: 1 }} value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>to</span>
+                <input type="date" className="input-field" style={{ padding: 'var(--space-1) var(--space-2)', fontSize: 'var(--text-xs)', flex: 1 }} value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
+              </div>
+            )}
+
+            <div className="void-modal-actions">
+              <button className="btn btn-secondary" onClick={() => setBulkModalOpen(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleBulkDownload} disabled={downloading}>
+                {downloading ? <Loader2 size={16} className="spinner" /> : <Download size={14} />} Export Invoices
               </button>
             </div>
           </div>

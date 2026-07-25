@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  Plus, Search, Edit3, Trash2, Package, Loader2, X, Save, Barcode, Printer, Download, FileSpreadsheet
+  Plus, Search, Edit3, Trash2, Package, Loader2, X, Save, Barcode, Printer, Download, FileSpreadsheet, Upload
 } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
 import './../billit.css';
@@ -328,6 +328,9 @@ export default function CatalogPage() {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <button className="btn" onClick={() => window.location.href = '/dashboard/billit/catalog/bulk-import'} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', height: '40px', padding: '0 var(--space-4)', borderRadius: 'var(--radius-full)' }}>
+            <Upload size={16} /> Bulk Import
+          </button>
           <button className="btn" onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', height: '40px', padding: '0 var(--space-4)', borderRadius: 'var(--radius-full)' }}>
             <FileSpreadsheet size={16} /> Export CSV
           </button>

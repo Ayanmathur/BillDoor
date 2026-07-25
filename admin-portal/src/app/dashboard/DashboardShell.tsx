@@ -13,14 +13,21 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Bell
+  Bell,
+  Menu,
+  X
 } from 'lucide-react';
 import { adminLogoutAction } from '@/app/login/actions';
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('billdoor-admin-theme');
@@ -52,7 +59,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   return (
     <div className="app-shell">
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start' }}>
           <img
             src={collapsed
@@ -66,7 +73,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         <nav className="sidebar-nav">
           {navItems.map((item) => {
             const Icon = item.icon;
-            // Precise active state matching
             const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href + '/'));
             return (
               <Link key={item.name} href={item.href} className={`sidebar-nav-item ${isActive ? 'active' : ''}`}>
@@ -85,9 +91,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         </div>
       </aside>
 
+      {mobileOpen && <div className="sidebar-overlay" onClick={() => setMobileOpen(false)} />}
+
       <main className="main-content">
         <header className="topnav">
-          <div className="topnav-left">
+          <div className="topnav-left" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <button className="topnav-btn topnav-mobile-menu" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle Menu">
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
             <span className="topnav-breadcrumb">Admin Dashboard</span>
           </div>
           <div className="topnav-right">

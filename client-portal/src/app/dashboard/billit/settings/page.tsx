@@ -25,9 +25,12 @@ export default function BillitSettingsPage() {
   const [error, setError] = useState('');
 
   const [barcodeEnabled, setBarcodeEnabled] = useState(false);
+  const [cameraBarcodeEnabled, setCameraBarcodeEnabled] = useState(false);
   const [defaultGst, setDefaultGst] = useState(0);
   const [defaultDiscountType, setDefaultDiscountType] = useState('₹');
   const [defaultDiscountValue, setDefaultDiscountValue] = useState(0);
+  const [defaultBillSize, setDefaultBillSize] = useState<'55mm' | '80mm' | 'A4'>('55mm');
+  const [posModeEnabled, setPosModeEnabled] = useState(false);
 
   const [slug, setSlug] = useState('');
   const [catalogViewerEnabled, setCatalogViewerEnabled] = useState(false);
@@ -49,9 +52,12 @@ export default function BillitSettingsPage() {
       const result = await fetchBillitSettingsAction();
       if (result.settings) {
         setBarcodeEnabled(result.settings.barcode_enabled ?? false);
+        setCameraBarcodeEnabled(result.settings.bill_settings?.camera_barcode_enabled === true);
         setDefaultGst(result.settings.bill_settings?.default_gst ?? 0);
         setDefaultDiscountType(result.settings.bill_settings?.default_discount_type ?? '₹');
         setDefaultDiscountValue(result.settings.bill_settings?.default_discount_value ?? 0);
+        setDefaultBillSize((result.settings.default_bill_size || result.settings.bill_settings?.default_bill_size || '55mm') as '55mm' | '80mm' | 'A4');
+        setPosModeEnabled((result.settings.pos_mode_enabled ?? result.settings.bill_settings?.pos_mode_enabled) === true);
         setSlug(result.settings.slug || '');
         setCatalogTemplate(result.settings.whatsapp_catalog_template || "Hi! I'm interested in {item_name}. Is it available?");
         setCatalogViewerEnabled(result.settings.modules_enabled?.quick_tools?.catalog_viewer === true);
@@ -81,6 +87,9 @@ export default function BillitSettingsPage() {
       defaultDiscountType,
       defaultDiscountValue,
       billitAutoSelectTemplate: autoSelectTemplate,
+      defaultBillSize,
+      posModeEnabled,
+      cameraBarcodeEnabled,
     });
     if (result.error) setError(result.error);
     else flash();
@@ -194,16 +203,34 @@ export default function BillitSettingsPage() {
         </div>
 
         {barcodeEnabled && (
-          <div
-            style={{
-              fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)',
-              marginTop: 'var(--space-3)', padding: 'var(--space-2)',
-              background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-sm)',
-            }}
-          >
-            When enabled, catalog items will auto-generate Code128 barcodes and a barcode
-            scanner input appears in Bill Creation.
-          </div>
+          <>
+            <div className="toggle-field" style={{ marginTop: 'var(--space-3)' }}>
+              <div>
+                <div className="toggle-field-label">Enable Camera Barcode Scanning</div>
+                <div className="toggle-field-desc">
+                  Displays a camera icon inside the barcode box on Create Bill to scan barcodes using device webcam, iPhone, or iPad camera.
+                </div>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={cameraBarcodeEnabled}
+                  onChange={(e) => setCameraBarcodeEnabled(e.target.checked)}
+                />
+                <span className="toggle-slider" />
+              </label>
+            </div>
+
+            <div
+              style={{
+                fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)',
+                marginTop: 'var(--space-3)', padding: 'var(--space-2)',
+                background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              When enabled, catalog items auto-generate Code128 barcodes and a barcode scanner input (with camera support) appears in Bill Creation.
+            </div>
+          </>
         )}
 
         <div style={{ marginTop: 'var(--space-6)' }}>
@@ -248,11 +275,51 @@ export default function BillitSettingsPage() {
           </div>
         </div>
 
+        {/* Default Bill Size (Step 2) */}
+        <div style={{ marginTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-4)' }}>
+          <label className="input-label" style={{ fontWeight: 'var(--weight-semibold)', marginBottom: 'var(--space-1)' }}>Default Bill Size (Digital Bill Preview)</label>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-3)' }}>
+            Controls the presentational preview layout on your Digital Bill page. Actual browser printing remains governed by your native print dialog.
+          </p>
+          <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+            {(['55mm', '80mm', 'A4'] as const).map((size) => (
+              <label key={size} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', padding: 'var(--space-2) var(--space-3)', background: defaultBillSize === size ? 'var(--color-accent-subtle)' : 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }}>
+                <input
+                  type="radio"
+                  name="defaultBillSize"
+                  value={size}
+                  checked={defaultBillSize === size}
+                  onChange={() => setDefaultBillSize(size)}
+                />
+                {size === '55mm' ? '55mm Thermal' : size === '80mm' ? '80mm Receipt' : 'A4 Document'}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* POS Mode Toggle (Step 3) */}
+        <div className="toggle-field" style={{ marginTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-4)' }}>
+          <div>
+            <div className="toggle-field-label">Enable POS Mode</div>
+            <div className="toggle-field-desc">
+              Surfaces high-contrast running total display, keyboard shortcuts ([Alt+C], [Alt+W], [Alt+P]), and barcode scanning focus on Create Bill screen.
+            </div>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={posModeEnabled}
+              onChange={(e) => setPosModeEnabled(e.target.checked)}
+            />
+            <span className="toggle-slider" />
+          </label>
+        </div>
+
         <button
           className="btn btn-primary"
           onClick={handleSave}
           disabled={saving}
-          style={{ marginTop: 'var(--space-4)' }}
+          style={{ marginTop: 'var(--space-5)' }}
         >
           {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Settings
         </button>

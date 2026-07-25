@@ -44,6 +44,9 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'settings', label: 'Settings', href: '/dashboard/settings', icon: <Settings size={20} /> },
 ];
 
+import { Store } from 'lucide-react';
+import { fetchMyShopsAction, setActiveShopAction } from '@/app/dashboard/actions';
+
 interface AppShellProps {
   children: ReactNode;
   businessName: string;
@@ -58,6 +61,23 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [unreadCount, setUnreadCount] = useState(notificationCount || 0);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Multi-shop state
+  const [shops, setShops] = useState<{ id: string; name: string; slug: string }[]>([]);
+  const [activeShopId, setActiveShopId] = useState<string | null>(null);
+  const [canSwitchShops, setCanSwitchShops] = useState(false);
+
+  useEffect(() => {
+    async function checkShops() {
+      const res = await fetchMyShopsAction();
+      if (res.canSwitch && res.shops.length > 1) {
+        setShops(res.shops);
+        setActiveShopId(res.activeShopId);
+        setCanSwitchShops(true);
+      }
+    }
+    checkShops();
+  }, []);
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -238,6 +258,37 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
           <h1 className="topbar-title">{pageTitle}</h1>
         </div>
         <div className="topbar-right">
+          {canSwitchShops && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <Store size={16} style={{ color: 'var(--color-text-secondary)' }} />
+              <select
+                value={activeShopId || ''}
+                onChange={async (e) => {
+                  const id = e.target.value;
+                  setActiveShopId(id);
+                  await setActiveShopAction(id);
+                  window.location.reload();
+                }}
+                style={{
+                  background: 'var(--color-bg-secondary)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '4px 8px',
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--color-text-primary)',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                }}
+              >
+                {shops.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Notification Bell */}
           <button className="topbar-btn" title="Notifications" onClick={() => router.push('/dashboard/notifications')}>
             <Bell size={18} />

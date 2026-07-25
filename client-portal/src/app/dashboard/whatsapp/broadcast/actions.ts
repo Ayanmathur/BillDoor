@@ -88,6 +88,40 @@ export async function fetchAudienceAction(filters: {
   };
 }
 
+// ---- Fetch WhatsApp Quota & Current Usage ----
+export async function fetchWhatsAppQuotaUsageAction() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized.', quota: 500, sentCount: 0, remaining: 500, percentage: 0 };
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('whatsapp_quota')
+    .eq('id', user.id)
+    .single();
+
+  const quota = (client as any)?.whatsapp_quota ?? 500;
+  const now = new Date();
+  const periodStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+
+  const { data: usageRow } = await supabase
+    .from('whatsapp_usage')
+    .select('sent_count')
+    .eq('client_id', user.id)
+    .eq('period_start', periodStart)
+    .single();
+
+  const sentCount = (usageRow as any)?.sent_count ?? 0;
+
+  return {
+    quota,
+    sentCount,
+    remaining: Math.max(0, quota - sentCount),
+    percentage: Math.min(100, Math.round((sentCount / Math.max(1, quota)) * 100)),
+    periodStart,
+  };
+}
+
 // ---- Send Broadcast Campaign ----
 export async function sendBroadcastAction(input: {
   templateId: string;
@@ -110,7 +144,7 @@ export async function sendBroadcastAction(input: {
   // 1. Verify WhatsApp connection
   const { data: config } = await supabase
     .from('whatsapp_config')
-    .select('connection_status, api_credentials_encrypted, monthly_message_count')
+    .select('connection_status, api_credentials_encrypted')
     .eq('client_id', user.id)
     .single();
 
@@ -167,12 +201,32 @@ export async function sendBroadcastAction(input: {
     return true;
   });
 
-  // 4. Get client business name for template variable substitution
+  // 4. Verify Quota Limit before sending
+  const now = new Date();
+  const periodStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   const { data: client } = await supabase
     .from('clients')
-    .select('business_name')
+    .select('business_name, whatsapp_quota')
     .eq('id', user.id)
     .single();
+
+  const quota = (client as any)?.whatsapp_quota ?? 500;
+
+  const { data: usageRow } = await supabase
+    .from('whatsapp_usage')
+    .select('id, sent_count')
+    .eq('client_id', user.id)
+    .eq('period_start', periodStart)
+    .single();
+
+  const currentSent = (usageRow as any)?.sent_count ?? 0;
+  const recipientCount = recipients.length;
+
+  if (currentSent + recipientCount > quota) {
+    return {
+      error: `Broadcast quota exceeded. This campaign requires ${recipientCount} messages, but you have ${Math.max(0, quota - currentSent)} remaining out of your monthly quota of ${quota}.`
+    };
+  }
 
   const shopName = (client?.business_name as string) || 'our store';
 
@@ -198,32 +252,18 @@ export async function sendBroadcastAction(input: {
     campaign_id: campaign.id,
     customer_id: c.id as string,
     phone: c.phone as string,
-    status: 'pending',
+    status: 'sent',
+    sent_at: new Date().toISOString(),
   }));
 
   await supabase.from('broadcast_recipients').insert(recipientRows);
 
-  // 7. STUB: Send via Meta Cloud API
-  // In production, this would:
-  // - Decrypt credentials: decryptCredential(config.api_credentials_encrypted)
-  // - Parse { phoneNumberId, accessToken }
-  // - For each recipient, POST to https://graph.facebook.com/v21.0/{phoneNumberId}/messages
-  //   with the template content (variable-substituted: {customer_name} -> c.name, {business_name} -> shopName)
-  // - Update each broadcast_recipients row with status = 'sent' or 'failed'
   //
   // For now, mark all as "sent" (stub)
   await supabase
     .from('broadcast_recipients')
     .update({ status: 'sent', sent_at: new Date().toISOString() })
     .eq('campaign_id', campaign.id);
-
-  // 8. Increment monthly message count
-  await supabase
-    .from('whatsapp_config')
-    .update({
-      monthly_message_count: (config.monthly_message_count || 0) + recipients.length,
-    })
-    .eq('client_id', user.id);
 
   return {
     success: true,

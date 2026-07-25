@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-config-schema/schema.json",
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "https://billdoor-rho.vercel.app"
+  },
+  "app": {
+    "title": "BillDoor Desktop",
+    "windows": [
+      {
+        "title": "BillDoor",
+        "width": 1280,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "identifier": "com.billdoor.desktop",
+    "icon": [
+      "public/favicon.png"
+    ]
+  }
+}
