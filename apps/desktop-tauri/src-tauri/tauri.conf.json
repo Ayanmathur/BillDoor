@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "identifier": "in.billdoor.desktop",
   "build": {
-    "devUrl": "http://localhost:3000",
-    "frontendDist": "../../client-portal/out"
+    "devUrl": "https://app.billdoor.in",
+    "frontendDist": "../dist"
   },
   "app": {
     "windows": [
