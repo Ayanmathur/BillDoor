@@ -28,6 +28,7 @@ import {
   logWhatsAppSendAction,
   fetchBillSettingsAction,
   previewNextBillNumberAction,
+  saveAndAddUncatalogedItemAction,
 } from './actions';
 import './../billit.css';
 
@@ -57,6 +58,7 @@ export default function CreateBillPage() {
   const [barcodeEnabled, setBarcodeEnabled] = useState(true);
   const [cameraBarcodeEnabled, setCameraBarcodeEnabled] = useState(false);
   const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [uncatalogedBarcode, setUncatalogedBarcode] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   async function handleContinuousScan(code: string) {
@@ -66,6 +68,7 @@ export default function CreateBillPage() {
       addItemFromSearch(result.item, 'barcode');
       return { success: true, name: result.item.name, price: result.item.price };
     }
+    setUncatalogedBarcode(clean);
     return { success: false, code: clean };
   }
 
@@ -246,8 +249,7 @@ export default function CreateBillPage() {
     if (result.item) {
       addItemFromSearch(result.item, 'barcode');
     } else {
-      setError(`No product matches barcode: ${clean}`);
-      setTimeout(() => setError(''), 3000);
+      setUncatalogedBarcode(clean);
     }
   }
 
@@ -853,6 +855,15 @@ export default function CreateBillPage() {
           onClose={() => setShowCameraScanner(false)}
         />
       )}
+
+      {/* Save Uncataloged Barcode Modal */}
+      {uncatalogedBarcode && (
+        <SaveUncatalogedProductModal
+          barcodeValue={uncatalogedBarcode}
+          onSaveAndAdd={(item) => addItemFromSearch(item, 'barcode')}
+          onClose={() => setUncatalogedBarcode(null)}
+        />
+      )}
     </div>
   );
 }
@@ -1003,6 +1014,138 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
             Done / Close Camera
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+interface SaveUncatalogedModalProps {
+  barcodeValue: string;
+  onSaveAndAdd: (item: SearchResult) => void;
+  onClose: () => void;
+}
+
+function SaveUncatalogedProductModal({ barcodeValue, onSaveAndAdd, onClose }: SaveUncatalogedModalProps) {
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [unit, setUnit] = useState('pcs');
+  const [gstPercent, setGstPercent] = useState('0');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  // Lock body scroll on mount
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) { setError('Please enter a product name.'); return; }
+    const parsedPrice = parseFloat(price);
+    if (isNaN(parsedPrice) || parsedPrice < 0) { setError('Please enter a valid price.'); return; }
+
+    setSaving(true);
+    setError('');
+    const res = await saveAndAddUncatalogedItemAction({
+      name: name.trim(),
+      price: parsedPrice,
+      barcodeValue,
+      unit,
+      gstPercent: parseFloat(gstPercent) || 0,
+    });
+
+    if (res.item) {
+      onSaveAndAdd(res.item);
+      onClose();
+    } else {
+      setError(res.error || 'Failed to save product to catalog.');
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="void-modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="void-modal" style={{ maxWidth: 420, width: '92%', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)', padding: 18 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)' }}>
+            <Barcode size={16} style={{ color: 'var(--color-accent)' }} /> New Product Barcode Detected
+          </h3>
+          <button className="bills-action-btn" onClick={onClose}><X size={18} /></button>
+        </div>
+
+        <div style={{ background: 'var(--color-bg-secondary)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>Barcode:</span>
+          <span style={{ fontFamily: 'monospace', fontWeight: 'var(--weight-bold)', fontSize: 'var(--text-xs)', color: 'var(--color-accent)' }}>{barcodeValue}</span>
+        </div>
+
+        {error && <p style={{ color: 'var(--color-error)', fontSize: 'var(--text-xs)', marginBottom: 10 }}>{error}</p>}
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div>
+            <label style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Product Name *</label>
+            <input
+              type="text"
+              className="input-field"
+              placeholder="e.g. Dairy Milk Silk 150g"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={{ fontSize: 'var(--text-xs)' }}
+              autoFocus
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Price (₹) *</label>
+              <input
+                type="number"
+                step="0.01"
+                className="input-field"
+                placeholder="100"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                style={{ fontSize: 'var(--text-xs)' }}
+              />
+            </div>
+            <div style={{ width: 85 }}>
+              <label style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Unit</label>
+              <select
+                className="input-field"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                style={{ fontSize: 'var(--text-xs)', padding: '6px' }}
+              >
+                <option value="pcs">pcs</option>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="l">l</option>
+                <option value="ml">ml</option>
+                <option value="pack">pack</option>
+              </select>
+            </div>
+            <div style={{ width: 75 }}>
+              <label style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>GST %</label>
+              <input
+                type="number"
+                className="input-field"
+                placeholder="0"
+                value={gstPercent}
+                onChange={(e) => setGstPercent(e.target.value)}
+                style={{ fontSize: 'var(--text-xs)' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+            <button type="button" className="btn btn-secondary" onClick={onClose} style={{ fontSize: 'var(--text-xs)' }}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={saving} style={{ fontSize: 'var(--text-xs)' }}>
+              {saving ? <Loader2 size={14} className="spinner" /> : <Check size={14} />} Add to Bill & Save to Catalog
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

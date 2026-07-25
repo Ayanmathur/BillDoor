@@ -71,7 +71,53 @@ export async function lookupBarcodeAction(barcodeValue: string) {
     }
   }
 
-  if (!item) return { error: `No product matches barcode: ${clean}`, item: null };
+  if (!item) return { error: `No product matches barcode: ${clean}`, item: null, barcodeValue: clean };
+  return { item };
+}
+
+// ============================================================
+// Save uncataloged item automatically to catalog & bill
+// ============================================================
+const SaveUncatalogedItemSchema = z.object({
+  name: z.string().min(1, 'Product name is required.').max(150),
+  price: z.number().min(0, 'Price must be 0 or positive.'),
+  barcodeValue: z.string().min(1, 'Barcode is required.').max(100),
+  unit: z.string().optional(),
+  gstPercent: z.number().optional(),
+});
+
+export async function saveAndAddUncatalogedItemAction(input: z.infer<typeof SaveUncatalogedItemSchema>) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized.', item: null };
+
+  const parsed = SaveUncatalogedItemSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || 'Invalid product details.', item: null };
+  }
+
+  const { name, price, barcodeValue, unit, gstPercent } = parsed.data;
+  const cleanBarcode = barcodeValue.trim();
+
+  const { data: item, error } = await supabase
+    .from('catalog_items')
+    .insert({
+      client_id: user.id,
+      name: name.trim(),
+      price: price,
+      unit: unit || 'pcs',
+      gst_percent: gstPercent || 0,
+      barcode_value: cleanBarcode,
+      active: true,
+    })
+    .select('id, name, price, unit, gst_percent, barcode_value')
+    .single();
+
+  if (error) {
+    console.error('Error saving uncataloged item:', error);
+    return { error: 'Failed to save product to catalog.', item: null };
+  }
+
   return { item };
 }
 
