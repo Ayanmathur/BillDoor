@@ -41,15 +41,37 @@ export async function lookupBarcodeAction(barcodeValue: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Unauthorized.', item: null };
 
-  const { data: item } = await supabase
+  const clean = barcodeValue.trim();
+  if (!clean) return { error: 'Invalid barcode value.', item: null };
+
+  // 1. Try case-insensitive match on barcode_value
+  let { data: item } = await supabase
     .from('catalog_items')
     .select('id, name, price, unit, gst_percent, barcode_value')
     .eq('client_id', user.id)
-    .eq('barcode_value', barcodeValue.trim())
+    .ilike('barcode_value', clean)
     .eq('active', true)
-    .single();
+    .maybeSingle();
 
-  if (!item) return { error: 'No product matches this barcode.', item: null };
+  // 2. Fallback: try search by name prefix if barcode matches product code
+  if (!item) {
+    const prefix = clean.split('-')[0];
+    if (prefix && prefix.length >= 3) {
+      const { data: fallbacks } = await supabase
+        .from('catalog_items')
+        .select('id, name, price, unit, gst_percent, barcode_value')
+        .eq('client_id', user.id)
+        .ilike('name', `%${prefix}%`)
+        .eq('active', true)
+        .limit(1);
+
+      if (fallbacks && fallbacks.length > 0) {
+        item = fallbacks[0];
+      }
+    }
+  }
+
+  if (!item) return { error: `No product matches barcode: ${clean}`, item: null };
   return { item };
 }
 

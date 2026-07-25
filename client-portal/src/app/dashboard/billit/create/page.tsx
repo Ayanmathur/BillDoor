@@ -55,15 +55,42 @@ export default function CreateBillPage() {
   const [barcodeEnabled, setBarcodeEnabled] = useState(false);
   const [cameraBarcodeEnabled, setCameraBarcodeEnabled] = useState(false);
   const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [manualBarcode, setManualBarcode] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
+  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const startCameraBarcodeScan = async () => {
     setShowCameraScanner(true);
+    setManualBarcode('');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        await videoRef.current.play();
+
+        // Native BarcodeDetector API loop
+        if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+          const detector = new (window as any).BarcodeDetector({
+            formats: ['code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code', 'data_matrix']
+          });
+
+          scanIntervalRef.current = setInterval(async () => {
+            if (videoRef.current && videoRef.current.readyState === 4) {
+              try {
+                const barcodes = await detector.detect(videoRef.current);
+                if (barcodes && barcodes.length > 0) {
+                  const scannedValue = barcodes[0].rawValue;
+                  if (scannedValue) {
+                    stopCameraScan();
+                    handleBarcodeScan(scannedValue);
+                  }
+                }
+              } catch (e) {
+                // Frame detect ignore
+              }
+            }
+          }, 250);
+        }
       }
     } catch {
       alert('Camera access failed or not permitted.');
@@ -72,9 +99,14 @@ export default function CreateBillPage() {
   };
 
   const stopCameraScan = () => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
     }
     setShowCameraScanner(false);
   };
@@ -853,21 +885,56 @@ export default function CreateBillPage() {
       {/* Camera Barcode Scanner Modal */}
       {showCameraScanner && (
         <div className="void-modal-overlay">
-          <div className="void-modal" style={{ maxWidth: 420, textAlign: 'center' }}>
+          <div className="void-modal" style={{ maxWidth: 440, textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)' }}><Camera size={16} /> Live Camera Barcode Scanner</h3>
               <button className="bills-action-btn" onClick={stopCameraScan}><X size={18} /></button>
             </div>
-            <div style={{ position: 'relative', width: '100%', height: 260, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+
+            <div style={{ position: 'relative', width: '100%', height: 240, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
               <video ref={videoRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} playsInline muted />
-              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 220, height: 120, border: '2px dashed #00FF00', borderRadius: 8, pointerEvents: 'none' }} />
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 220, height: 110, border: '2px dashed #00FF00', borderRadius: 8, pointerEvents: 'none', boxShadow: '0 0 0 9999px rgba(0,0,0,0.35)' }} />
             </div>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 12 }}>
-              Point device camera at barcode to scan automatically.
-            </p>
-            <button className="btn btn-secondary" onClick={stopCameraScan} style={{ marginTop: 12 }}>
-              Close Camera
-            </button>
+
+            {/* Manual Barcode Input & Scanner Support */}
+            <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
+              <input
+                type="text"
+                placeholder="Or type/scan barcode (e.g. BLUEBERR-0003)"
+                value={manualBarcode}
+                onChange={(e) => setManualBarcode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && manualBarcode.trim()) {
+                    stopCameraScan();
+                    handleBarcodeScan(manualBarcode.trim());
+                  }
+                }}
+                className="input-field"
+                style={{ flex: 1, fontSize: 'var(--text-xs)', textTransform: 'uppercase' }}
+                autoFocus
+              />
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  if (manualBarcode.trim()) {
+                    stopCameraScan();
+                    handleBarcodeScan(manualBarcode.trim());
+                  }
+                }}
+                style={{ fontSize: 'var(--text-xs)' }}
+              >
+                Scan Barcode
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+                Hardware scanner & camera decoding active
+              </span>
+              <button className="btn btn-secondary" onClick={stopCameraScan} style={{ fontSize: 'var(--text-xs)' }}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
