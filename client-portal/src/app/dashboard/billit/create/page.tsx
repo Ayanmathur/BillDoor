@@ -18,6 +18,7 @@ import {
 import { createPortal } from 'react-dom';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import StandardCalculatorWidget from '@/components/calculator-widget';
+import { useBarcodeScanner } from '@/hooks/use-barcode-scanner';
 import {
   lookupCustomerAction,
   lookupBarcodeAction,
@@ -227,45 +228,16 @@ export default function CreateBillPage() {
     };
   }, []);
 
-  // Barcode scanner listener (HID mode: fast keystrokes + Enter)
-  useEffect(() => {
-    if (!barcodeEnabled) return;
-
-    function handleKeyDown(e: KeyboardEvent) {
-      // Ignore window-level listener if typing inside an input/textarea
-      const targetTag = (e.target as HTMLElement)?.tagName;
-      if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT') {
-        return;
-      }
-
-      const now = Date.now();
-      const timeDiff = now - lastKeyTime.current;
-
-      if (e.key === 'Enter' && barcodeBuffer.current.length >= 3 && timeDiff < 100) {
-        e.preventDefault();
-        const scannedValue = barcodeBuffer.current;
-        barcodeBuffer.current = '';
-        if (scannedValue.trim()) {
-          handleBarcodeScan(scannedValue.trim());
-        }
-        return;
-      }
-
-      if (e.key.length === 1) {
-        if (timeDiff > 100) {
-          barcodeBuffer.current = '';
-        }
-        barcodeBuffer.current += e.key;
-        lastKeyTime.current = now;
-
-        if (barcodeTimeout.current) clearTimeout(barcodeTimeout.current);
-        barcodeTimeout.current = setTimeout(() => { barcodeBuffer.current = ''; }, 200);
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [barcodeEnabled]);
+  // Hardware Barcode scanner hook (USB & Bluetooth HID mode)
+  useBarcodeScanner({
+    onScan: useCallback((code: string) => {
+      handleBarcodeScan(code);
+    }, []),
+    enabled: barcodeEnabled,
+    minLength: 3,
+    maxInterCharDelayMs: 80,
+    suppressWhenTyping: true,
+  });
 
   // Keyboard shortcuts: Alt+C (clear), Alt+W (WhatsApp send), Alt+P (print)
   useEffect(() => {
@@ -742,11 +714,15 @@ export default function CreateBillPage() {
           </div>
           {barcodeEnabled && (
             <div className="input-group" style={{ flex: '1 1 160px', position: 'relative' }}>
-              <input className="input-field" placeholder="Scan barcode..." style={{ paddingLeft: 8, paddingRight: cameraBarcodeEnabled ? 32 : 8, fontSize: 'var(--text-xs)' }}
+              <input className="input-field" placeholder="Scan barcode..." data-barcode-capture="true" style={{ paddingLeft: 8, paddingRight: cameraBarcodeEnabled ? 32 : 8, fontSize: 'var(--text-xs)' }}
                 onKeyDown={async (e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === 'Enter' || e.key === 'Tab') {
                     const val = (e.target as HTMLInputElement).value.trim();
-                    if (val) { await handleBarcodeScan(val); (e.target as HTMLInputElement).value = ''; }
+                    if (val) {
+                      e.preventDefault();
+                      await handleBarcodeScan(val);
+                      (e.target as HTMLInputElement).value = '';
+                    }
                   }
                 }} />
               {cameraBarcodeEnabled && (
