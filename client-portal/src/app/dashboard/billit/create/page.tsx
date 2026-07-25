@@ -42,6 +42,7 @@ interface LineItem {
   unitPrice: number;
   discount: number;
   gstPercent: number;
+  barcodeValue?: string | null;
   addedVia: 'manual' | 'search' | 'barcode';
 }
 
@@ -266,7 +267,8 @@ export default function CreateBillPage() {
   function addItemFromSearch(item: SearchResult, via: 'search' | 'barcode') {
     setItems(prev => {
       const existing = prev.find(i => 
-        (i.catalogItemId && i.catalogItemId === item.id) ||
+        (item.id && i.catalogItemId && i.catalogItemId === item.id) ||
+        (item.barcode_value && i.barcodeValue && i.barcodeValue.trim().toLowerCase() === item.barcode_value.trim().toLowerCase()) ||
         (i.description && i.description.trim().toLowerCase() === item.name.trim().toLowerCase())
       );
 
@@ -283,6 +285,7 @@ export default function CreateBillPage() {
         unitPrice: item.price,
         discount: 0,
         gstPercent: item.gst_percent || 0,
+        barcodeValue: item.barcode_value,
         addedVia: via,
       }];
     });
