@@ -878,11 +878,11 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
   const [manualBarcode, setManualBarcode] = useState('');
   const [scanFeedback, setScanFeedback] = useState<{ text: string; isError?: boolean } | null>(null);
   const [zoom, setZoom] = useState(1);
-  const [minZoom, setMinZoom] = useState(1);
-  const [maxZoom, setMaxZoom] = useState(5);
-  const [zoomSupported, setZoomSupported] = useState(false);
+  const [minZoom] = useState(1);
+  const [maxZoom] = useState(4);
   const [torchSupported, setTorchSupported] = useState(false);
   const [torchOn, setTorchOn] = useState(false);
+  const [isFocusPulse, setIsFocusPulse] = useState(false);
 
   const activeTrackRef = useRef<MediaStreamTrack | null>(null);
   const lastScanTimeRef = useRef<{ code: string; time: number }>({ code: '', time: 0 });
@@ -911,15 +911,14 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
   const applyZoomValue = (value: number) => {
     const newZoom = Math.min(Math.max(value, minZoom), maxZoom);
     setZoom(newZoom);
+    // Also try hardware zoom as progressive enhancement
     const track = activeTrackRef.current;
     if (track && typeof track.applyConstraints === 'function') {
       try {
         track.applyConstraints({
           advanced: [{ zoom: newZoom, focusMode: 'continuous' } as any],
         } as any);
-      } catch (err) {
-        console.warn('Apply zoom error:', err);
-      }
+      } catch (err) {}
     }
   };
 
@@ -932,13 +931,13 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
           advanced: [{ torch: nextTorch } as any],
         } as any);
         setTorchOn(nextTorch);
-      } catch (err) {
-        console.warn('Torch toggle error:', err);
-      }
+      } catch (err) {}
     }
   };
 
   const handleTapToFocus = () => {
+    setIsFocusPulse(true);
+    setTimeout(() => setIsFocusPulse(false), 800);
     const track = activeTrackRef.current;
     if (track && typeof track.applyConstraints === 'function') {
       try {
@@ -992,26 +991,18 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
           () => {}
         );
 
-        // Detect camera capabilities (Zoom & Torch)
+        // Detect camera capabilities (Torch)
         if (scanner) {
           try {
             const track = (scanner as any).getRunningTrack?.() || null;
             if (track) {
               activeTrackRef.current = track;
               const capabilities = track.getCapabilities?.() || {};
-              if (capabilities.zoom) {
-                setZoomSupported(true);
-                setMinZoom(capabilities.zoom.min || 1);
-                setMaxZoom(capabilities.zoom.max || 5);
-                setZoom(capabilities.zoom.min || 1);
-              }
               if (capabilities.torch) {
                 setTorchSupported(true);
               }
             }
-          } catch (e) {
-            console.warn('Capabilities query error:', e);
-          }
+          } catch (e) {}
         }
       } catch (err) {
         console.error('Camera scanner start error:', err);
@@ -1056,11 +1047,31 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
         </div>
 
         <div
-          id="camera-scanner-view"
           onClick={handleTapToFocus}
           title="Tap to focus"
-          style={{ width: '100%', minHeight: 220, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden', cursor: 'pointer' }}
-        />
+          style={{
+            width: '100%',
+            height: 230,
+            background: '#000',
+            borderRadius: 'var(--radius-md)',
+            overflow: 'hidden',
+            cursor: 'pointer',
+            position: 'relative',
+            boxShadow: isFocusPulse ? '0 0 0 3px #10b981' : 'none',
+            transition: 'box-shadow 0.2s',
+          }}
+        >
+          <div
+            id="camera-scanner-view"
+            style={{
+              width: '100%',
+              height: '100%',
+              transform: `scale(${zoom})`,
+              transformOrigin: 'center center',
+              transition: 'transform 0.2s ease-out',
+            }}
+          />
+        </div>
 
         {/* Zoom Controls */}
         <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
