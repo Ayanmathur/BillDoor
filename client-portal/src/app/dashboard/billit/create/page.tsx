@@ -14,6 +14,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Phone, Search, Plus, Trash2, Printer, Save, Loader2,
   Gift, Check, X, Barcode, MessageSquare, User, Camera,
+  ZoomIn, ZoomOut, Zap,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
@@ -876,6 +877,14 @@ interface CameraBarcodeModalProps {
 function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
   const [manualBarcode, setManualBarcode] = useState('');
   const [scanFeedback, setScanFeedback] = useState<{ text: string; isError?: boolean } | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [minZoom, setMinZoom] = useState(1);
+  const [maxZoom, setMaxZoom] = useState(5);
+  const [zoomSupported, setZoomSupported] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
+
+  const activeTrackRef = useRef<MediaStreamTrack | null>(null);
   const lastScanTimeRef = useRef<{ code: string; time: number }>({ code: '', time: 0 });
 
   // Body scroll lock on mount
@@ -896,6 +905,47 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
     } else {
       setScanFeedback({ text: `⚠️ No product found for barcode: ${res.code || clean}`, isError: true });
       setTimeout(() => setScanFeedback(null), 3000);
+    }
+  };
+
+  const applyZoomValue = (value: number) => {
+    const newZoom = Math.min(Math.max(value, minZoom), maxZoom);
+    setZoom(newZoom);
+    const track = activeTrackRef.current;
+    if (track && typeof track.applyConstraints === 'function') {
+      try {
+        track.applyConstraints({
+          advanced: [{ zoom: newZoom, focusMode: 'continuous' } as any],
+        } as any);
+      } catch (err) {
+        console.warn('Apply zoom error:', err);
+      }
+    }
+  };
+
+  const toggleTorch = () => {
+    const track = activeTrackRef.current;
+    if (track && typeof track.applyConstraints === 'function') {
+      const nextTorch = !torchOn;
+      try {
+        track.applyConstraints({
+          advanced: [{ torch: nextTorch } as any],
+        } as any);
+        setTorchOn(nextTorch);
+      } catch (err) {
+        console.warn('Torch toggle error:', err);
+      }
+    }
+  };
+
+  const handleTapToFocus = () => {
+    const track = activeTrackRef.current;
+    if (track && typeof track.applyConstraints === 'function') {
+      try {
+        track.applyConstraints({
+          advanced: [{ focusMode: 'continuous' } as any],
+        } as any);
+      } catch {}
     }
   };
 
@@ -941,6 +991,28 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
           },
           () => {}
         );
+
+        // Detect camera capabilities (Zoom & Torch)
+        if (scanner) {
+          try {
+            const track = (scanner as any).getRunningTrack?.() || null;
+            if (track) {
+              activeTrackRef.current = track;
+              const capabilities = track.getCapabilities?.() || {};
+              if (capabilities.zoom) {
+                setZoomSupported(true);
+                setMinZoom(capabilities.zoom.min || 1);
+                setMaxZoom(capabilities.zoom.max || 5);
+                setZoom(capabilities.zoom.min || 1);
+              }
+              if (capabilities.torch) {
+                setTorchSupported(true);
+              }
+            }
+          } catch (e) {
+            console.warn('Capabilities query error:', e);
+          }
+        }
       } catch (err) {
         console.error('Camera scanner start error:', err);
       }
@@ -958,6 +1030,7 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
           }
         } catch {}
       }
+      activeTrackRef.current = null;
     };
   }, []);
 
@@ -966,10 +1039,86 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
       <div className="void-modal" style={{ maxWidth: 440, width: '92%', textAlign: 'center', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)' }}><Camera size={16} /> Live Camera Barcode Scanner</h3>
-          <button className="bills-action-btn" onClick={onClose}><X size={18} /></button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {torchSupported && (
+              <button
+                type="button"
+                className="bills-action-btn"
+                onClick={toggleTorch}
+                title={torchOn ? 'Turn Flash Off' : 'Turn Flash On'}
+                style={{ color: torchOn ? '#f59e0b' : 'inherit' }}
+              >
+                <Zap size={16} />
+              </button>
+            )}
+            <button className="bills-action-btn" onClick={onClose}><X size={18} /></button>
+          </div>
         </div>
 
-        <div id="camera-scanner-view" style={{ width: '100%', minHeight: 220, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} />
+        <div
+          id="camera-scanner-view"
+          onClick={handleTapToFocus}
+          title="Tap to focus"
+          style={{ width: '100%', minHeight: 220, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden', cursor: 'pointer' }}
+        />
+
+        {/* Zoom Controls */}
+        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-bg-secondary)', padding: '4px 8px', borderRadius: 'var(--radius-full)' }}>
+            <button
+              type="button"
+              onClick={() => applyZoomValue(zoom - 0.5)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
+              title="Zoom out"
+            >
+              <ZoomOut size={14} />
+            </button>
+            <input
+              type="range"
+              min={minZoom}
+              max={maxZoom}
+              step={0.1}
+              value={zoom}
+              onChange={(e) => applyZoomValue(parseFloat(e.target.value))}
+              style={{ width: 90, accentColor: 'var(--color-accent)', cursor: 'pointer' }}
+            />
+            <button
+              type="button"
+              onClick={() => applyZoomValue(zoom + 0.5)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
+              title="Zoom in"
+            >
+              <ZoomIn size={14} />
+            </button>
+            <span style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--color-text-secondary)', minWidth: 28 }}>
+              {zoom.toFixed(1)}x
+            </span>
+          </div>
+
+          {/* Quick Zoom Presets */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            {[1, 1.5, 2, 3].map((zVal) => (
+              <button
+                key={zVal}
+                type="button"
+                onClick={() => applyZoomValue(zVal)}
+                style={{
+                  padding: '2px 8px',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '11px',
+                  fontFamily: 'monospace',
+                  border: '1px solid var(--color-border)',
+                  background: Math.abs(zoom - zVal) < 0.1 ? 'var(--color-accent)' : 'var(--color-bg-secondary)',
+                  color: Math.abs(zoom - zVal) < 0.1 ? '#fff' : 'var(--color-text-secondary)',
+                  cursor: 'pointer',
+                  fontWeight: 'var(--weight-semibold)',
+                }}
+              >
+                {zVal}x
+              </button>
+            ))}
+          </div>
+        </div>
 
         {scanFeedback && (
           <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 'var(--radius-md)', background: scanFeedback.isError ? 'var(--color-error-subtle, rgba(239,68,68,0.15))' : 'var(--color-success-subtle, rgba(16,185,129,0.15))', color: scanFeedback.isError ? 'var(--color-error, #ef4444)' : 'var(--color-success, #10b981)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)' }}>
@@ -1008,7 +1157,7 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
-            Continuous multi-scan active
+            Tap camera to auto-focus • Pinch/use slider to zoom
           </span>
           <button className="btn btn-primary" onClick={onClose} style={{ fontSize: 'var(--text-xs)' }}>
             Done / Close Camera
