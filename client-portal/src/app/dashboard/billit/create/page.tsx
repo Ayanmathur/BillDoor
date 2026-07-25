@@ -524,13 +524,11 @@ export default function CreateBillPage() {
       message = `Hi ${billToUse.customerName}, here is your bill from ${businessName}.\nAmount: ₹${Number(billToUse.grandTotal).toLocaleString('en-IN')}.\nView Bill:\n${billToUse.billUrl}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n${reviewLink}\n\nThankYou!`;
     }
     const cleanPhone = billToUse.customerPhone ? billToUse.customerPhone.replace(/\D/g, '') : '';
-    const phoneNum = cleanPhone ? `91${cleanPhone.replace(/^91/, '')}` : '';
+    const phoneNum = cleanPhone ? (cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`) : '';
 
-    const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobile) {
-      return `whatsapp://send?phone=${phoneNum}&text=${encodeURIComponent(message)}`;
-    }
-    return `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(message)}`;
+    return phoneNum
+      ? `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(message)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
   }
 
   async function handleWhatsAppDirectly(newTab: Window | null) {
@@ -545,17 +543,10 @@ export default function CreateBillPage() {
     }
 
     const waUrl = getWhatsAppUrl(billToUse);
-    const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      if (newTab && !newTab.closed) newTab.close();
-      window.location.href = waUrl;
+    if (newTab && !newTab.closed) {
+      newTab.location.href = waUrl;
     } else {
-      if (newTab && !newTab.closed) {
-        newTab.location.href = waUrl;
-      } else {
-        window.open(waUrl, '_blank');
-      }
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
     }
     logWhatsAppSendAction(billToUse.id, billToUse.customerPhone);
   }
