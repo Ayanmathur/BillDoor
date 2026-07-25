@@ -6,7 +6,7 @@ import { z } from 'zod';
 const expenseSchema = z.object({
   amount: z.number().positive(),
   category: z.enum(['rent', 'salary', 'supplies', 'utilities', 'marketing', 'general', 'other']),
-  note: z.string().optional(),
+  notes: z.string().optional(),
   expenseDate: z.string(), // ISO string YYYY-MM-DD
 });
 
@@ -19,9 +19,8 @@ export async function fetchExpensesAction(filters?: { from?: string; to?: string
 
   let query = supabase
     .from('expenses')
-    .select('*')
+    .select('id, category, amount, notes, expense_date, created_at')
     .eq('client_id', user.id)
-    .is('deleted_at', null)
     .order('expense_date', { ascending: false });
 
   if (filters?.from) query = query.gte('expense_date', filters.from);
@@ -29,12 +28,15 @@ export async function fetchExpensesAction(filters?: { from?: string; to?: string
   if (filters?.category && filters.category !== 'all') query = query.eq('category', filters.category);
 
   const { data, error } = await query;
-  if (error) return { error: 'Failed to fetch expenses', expenses: [] };
+  if (error) {
+    console.error('fetchExpenses error:', error);
+    return { error: 'Failed to fetch expenses', expenses: [] };
+  }
 
-  return { expenses: data };
+  return { expenses: data || [] };
 }
 
-export async function createExpenseAction(data: { amount: number; category: string; note?: string; expenseDate: string }) {
+export async function createExpenseAction(data: { amount: number; category: string; notes?: string; expenseDate: string }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Unauthorized' };
@@ -46,15 +48,19 @@ export async function createExpenseAction(data: { amount: number; category: stri
     client_id: user.id,
     amount: parsed.data.amount,
     category: parsed.data.category,
-    note: parsed.data.note,
+    notes: parsed.data.notes || null,
     expense_date: parsed.data.expenseDate,
   });
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error('createExpense error:', error);
+    return { error: error.message };
+  }
+
   return { success: true };
 }
 
-export async function updateExpenseAction(id: string, data: { amount?: number; category?: string; note?: string; expenseDate?: string }) {
+export async function updateExpenseAction(id: string, data: { amount?: number; category?: string; notes?: string; expenseDate?: string }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Unauthorized' };
@@ -65,7 +71,7 @@ export async function updateExpenseAction(id: string, data: { amount?: number; c
   const updateData: any = {};
   if (parsed.data.amount !== undefined) updateData.amount = parsed.data.amount;
   if (parsed.data.category !== undefined) updateData.category = parsed.data.category;
-  if (parsed.data.note !== undefined) updateData.note = parsed.data.note;
+  if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes;
   if (parsed.data.expenseDate !== undefined) updateData.expense_date = parsed.data.expenseDate;
 
   const { error } = await supabase
@@ -83,10 +89,9 @@ export async function deleteExpenseAction(id: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Unauthorized' };
 
-  // Soft delete per security & DB rules
   const { error } = await supabase
     .from('expenses')
-    .update({ deleted_at: new Date().toISOString() })
+    .delete()
     .eq('id', id)
     .eq('client_id', user.id);
 
@@ -103,14 +108,13 @@ export async function fetchExpenseSummaryAction(from: string, to: string) {
     .from('expenses')
     .select('amount, category')
     .eq('client_id', user.id)
-    .is('deleted_at', null)
     .gte('expense_date', from)
     .lte('expense_date', to);
 
   if (error) return { error: 'Failed to fetch summary', summary: {}, totalExpenses: 0 };
 
   const summary = (data || []).reduce((acc: Record<string, number>, curr) => {
-    acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
+    acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount || 0);
     return acc;
   }, {});
 

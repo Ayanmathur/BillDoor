@@ -12,7 +12,7 @@ interface Expense {
   expense_date: string;
   amount: number;
   category: string;
-  note: string | null;
+  notes: string | null;
 }
 
 export default function ExpensesPage() {
@@ -55,7 +55,7 @@ export default function ExpensesPage() {
     const payload = {
       amount: Number(formData.amount),
       category: formData.category,
-      note: formData.note,
+      notes: formData.note,
       expenseDate: formData.expenseDate,
     };
 
@@ -76,7 +76,7 @@ export default function ExpensesPage() {
     setFormData({
       amount: exp.amount.toString(),
       category: exp.category,
-      note: exp.note || '',
+      note: exp.notes || '',
       expenseDate: exp.expense_date,
     });
     setEditId(exp.id);
@@ -187,7 +187,7 @@ export default function ExpensesPage() {
                 <tr key={exp.id}>
                   <td style={{ fontSize: 'var(--text-xs)' }}>{new Date(exp.expense_date).toLocaleDateString('en-IN')}</td>
                   <td style={{ textTransform: 'capitalize' }}>{exp.category}</td>
-                  <td style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>{exp.note || '—'}</td>
+                  <td style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>{exp.notes || '—'}</td>
                   <td style={{ textAlign: 'right', fontWeight: 'var(--weight-medium)' }}>₹{Number(exp.amount).toLocaleString('en-IN')}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
