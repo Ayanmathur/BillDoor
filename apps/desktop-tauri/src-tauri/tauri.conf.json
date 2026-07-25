@@ -1,33 +1,58 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
-  "productName": "BillDoor",
-  "version": "1.0.0",
-  "identifier": "in.billdoor.desktop",
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/tooling/cli/schema.json",
   "build": {
-    "devUrl": "https://app.billdoor.in",
-    "frontendDist": "../dist"
+    "devPath": "https://app.billdoor.in",
+    "distDir": "../dist"
   },
-  "app": {
-    "windows": [
-      {
-        "title": "BillDoor — Desktop Billing & Management",
-        "width": 1280,
-        "height": 768,
-        "resizable": true
+  "package": {
+    "productName": "BillDoor",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
       }
-    ],
+    },
+    "bundle": {
+      "active": true,
+      "category": "Business",
+      "copyright": "Copyright © 2026 Orbitex / BillDoor",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "icon": [
+        "icons/icon.png"
+      ],
+      "identifier": "in.billdoor.desktop",
+      "longDescription": "BillDoor Desktop POS & Business Management Application",
+      "macOS": {
+        "frameworks": [],
+        "minimumSystemVersion": "10.15"
+      },
+      "resources": [],
+      "shortDescription": "BillDoor Desktop App",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
     "security": {
       "csp": null
-    }
-  },
-  "bundle": {
-    "active": true,
-    "targets": "all",
-    "icon": [
-      "icons/icon.png"
-    ],
-    "copyright": "Copyright © 2026 Orbitex / BillDoor",
-    "shortDescription": "BillDoor Desktop App",
-    "longDescription": "BillDoor Desktop POS & Business Management Application"
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 768,
+        "resizable": true,
+        "title": "BillDoor — Desktop Billing & Management",
+        "width": 1280
+      }
+    ]
   }
 }
