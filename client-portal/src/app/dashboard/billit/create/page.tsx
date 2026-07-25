@@ -960,23 +960,34 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
         scanner = new Html5Qrcode('camera-scanner-view', {
           formatsToSupport: [
             Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.CODE_93,
             Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
             Html5QrcodeSupportedFormats.UPC_A,
             Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.CODE_93,
+            Html5QrcodeSupportedFormats.EAN_8,
             Html5QrcodeSupportedFormats.QR_CODE,
           ],
           verbose: false,
         });
 
         await scanner.start(
-          { facingMode: 'environment' },
           {
-            fps: 15,
-            qrbox: { width: 260, height: 130 },
+            facingMode: { ideal: 'environment' },
+            width: { min: 1280, ideal: 1920, max: 3840 },
+            height: { min: 720, ideal: 1080, max: 2160 },
+            advanced: [
+              { focusMode: 'continuous' } as any,
+            ],
           },
+          {
+            fps: 20,
+            qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+              const w = Math.min(viewfinderWidth * 0.9, 360);
+              const h = Math.min(viewfinderHeight * 0.65, 180);
+              return { width: Math.max(w, 240), height: Math.max(h, 100) };
+            },
+          } as any,
           (decodedText) => {
             if (decodedText && decodedText.trim()) {
               const clean = decodedText.trim();
