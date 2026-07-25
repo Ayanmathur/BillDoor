@@ -1,38 +1,84 @@
 /**
- * BillDoor Native Mobile App — Design Tokens
- * Identical token mapping to shared/design-tokens.css
+ * BillDoor Native Mobile App — Design Tokens & Dynamic Theme Engine
+ * Supports Light & Dark themes dynamically
  */
 
-export const theme = {
-  colors: {
-    accent: '#088395',
-    accentHover: '#056674',
-    accentSubtle: '#E6F3F5',
-    accentText: '#FFFFFF',
+export interface ThemeColors {
+  accent: string;
+  accentHover: string;
+  accentSubtle: string;
+  accentText: string;
+  bgPrimary: string;
+  bgSecondary: string;
+  bgElevated: string;
+  bgCard: string;
+  textPrimary: string;
+  textSecondary: string;
+  textTertiary: string;
+  border: string;
+  borderSubtle: string;
+  borderFocus: string;
+  success: string;
+  successSubtle: string;
+  warning: string;
+  warningSubtle: string;
+  error: string;
+  errorSubtle: string;
+  info: string;
+  infoSubtle: string;
+}
 
-    bgPrimary: '#111111',
-    bgSecondary: '#1A1A1A',
-    bgElevated: '#222222',
-    bgCard: '#1E1E1E',
+export const lightTheme: ThemeColors = {
+  accent: '#088395',
+  accentHover: '#056674',
+  accentSubtle: '#E6F3F5',
+  accentText: '#FFFFFF',
+  bgPrimary: '#FFFFFF',
+  bgSecondary: '#FAFAFA',
+  bgElevated: '#FFFFFF',
+  bgCard: '#FFFFFF',
+  textPrimary: '#111111',
+  textSecondary: '#6B6B6F',
+  textTertiary: '#9A9A9E',
+  border: '#EAEAEA',
+  borderSubtle: '#F5F5F5',
+  borderFocus: '#088395',
+  success: '#2D9F6F',
+  successSubtle: '#E8F7F0',
+  warning: '#D4873E',
+  warningSubtle: '#FDF3E9',
+  error: '#D94452',
+  errorSubtle: '#FDE8EA',
+  info: '#3B82B8',
+  infoSubtle: '#E8F0FA',
+};
 
-    textPrimary: '#FFFFFF',
-    textSecondary: '#A0A0A5',
-    textTertiary: '#66666B',
-    textInverse: '#111111',
+export const darkTheme: ThemeColors = {
+  accent: '#088395',
+  accentHover: '#056674',
+  accentSubtle: 'rgba(8, 131, 149, 0.2)',
+  accentText: '#FFFFFF',
+  bgPrimary: '#111111',
+  bgSecondary: '#1A1A1A',
+  bgElevated: '#222222',
+  bgCard: '#1E1E1E',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#A0A0A5',
+  textTertiary: '#66666B',
+  border: '#2E2E32',
+  borderSubtle: '#222225',
+  borderFocus: '#088395',
+  success: '#2D9F6F',
+  successSubtle: 'rgba(45, 159, 111, 0.15)',
+  warning: '#D4873E',
+  warningSubtle: 'rgba(212, 135, 62, 0.15)',
+  error: '#D94452',
+  errorSubtle: 'rgba(217, 68, 82, 0.15)',
+  info: '#3B82B8',
+  infoSubtle: 'rgba(59, 130, 184, 0.15)',
+};
 
-    border: '#2E2E32',
-    borderSubtle: '#222225',
-    borderFocus: '#088395',
-
-    success: '#2D9F6F',
-    successSubtle: 'rgba(45, 159, 111, 0.15)',
-    warning: '#D4873E',
-    warningSubtle: 'rgba(212, 135, 62, 0.15)',
-    error: '#D94452',
-    errorSubtle: 'rgba(217, 68, 82, 0.15)',
-    info: '#3B82B8',
-    infoSubtle: 'rgba(59, 130, 184, 0.15)',
-  },
+export const themeDimensions = {
   spacing: {
     xs: 4,
     sm: 8,

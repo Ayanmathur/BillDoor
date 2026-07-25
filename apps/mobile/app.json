@@ -2,6 +2,7 @@
   "expo": {
     "name": "BillDoor",
     "slug": "billdoor",
+    "owner": "ayan_mathur",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -36,7 +37,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "billdoor-mobile-app"
+        "projectId": "75e5d09f-1e4c-4075-9684-f374d7ac98c5"
       }
     }
   }
