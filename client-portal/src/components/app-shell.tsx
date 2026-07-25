@@ -79,6 +79,12 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
       setUnreadCount(count || 0);
     }
     loadUnreadCount();
+
+    const handleSync = () => {
+      loadUnreadCount();
+    };
+    window.addEventListener('notifications-updated', handleSync);
+    return () => window.removeEventListener('notifications-updated', handleSync);
   }, []);
 
   function toggleCollapse() {
