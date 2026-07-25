@@ -62,7 +62,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="dash-card">
+        <div className="dash-card" onClick={() => router.push('/dashboard/reviews')} style={{ cursor: 'pointer' }}>
           <div className="dash-card-header">
             <span className="dash-card-label">Review Funnel</span>
             <div className="dash-card-icon" style={{ background: 'var(--color-success-subtle)', color: 'var(--color-success)' }}>
@@ -82,7 +82,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Today's Revenue */}
-        <div className="dash-card" onClick={() => router.push('/dashboard/billit')} style={{ cursor: 'pointer' }}>
+        <div className="dash-card" onClick={() => router.push('/dashboard/billit/reports?range=today')} style={{ cursor: 'pointer' }}>
           <div className="dash-card-header">
             <span className="dash-card-label">Today&apos;s Revenue</span>
             <div className="dash-card-icon" style={{ background: 'var(--color-accent-subtle)', color: 'var(--color-accent)' }}>

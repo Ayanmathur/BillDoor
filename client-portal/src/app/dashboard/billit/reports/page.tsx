@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   ArrowLeft, IndianRupee, TrendingUp, TrendingDown, Minus, 
@@ -11,8 +12,10 @@ import { fetchExpenseSummaryAction } from '../expenses/actions';
 
 type DateRange = 'today' | 'week' | 'month' | 'year' | 'custom';
 
-export default function ReportsDashboard() {
-  const [dateRange, setDateRange] = useState<DateRange>('month');
+function ReportsDashboardContent() {
+  const searchParams = useSearchParams();
+  const initialRange = (searchParams.get('range') as DateRange) || 'month';
+  const [dateRange, setDateRange] = useState<DateRange>(initialRange);
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   
@@ -52,7 +55,6 @@ export default function ReportsDashboard() {
     try {
       const [revRes, expRes] = await Promise.all([
         fetchRevenueReportAction(dateFrom || '', dateTo || ''),
-        // Fallback for if expenses module doesn't export properly yet, handle errors gracefully
         fetchExpenseSummaryAction(dateFrom || '', dateTo || '').catch(() => ({ totalExpenses: 0 })),
       ]);
       setRevenueData(revRes);
@@ -98,7 +100,7 @@ export default function ReportsDashboard() {
                 className={`btn ${dateRange === range ? 'btn-primary' : 'btn-secondary'}`}
                 style={{ fontSize: 'var(--text-xs)', padding: '4px 10px', textTransform: 'capitalize' }}
               >
-                {range === 'week' ? 'This Week' : range === 'month' ? 'This Month' : range === 'year' ? 'This Year' : range}
+                {range}
               </button>
             ))}
           </div>
@@ -106,81 +108,61 @@ export default function ReportsDashboard() {
 
         {dateRange === 'custom' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginLeft: 'auto' }}>
-            <input
-              type="date"
-              value={customFrom}
-              onChange={(e) => setCustomFrom(e.target.value)}
-              className="input-field"
-              style={{ width: '130px', fontSize: 'var(--text-xs)' }}
-            />
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>to</span>
-            <input
-              type="date"
-              value={customTo}
-              onChange={(e) => setCustomTo(e.target.value)}
-              className="input-field"
-              style={{ width: '130px', fontSize: 'var(--text-xs)' }}
-            />
+            <input type="date" className="input-field" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} style={{ fontSize: 'var(--text-xs)', padding: '4px 8px' }} />
+            <span style={{ fontSize: 'var(--text-xs)' }}>to</span>
+            <input type="date" className="input-field" value={customTo} onChange={(e) => setCustomTo(e.target.value)} style={{ fontSize: 'var(--text-xs)', padding: '4px 8px' }} />
           </div>
         )}
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-6)' }}>
-          <Loader2 size={32} className="spin" />
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-8)' }}>
+          <Loader2 size={24} className="spinner" />
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-4)', marginBottom: 'var(--space-5)' }}>
-          {/* Revenue Card */}
-          <div className="settings-section" style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Total Revenue</span>
-              <div style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--color-success-subtle)', color: 'var(--color-success)' }}>
-                <TrendingUp size={16} />
+        <>
+          {/* Summary KPIs */}
+          <div className="dashboard-grid" style={{ marginBottom: 'var(--space-6)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-4)' }}>
+            <div className="dash-card" style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
+              <div className="dash-card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                <span className="dash-card-label" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Total Revenue</span>
+                <div className="dash-card-icon" style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--color-accent-subtle)', color: 'var(--color-accent)' }}>
+                  <TrendingUp size={18} />
+                </div>
               </div>
+              <div className="dash-card-value" style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--weight-bold)' }}>₹{totalRev.toLocaleString('en-IN')}</div>
+              <div className="dash-card-sub" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-2)' }}>{revenueData?.billCount || 0} bills in period</div>
             </div>
-            <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--weight-bold)', display: 'flex', alignItems: 'center', color: 'var(--color-text-primary)' }}>
-              <IndianRupee size={20} style={{ marginRight: 4, color: 'var(--color-text-tertiary)' }} />
-              {totalRev.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', display: 'flex', justifyContent: 'space-between', marginTop: 'var(--space-3)', paddingTop: 'var(--space-2)', borderTop: '1px solid var(--color-border)' }}>
-              <span>{revenueData?.billCount || 0} Bills</span>
-              <span>Avg: ₹{(revenueData?.avgBillValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-          </div>
 
-          {/* Expenses Card */}
-          <div className="settings-section" style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Total Expenses</span>
-              <div style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--color-error-subtle)', color: 'var(--color-error)' }}>
-                <TrendingDown size={16} />
+            <div className="dash-card" style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
+              <div className="dash-card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                <span className="dash-card-label" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Total Expenses</span>
+                <div className="dash-card-icon" style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--color-warning-subtle)', color: 'var(--color-warning)' }}>
+                  <TrendingDown size={18} />
+                </div>
               </div>
+              <div className="dash-card-value" style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--weight-bold)' }}>₹{totalExp.toLocaleString('en-IN')}</div>
+              <div className="dash-card-sub" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-2)' }}>Recorded business expenses</div>
             </div>
-            <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--weight-bold)', display: 'flex', alignItems: 'center', color: 'var(--color-text-primary)' }}>
-              <IndianRupee size={20} style={{ marginRight: 4, color: 'var(--color-text-tertiary)' }} />
-              {totalExp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-          </div>
 
-          {/* Estimated Net */}
-          <div className="settings-section" style={{ background: 'var(--color-accent-subtle)', border: '1px solid var(--color-accent)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-accent)', fontWeight: 600 }}>Estimated Net (Profit / Loss)</span>
-              <div style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-elevated)', color: 'var(--color-accent)' }}>
-                <Minus size={16} />
+            <div className="dash-card" style={{ background: 'var(--color-accent-subtle)', border: '1px solid var(--color-accent)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
+              <div className="dash-card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                <span className="dash-card-label" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-accent)', fontWeight: 600 }}>Estimated Net P/L</span>
+                <div className="dash-card-icon" style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-elevated)', color: estimatedNet >= 0 ? 'var(--color-success)' : 'var(--color-error)' }}>
+                  {estimatedNet >= 0 ? <TrendingUp size={18} /> : <Minus size={18} />}
+                </div>
               </div>
-            </div>
-            <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--weight-bold)', display: 'flex', alignItems: 'center', color: estimatedNet >= 0 ? 'var(--color-success)' : 'var(--color-error)' }}>
-              <IndianRupee size={20} style={{ marginRight: 4 }} />
-              {estimatedNet.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div className="dash-card-value" style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--weight-bold)', color: estimatedNet >= 0 ? 'var(--color-success)' : 'var(--color-error)' }}>
+                ₹{estimatedNet.toLocaleString('en-IN')}
+              </div>
+              <div className="dash-card-sub" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-2)' }}>Revenue minus Expenses</div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
-      {/* Sub-pages Quick Navigation Bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-3)', marginBottom: 'var(--space-5)' }}>
+      {/* Reports Navigation Links */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
         <Link 
           href="/dashboard/billit/expenses" 
           className="settings-section"
@@ -192,7 +174,7 @@ export default function ReportsDashboard() {
             </div>
             <div>
               <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)' }}>Expense Log</div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>Track & log operating expenses</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>Track and manage expenses</div>
             </div>
           </div>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-accent)', fontWeight: 600 }}>Manage →</span>
@@ -233,5 +215,13 @@ export default function ReportsDashboard() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function ReportsDashboard() {
+  return (
+    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Loader2 size={24} className="spinner" /></div>}>
+      <ReportsDashboardContent />
+    </Suspense>
   );
 }
