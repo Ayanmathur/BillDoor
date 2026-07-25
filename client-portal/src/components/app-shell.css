@@ -322,12 +322,17 @@
 
   /* Reset sidebar internals for top drawer */
   .sidebar-brand,
-  .sidebar-divider,
-  .sidebar-footer {
+  .sidebar-divider {
     display: flex;
   }
 
+  .sidebar-footer {
+    display: flex;
+    margin-top: var(--space-3);
+  }
+
   .sidebar-nav {
+    flex: 0 0 auto; /* Keep items tightly packed from top; empty space sits at bottom */
     padding: 0 var(--space-2);
   }
 
