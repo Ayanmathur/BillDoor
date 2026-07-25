@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Upload, FileSpreadsheet, Download, Check, X,
-  AlertTriangle, Loader2, Edit3, Trash2, Save, IndianRupee,
+  AlertTriangle, Loader2, Edit3, Trash2, Save, IndianRupee, Camera,
 } from 'lucide-react';
 import {
   parseBulkImportFileAction,
@@ -151,9 +151,14 @@ export default function BulkImportPage() {
                 Upload a CSV file containing your items to import them in bulk into your catalog.
               </p>
             </div>
-            <button className="btn" onClick={handleDownloadTemplate} style={{ fontSize: 'var(--text-xs)' }}>
-              <Download size={14} /> Download Sample Template
-            </button>
+            <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+              <button className="btn" onClick={() => router.push('/dashboard/billit/catalog/import')} style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Camera size={14} /> Snap Menu Photo (Camera)
+              </button>
+              <button className="btn" onClick={handleDownloadTemplate} style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Download size={14} /> Download Sample Template
+              </button>
+            </div>
           </div>
 
           <div

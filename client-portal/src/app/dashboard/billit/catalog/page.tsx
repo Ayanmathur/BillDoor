@@ -319,19 +319,19 @@ export default function CatalogPage() {
   return (
     <div>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flex: 1, maxWidth: 320 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flex: '1 1 220px', maxWidth: 320 }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-tertiary)' }} />
             <input className="input-field" placeholder="Search items..." value={search} onChange={(e) => setSearch(e.target.value)}
               style={{ paddingLeft: 34, fontSize: 'var(--text-sm)' }} />
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <button className="btn" onClick={() => window.location.href = '/dashboard/billit/catalog/bulk-import'} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', height: '40px', padding: '0 var(--space-4)', borderRadius: 'var(--radius-full)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          <button className="btn" onClick={() => window.location.href = '/dashboard/billit/catalog/bulk-import'} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)', height: '40px', padding: '0 var(--space-4)', borderRadius: 'var(--radius-full)' }}>
             <Upload size={16} /> Bulk Import
           </button>
-          <button className="btn" onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', height: '40px', padding: '0 var(--space-4)', borderRadius: 'var(--radius-full)' }}>
+          <button className="btn" onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)', height: '40px', padding: '0 var(--space-4)', borderRadius: 'var(--radius-full)' }}>
             <FileSpreadsheet size={16} /> Export CSV
           </button>
           <button className="btn-add-item" onClick={() => { resetForm(); setShowForm(true); }}>

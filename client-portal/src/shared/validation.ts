@@ -42,8 +42,8 @@ export function isValidEmail(email: string): boolean {
 }
 
 export function isValidUsername(username: string): boolean {
-  // 3-30 chars, lowercase letters, numbers, underscores
-  return /^[a-z0-9_]{3,30}$/.test(username);
+  // 3-30 chars, letters (upper/lower), numbers, underscores
+  return /^[a-zA-Z0-9_]{3,30}$/.test(username);
 }
 
 export function isValidPassword(password: string): boolean {

@@ -26,7 +26,7 @@ export async function fetchBookingInfoAction(slug: string) {
   // Find client by slug
   const { data: client } = await supabase
     .from('clients')
-    .select('id, business_name, slug, status, appointer_config')
+    .select('id, business_name, logo_url, slug, status, appointer_config')
     .eq('slug', slug)
     .single();
 
@@ -61,6 +61,7 @@ export async function fetchBookingInfoAction(slug: string) {
     client: {
       id: client.id,
       businessName: client.business_name,
+      logoUrl: client.logo_url,
       slug: client.slug,
     },
     resources: (resources || []).map((r: any) => ({

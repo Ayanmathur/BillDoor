@@ -49,7 +49,7 @@ export async function loginAction(data: {
   const { data: client, error: lookupError } = await supabase
     .from('clients')
     .select('id, username, password_hash, status, deleted_at')
-    .eq('username', username)
+    .ilike('username', username)
     .is('deleted_at', null)
     .single();
 

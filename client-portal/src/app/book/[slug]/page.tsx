@@ -50,6 +50,7 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
 
   // Client info
   const [businessName, setBusinessName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
   const [clientId, setClientId] = useState('');
   const [services, setServices] = useState<Service[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
@@ -85,6 +86,7 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
         return;
       }
       setBusinessName(result.client.businessName);
+      setLogoUrl(result.client.logoUrl || '');
       setClientId(result.client.id);
       setResources(result.resources || []);
       setServices(result.services || []);
@@ -254,6 +256,13 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
       <div className="booking-container">
         {/* Header */}
         <div className="booking-header">
+          {logoUrl && (
+            <img
+              src={logoUrl}
+              alt={businessName}
+              style={{ maxHeight: 60, width: 'auto', marginBottom: 12, borderRadius: 'var(--radius-md)', objectFit: 'contain' }}
+            />
+          )}
           <h1>{businessName}</h1>
           <p>Book an appointment online</p>
           <PoweredByFooter />

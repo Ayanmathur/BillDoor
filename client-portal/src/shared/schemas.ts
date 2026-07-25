@@ -31,7 +31,7 @@ const usernameSchema = z
   .trim()
   .min(3, 'Username must be at least 3 characters')
   .max(30, 'Username must be at most 30 characters')
-  .regex(/^[a-z0-9_]+$/, 'Only lowercase letters, numbers, and underscores');
+  .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, and underscores');
 
 const passwordSchema = z
   .string()
