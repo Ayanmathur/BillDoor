@@ -52,12 +52,13 @@ interface SearchResult {
 
 export default function CreateBillPage() {
   // Settings
-  const [barcodeEnabled, setBarcodeEnabled] = useState(false);
+  const [barcodeEnabled, setBarcodeEnabled] = useState(true);
   const [cameraBarcodeEnabled, setCameraBarcodeEnabled] = useState(false);
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [manualBarcode, setManualBarcode] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const startCameraBarcodeScan = async () => {
     setShowCameraScanner(true);
@@ -196,13 +197,32 @@ export default function CreateBillPage() {
     return () => mql.removeEventListener('change', handler);
   }, []);
 
-  // Removed old GST calculator pre-fill code
+  // Dismiss search dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent | TouchEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSearch(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
 
   // Barcode scanner listener (HID mode: fast keystrokes + Enter)
   useEffect(() => {
     if (!barcodeEnabled) return;
 
     function handleKeyDown(e: KeyboardEvent) {
+      // Ignore window-level listener if typing inside an input/textarea
+      const targetTag = (e.target as HTMLElement)?.tagName;
+      if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT') {
+        return;
+      }
+
       const now = Date.now();
       const timeDiff = now - lastKeyTime.current;
 
@@ -210,7 +230,9 @@ export default function CreateBillPage() {
         e.preventDefault();
         const scannedValue = barcodeBuffer.current;
         barcodeBuffer.current = '';
-        handleBarcodeScan(scannedValue);
+        if (scannedValue.trim()) {
+          handleBarcodeScan(scannedValue.trim());
+        }
         return;
       }
 
@@ -290,11 +312,13 @@ export default function CreateBillPage() {
 
   // Barcode scan handler
   async function handleBarcodeScan(value: string) {
-    const result = await lookupBarcodeAction(value);
+    if (!value || !value.trim()) return;
+    const clean = value.trim();
+    const result = await lookupBarcodeAction(clean);
     if (result.item) {
       addItemFromSearch(result.item, 'barcode');
     } else {
-      setError(`No product matches barcode: ${value}`);
+      setError(`No product matches barcode: ${clean}`);
       setTimeout(() => setError(''), 3000);
     }
   }
@@ -313,20 +337,19 @@ export default function CreateBillPage() {
     const existing = items.find(i => i.catalogItemId === item.id);
     if (existing) {
       setItems(prev => prev.map(i => i.id === existing.id ? { ...i, quantity: i.quantity + 1 } : i));
-      return;
+    } else {
+      setItems(prev => [...prev, {
+        id: crypto.randomUUID(),
+        catalogItemId: item.id,
+        description: item.name,
+        quantity: 1,
+        unit: item.unit || 'pcs',
+        unitPrice: item.price,
+        discount: 0,
+        gstPercent: item.gst_percent || 0,
+        addedVia: via,
+      }]);
     }
-
-    setItems(prev => [...prev, {
-      id: crypto.randomUUID(),
-      catalogItemId: item.id,
-      description: item.name,
-      quantity: 1,
-      unit: item.unit || 'pcs',
-      unitPrice: item.price,
-      discount: 0,
-      gstPercent: item.gst_percent || 0,
-      addedVia: via,
-    }]);
     setSearchQuery('');
     setSearchResults([]);
     setShowSearch(false);
@@ -687,7 +710,7 @@ export default function CreateBillPage() {
 
         {/* Search + Barcode */}
         <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-3)', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: '1 1 200px' }}>
+          <div ref={searchRef} style={{ position: 'relative', flex: '1 1 200px' }}>
             <input className="input-field" placeholder="Search products/services..." value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)} onFocus={() => searchQuery.length >= 2 && setShowSearch(true)} />
             {showSearch && searchResults.length > 0 && (
