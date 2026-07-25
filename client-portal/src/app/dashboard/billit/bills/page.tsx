@@ -172,21 +172,21 @@ export default function BillsPage() {
             <tbody>
               {bills.map((bill) => (
                 <Fragment key={bill.id}>
-                  <tr>
-                    <td>
+                  <tr className="bill-row">
+                    <td className="col-bill-num">
                       <span className={bill.status === 'voided' ? 'bill-number-voided' : ''}>
                         {bill.billNumber}
                       </span>
                     </td>
-                    <td>{bill.customerName || 'Walk-in'}</td>
-                    <td>{new Date(bill.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                    <td>₹{Number(bill.grandTotal || 0).toFixed(2)}</td>
-                    <td>
+                    <td className="col-customer">{bill.customerName || 'Walk-in'}</td>
+                    <td className="col-date">{new Date(bill.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    <td className="col-amount">₹{Number(bill.grandTotal || 0).toFixed(2)}</td>
+                    <td className="col-status">
                       <span className={`bill-status-badge ${bill.status || 'draft'}`}>
                         {bill.status || 'draft'}
                       </span>
                     </td>
-                    <td>
+                    <td className="col-actions">
                       <div className="bills-actions">
                         {bill.status === 'issued' && (
                           <>
