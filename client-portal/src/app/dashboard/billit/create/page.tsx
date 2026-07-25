@@ -58,12 +58,30 @@ export default function CreateBillPage() {
   const [cameraBarcodeEnabled, setCameraBarcodeEnabled] = useState(false);
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [manualBarcode, setManualBarcode] = useState('');
+  const [scanFeedback, setScanFeedback] = useState<{ text: string; isError?: boolean } | null>(null);
   const html5QrcodeScannerRef = useRef<Html5Qrcode | null>(null);
+  const lastScanTimeRef = useRef<{ code: string; time: number }>({ code: '', time: 0 });
   const searchRef = useRef<HTMLDivElement>(null);
+
+  async function handleCameraContinuousScan(code: string) {
+    if (!code || !code.trim()) return;
+    const clean = code.trim();
+    const result = await lookupBarcodeAction(clean);
+    if (result.item) {
+      addItemFromSearch(result.item, 'barcode');
+      setScanFeedback({ text: `✅ Added: ${result.item.name} (₹${result.item.price})` });
+      setTimeout(() => setScanFeedback(null), 2500);
+    } else {
+      setScanFeedback({ text: `⚠️ No product found for barcode: ${clean}`, isError: true });
+      setTimeout(() => setScanFeedback(null), 3000);
+    }
+  }
 
   const startCameraBarcodeScan = async () => {
     setShowCameraScanner(true);
     setManualBarcode('');
+    setScanFeedback(null);
+    lastScanTimeRef.current = { code: '', time: 0 };
 
     setTimeout(async () => {
       try {
@@ -102,8 +120,14 @@ export default function CreateBillPage() {
           },
           (decodedText) => {
             if (decodedText && decodedText.trim()) {
-              stopCameraScan();
-              handleBarcodeScan(decodedText.trim());
+              const clean = decodedText.trim();
+              const now = Date.now();
+              // 1.5s cooldown for identical barcode to prevent rapid camera repeat-scans
+              if (lastScanTimeRef.current.code === clean && now - lastScanTimeRef.current.time < 1500) {
+                return;
+              }
+              lastScanTimeRef.current = { code: clean, time: now };
+              handleCameraContinuousScan(clean);
             }
           },
           () => {
@@ -909,10 +933,28 @@ export default function CreateBillPage() {
               <button className="bills-action-btn" onClick={stopCameraScan}><X size={18} /></button>
             </div>
 
-            <div id="camera-scanner-view" style={{ width: '100%', minHeight: 240, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} />
+            <div id="camera-scanner-view" style={{ width: '100%', minHeight: 240, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden', position: 'relative' }} />
 
-            {/* Manual Barcode Input & Scanner Support */}
-            <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
+            {/* Scan Feedback Banner */}
+            {scanFeedback && (
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: '8px 12px',
+                  borderRadius: 'var(--radius-md)',
+                  background: scanFeedback.isError ? 'var(--color-error-subtle, rgba(239,68,68,0.15))' : 'var(--color-success-subtle, rgba(16,185,129,0.15))',
+                  color: scanFeedback.isError ? 'var(--color-error, #ef4444)' : 'var(--color-success, #10b981)',
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: 'var(--weight-semibold)',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {scanFeedback.text}
+              </div>
+            )}
+
+            {/* Manual Barcode Input & Continuous Add */}
+            <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
               <input
                 type="text"
                 placeholder="Or type/scan barcode (e.g. BLUEBERR-0003)"
@@ -920,34 +962,33 @@ export default function CreateBillPage() {
                 onChange={(e) => setManualBarcode(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && manualBarcode.trim()) {
-                    stopCameraScan();
-                    handleBarcodeScan(manualBarcode.trim());
+                    handleCameraContinuousScan(manualBarcode.trim());
+                    setManualBarcode('');
                   }
                 }}
                 className="input-field"
                 style={{ flex: 1, fontSize: 'var(--text-xs)', textTransform: 'uppercase' }}
-                autoFocus
               />
               <button
                 className="btn btn-primary"
                 onClick={() => {
                   if (manualBarcode.trim()) {
-                    stopCameraScan();
-                    handleBarcodeScan(manualBarcode.trim());
+                    handleCameraContinuousScan(manualBarcode.trim());
+                    setManualBarcode('');
                   }
                 }}
                 style={{ fontSize: 'var(--text-xs)' }}
               >
-                Scan Barcode
+                Add Product
               </button>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
-                Hardware scanner & camera decoding active
+                Continuous multi-scan active • Point camera at next item
               </span>
-              <button className="btn btn-secondary" onClick={stopCameraScan} style={{ fontSize: 'var(--text-xs)' }}>
-                Close
+              <button className="btn btn-primary" onClick={stopCameraScan} style={{ fontSize: 'var(--text-xs)' }}>
+                Done / Close Camera
               </button>
             </div>
           </div>
