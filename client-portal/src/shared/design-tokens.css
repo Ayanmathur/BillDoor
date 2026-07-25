@@ -1002,4 +1002,12 @@ html, body {
     max-width: 100%;
     box-sizing: border-box;
   }
+
+  /* Prevent iOS Safari automatic zoom on input focus */
+  input,
+  select,
+  textarea,
+  .input-field {
+    font-size: 16px !important;
+  }
 }
