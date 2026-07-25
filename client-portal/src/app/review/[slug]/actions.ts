@@ -149,38 +149,53 @@ export async function generateAiReviewAction(data: {
     .update({ regeneration_count: (session?.regeneration_count || 0) + 1 })
     .eq('id', data.sessionId);
 
-  // Build prompt
+  // Build business-aware prompt & fallbacks based on about/businessType
+  const businessContext = `${data.businessName} ${data.businessType || ''} ${data.about || ''}`.toLowerCase();
+
+  const isFoodOrDelivery = /tiffin|food|mess|catering|kitchen|meal|delivery|canteen|restaurant|dhaba|bento/i.test(businessContext);
+  const isSalonOrSpa = /salon|spa|hair|beauty|parlor|barber/i.test(businessContext);
+
   const previousText = data.previousDrafts.length > 0
     ? `\n\nIMPORTANT: Do NOT repeat or closely rephrase any of these previous drafts:\n${data.previousDrafts.map((d, i) => `${i + 1}. "${d}"`).join('\n')}`
     : '';
 
   const prompt = `You are helping a satisfied customer write a genuine Google review for a business.
 
-Business name: ${data.businessName}
-${data.businessType ? `Business type: ${data.businessType}` : ''}
-${data.about ? `About: ${data.about}` : ''}
+Business Name: ${data.businessName}
+${data.businessType ? `Business Type: ${data.businessType}` : ''}
+${data.about ? `About Business & Offerings: ${data.about}` : ''}
 Rating: ${data.stars} out of 5 stars
 
-Write a short, natural-sounding Google review (2-4 sentences). It should:
-- Sound like a real customer, not a marketer
-- Be warm and specific (mention the type of business naturally)
-- Not use excessive exclamation marks or all-caps
-- Not mention the star rating number
-- Be in English${previousText}
+Write a short, natural-sounding Google review (2-3 sentences). It MUST specifically reflect the actual business concept (${data.businessName} - ${data.businessType || ''} ${data.about || ''}).
+${isFoodOrDelivery ? '- CRITICAL: This is a food/tiffin/delivery service! Mention delicious taste, home-cooked feel, fresh ingredients, or punctual delivery. NEVER mention visiting a physical shop!' : ''}
+- Sound like an authentic happy customer, not a marketer.
+- Be warm and specific.
+- Do NOT mention star rating numbers.${previousText}
 
 Reply with ONLY the review text, no quotes, no explanation.`;
 
-  // Fallback templates if Gemini is not configured or fails
-  const fallbacks = [
+  // Smart business-aware fallback templates
+  let fallbacks = [
     `I had a fantastic experience with ${data.businessName}. Highly recommended!`,
-    `Excellent service at ${data.businessName}. The team is great and very professional.`,
-    `Really impressed with ${data.businessName}. Great quality and experience overall.`,
-    `If you're looking for great service, ${data.businessName} is the place to go. 5 stars!`,
-    `Wonderful experience. I will definitely be returning to ${data.businessName} in the future.`
+    `Excellent service from ${data.businessName}. Very professional and top quality!`,
+    `Really impressed with ${data.businessName}. Great experience overall!`
   ];
-  
+
+  if (isFoodOrDelivery) {
+    fallbacks = [
+      `Delicious, fresh home-style food from ${data.businessName}! Timely delivery and amazing taste every single time.`,
+      `Super satisfied with ${data.businessName}. The food quality is fresh, hygienic, and delivered right on time!`,
+      `Hands down the best food service! ${data.businessName} serves meals that taste just like home. Highly recommended!`
+    ];
+  } else if (isSalonOrSpa) {
+    fallbacks = [
+      `Wonderful experience at ${data.businessName}. The staff is skilled, gentle, and very professional!`,
+      `Highly recommend ${data.businessName}! Great hygiene, relaxed atmosphere, and excellent service.`,
+      `Loved the service at ${data.businessName}. Very attentive staff and great results!`
+    ];
+  }
+
   const getFallback = () => {
-    // Pick a random fallback that hasn't been used recently if possible
     const available = fallbacks.filter(f => !data.previousDrafts.includes(f));
     const list = available.length > 0 ? available : fallbacks;
     return list[Math.floor(Math.random() * list.length)];
@@ -193,7 +208,7 @@ Reply with ONLY the review text, no quotes, no explanation.`;
       return { draft: getFallback() };
     }
 
-    const response = await fetch(
+    let response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
@@ -201,7 +216,7 @@ Reply with ONLY the review text, no quotes, no explanation.`;
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.9,
+            temperature: 0.8,
             maxOutputTokens: 200,
           },
         }),
@@ -209,7 +224,25 @@ Reply with ONLY the review text, no quotes, no explanation.`;
     );
 
     if (!response.ok) {
-      console.error('Gemini API error:', response.status);
+      // Fallback to gemini-1.5-flash if 2.0-flash is unavailable
+      response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.8,
+              maxOutputTokens: 200,
+            },
+          }),
+        }
+      );
+    }
+
+    if (!response.ok) {
+      console.error('Gemini API error status:', response.status);
       return { draft: getFallback() };
     }
 
