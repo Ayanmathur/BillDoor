@@ -344,12 +344,17 @@ export default function CreateBillPage() {
   }
 
   function addItemFromSearch(item: SearchResult, via: 'search' | 'barcode') {
-    // Check if already added — increment qty instead
-    const existing = items.find(i => i.catalogItemId === item.id);
-    if (existing) {
-      setItems(prev => prev.map(i => i.id === existing.id ? { ...i, quantity: i.quantity + 1 } : i));
-    } else {
-      setItems(prev => [...prev, {
+    setItems(prev => {
+      const existing = prev.find(i => 
+        (i.catalogItemId && i.catalogItemId === item.id) ||
+        (i.description && i.description.trim().toLowerCase() === item.name.trim().toLowerCase())
+      );
+
+      if (existing) {
+        return prev.map(i => i.id === existing.id ? { ...i, quantity: i.quantity + 1 } : i);
+      }
+
+      return [...prev, {
         id: crypto.randomUUID(),
         catalogItemId: item.id,
         description: item.name,
@@ -359,8 +364,9 @@ export default function CreateBillPage() {
         discount: 0,
         gstPercent: item.gst_percent || 0,
         addedVia: via,
-      }]);
-    }
+      }];
+    });
+
     setSearchQuery('');
     setSearchResults([]);
     setShowSearch(false);
