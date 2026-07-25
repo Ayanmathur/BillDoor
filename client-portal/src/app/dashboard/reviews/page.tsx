@@ -21,6 +21,8 @@ import {
   fetchReviewsForExportAction,
 } from './actions';
 
+import './reviews.css';
+
 type DateRange = 'today' | 'week' | 'month' | 'all' | 'custom';
 
 interface Review {
@@ -141,9 +143,9 @@ export default function ReviewsDashboard() {
   return (
     <div>
       {/* Top Section: QR + Link + Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 'var(--space-4)', marginBottom: 'var(--space-5)', alignItems: 'stretch' }}>
+      <div className="reviews-dashboard-grid">
         {/* QR Card */}
-        <div className="dash-card" style={{ textAlign: 'center', minWidth: 160, justifyContent: 'center' }}>
+        <div className="dash-card" style={{ textAlign: 'center', minWidth: 140, justifyContent: 'center' }}>
           {linkInfo?.reviewUrl ? (
             <img
               id="review-qr-img"
@@ -180,24 +182,26 @@ export default function ReviewsDashboard() {
         <div className="dash-card" style={{ justifyContent: 'space-between' }}>
           <div>
             <span className="dash-card-label">Your Review Link</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
-              <code style={{ fontSize: 'var(--text-sm)', background: 'var(--color-bg-primary)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-sm)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-2)', flexWrap: 'wrap' }}>
+              <code style={{ fontSize: 'var(--text-sm)', background: 'var(--color-bg-primary)', padding: 'var(--space-1) var(--space-2)', borderRadius: 'var(--radius-sm)', flex: 1, minWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {linkInfo?.reviewUrl || '...'}
               </code>
-              <button className="btn" onClick={handleCopyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
-              {linkInfo?.reviewUrl && (
-                <a href={linkInfo.reviewUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
-                  <ExternalLink size={16} />
-                  Open
-                </a>
-              )}
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <button className="btn" onClick={handleCopyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
+                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+                {linkInfo?.reviewUrl && (
+                  <a href={linkInfo.reviewUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
+                    <ExternalLink size={16} />
+                    Open
+                  </a>
+                )}
+              </div>
             </div>
           </div>
           {stats && (
-            <div style={{ display: 'flex', gap: 'var(--space-5)', marginTop: 'var(--space-3)' }}>
+            <div className="reviews-stats-flex">
               <div>
                 <div className="dash-card-value">{stats.avgRating} ★</div>
                 <div className="dash-card-sub">{stats.total} reviews</div>
@@ -236,8 +240,8 @@ export default function ReviewsDashboard() {
       </div>
 
       {/* Filters */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
+      <div className="reviews-filter-bar">
+        <div className="reviews-filter-group">
           {(['today', 'week', 'month', 'all'] as DateRange[]).map((range) => (
             <button key={range} className={`settings-tab ${dateRange === range ? 'active' : ''}`}
               style={{ padding: 'var(--space-1) var(--space-3)', fontSize: 'var(--text-xs)', borderBottom: 'none', borderRadius: 'var(--radius-md)', background: dateRange === range ? 'var(--color-accent-subtle)' : 'var(--color-bg-secondary)' }}
@@ -253,14 +257,14 @@ export default function ReviewsDashboard() {
         </div>
 
         {dateRange === 'custom' && (
-          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
             <input type="date" className="input-field" style={{ padding: 'var(--space-1) var(--space-2)', fontSize: 'var(--text-xs)', width: 130 }} value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>to</span>
             <input type="date" className="input-field" style={{ padding: 'var(--space-1) var(--space-2)', fontSize: 'var(--text-xs)', width: 130 }} value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
           </div>
         )}
 
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 'var(--space-2)' }}>
+        <div className="reviews-actions-right">
           <button className="quick-action-btn" onClick={() => setShowArchived(!showArchived)} style={{ fontSize: 'var(--text-xs)' }}>
             <Archive size={12} /> {showArchived ? 'Active' : 'Archived'}
           </button>
