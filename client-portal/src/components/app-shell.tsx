@@ -50,11 +50,12 @@ import { fetchMyShopsAction, setActiveShopAction } from '@/app/dashboard/actions
 interface AppShellProps {
   children: ReactNode;
   businessName: string;
+  logoUrl?: string | null;
   modulesEnabled: Record<string, boolean>;
   notificationCount?: number;
 }
 
-export default function AppShell({ children, businessName, modulesEnabled, notificationCount = 0 }: AppShellProps) {
+export default function AppShell({ children, businessName, logoUrl, modulesEnabled, notificationCount = 0 }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -299,7 +300,13 @@ export default function AppShell({ children, businessName, modulesEnabled, notif
 
           {/* User */}
           <div className="topbar-user">
-            <div className="topbar-user-avatar">{initials}</div>
+            <div className="topbar-user-avatar" style={{ overflow: 'hidden', padding: logoUrl ? 0 : undefined }}>
+              {logoUrl ? (
+                <img src={logoUrl} alt={businessName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                initials
+              )}
+            </div>
             <span>{businessName}</span>
           </div>
         </div>

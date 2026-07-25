@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Fetch client record
   const { data: client } = await supabase
     .from('clients')
-    .select('business_name, modules_enabled, status')
+    .select('business_name, logo_url, modules_enabled, status')
     .eq('id', user.id)
     .is('deleted_at', null)
     .single();
@@ -44,6 +44,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <AppShell
       businessName={client.business_name || 'My Business'}
+      logoUrl={client.logo_url || null}
       modulesEnabled={client.modules_enabled || {}}
       notificationCount={notifCount || 0}
     >
