@@ -99,14 +99,36 @@ export async function saveAndAddUncatalogedItemAction(input: z.infer<typeof Save
   const { name, price, barcodeValue, unit, gstPercent } = parsed.data;
   const cleanBarcode = barcodeValue.trim();
 
+  // Check if item already exists with this barcode
+  const { data: existing } = await supabase
+    .from('catalog_items')
+    .select('id')
+    .eq('client_id', user.id)
+    .eq('barcode_value', cleanBarcode)
+    .eq('active', true)
+    .maybeSingle();
+
+  if (existing) {
+    const { data: existingItem } = await supabase
+      .from('catalog_items')
+      .select('id, name, price, unit, gst_percent, barcode_value')
+      .eq('id', existing.id)
+      .single();
+
+    if (existingItem) return { item: existingItem };
+  }
+
   const { data: item, error } = await supabase
     .from('catalog_items')
     .insert({
       client_id: user.id,
       name: name.trim(),
+      type: 'product',
       price: price,
       unit: unit || 'pcs',
       gst_percent: gstPercent || 0,
+      discount_type: '₹',
+      discount_value: 0,
       barcode_value: cleanBarcode,
       active: true,
     })
@@ -115,7 +137,7 @@ export async function saveAndAddUncatalogedItemAction(input: z.infer<typeof Save
 
   if (error) {
     console.error('Error saving uncataloged item:', error);
-    return { error: 'Failed to save product to catalog.', item: null };
+    return { error: error.message || 'Failed to save product to catalog.', item: null };
   }
 
   return { item };
