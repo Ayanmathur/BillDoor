@@ -966,45 +966,13 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
 
   return (
     <div className="void-modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="void-modal" style={{ maxWidth: 460, width: '92%', textAlign: 'center', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)', padding: 16 }}>
+      <div className="void-modal" style={{ maxWidth: 440, width: '92%', textAlign: 'center', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)' }}><Camera size={16} /> Live Camera Barcode Scanner</h3>
           <button className="bills-action-btn" onClick={onClose}><X size={18} /></button>
         </div>
 
-        {/* Camera Viewfinder with Cosmetic Aiming Target Overlay */}
-        <div style={{ position: 'relative', width: '100%', minHeight: 280, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-          <div id="camera-scanner-view" style={{ width: '100%', minHeight: 280 }} />
-          
-          {/* Cosmetic Aiming Guide Overlay (zero effect on pre-decoding crop) */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <div
-              style={{
-                width: '85%',
-                height: 160,
-                border: '2px dashed rgba(255, 255, 255, 0.4)',
-                borderRadius: 12,
-                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.25)',
-                position: 'relative',
-              }}
-            >
-              {/* Corner Accent Markers */}
-              <div style={{ position: 'absolute', top: -2, left: -2, width: 16, height: 16, borderTop: '3px solid var(--color-accent)', borderLeft: '3px solid var(--color-accent)', borderTopLeftRadius: 6 }} />
-              <div style={{ position: 'absolute', top: -2, right: -2, width: 16, height: 16, borderTop: '3px solid var(--color-accent)', borderRight: '3px solid var(--color-accent)', borderTopRightRadius: 6 }} />
-              <div style={{ position: 'absolute', bottom: -2, left: -2, width: 16, height: 16, borderBottom: '3px solid var(--color-accent)', borderLeft: '3px solid var(--color-accent)', borderBottomLeftRadius: 6 }} />
-              <div style={{ position: 'absolute', bottom: -2, right: -2, width: 16, height: 16, borderBottom: '3px solid var(--color-accent)', borderRight: '3px solid var(--color-accent)', borderBottomRightRadius: 6 }} />
-            </div>
-          </div>
-        </div>
+        <div id="camera-scanner-view" style={{ width: '100%', minHeight: 220, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} />
 
         {scanFeedback && (
           <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 'var(--radius-md)', background: scanFeedback.isError ? 'var(--color-error-subtle, rgba(239,68,68,0.15))' : 'var(--color-success-subtle, rgba(16,185,129,0.15))', color: scanFeedback.isError ? 'var(--color-error, #ef4444)' : 'var(--color-success, #10b981)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)' }}>
