@@ -16,6 +16,7 @@ import {
   Gift, Check, X, Barcode, MessageSquare, User, Camera,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import StandardCalculatorWidget from '@/components/calculator-widget';
 import {
   lookupCustomerAction,
@@ -56,58 +57,72 @@ export default function CreateBillPage() {
   const [cameraBarcodeEnabled, setCameraBarcodeEnabled] = useState(false);
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [manualBarcode, setManualBarcode] = useState('');
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const html5QrcodeScannerRef = useRef<Html5Qrcode | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   const startCameraBarcodeScan = async () => {
     setShowCameraScanner(true);
     setManualBarcode('');
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
 
-        // Native BarcodeDetector API loop
-        if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-          const detector = new (window as any).BarcodeDetector({
-            formats: ['code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code', 'data_matrix']
-          });
+    setTimeout(async () => {
+      try {
+        const scannerElement = document.getElementById('camera-scanner-view');
+        if (!scannerElement) return;
 
-          scanIntervalRef.current = setInterval(async () => {
-            if (videoRef.current && videoRef.current.readyState === 4) {
-              try {
-                const barcodes = await detector.detect(videoRef.current);
-                if (barcodes && barcodes.length > 0) {
-                  const scannedValue = barcodes[0].rawValue;
-                  if (scannedValue) {
-                    stopCameraScan();
-                    handleBarcodeScan(scannedValue);
-                  }
-                }
-              } catch (e) {
-                // Frame detect ignore
-              }
+        if (html5QrcodeScannerRef.current) {
+          try {
+            if (html5QrcodeScannerRef.current.isScanning) {
+              await html5QrcodeScannerRef.current.stop();
             }
-          }, 250);
+          } catch {}
         }
+
+        const scanner = new Html5Qrcode('camera-scanner-view', {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.CODE_93,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.QR_CODE,
+          ],
+          verbose: false,
+        });
+
+        html5QrcodeScannerRef.current = scanner;
+
+        await scanner.start(
+          { facingMode: 'environment' },
+          {
+            fps: 15,
+            qrbox: { width: 260, height: 130 },
+          },
+          (decodedText) => {
+            if (decodedText && decodedText.trim()) {
+              stopCameraScan();
+              handleBarcodeScan(decodedText.trim());
+            }
+          },
+          () => {
+            // Frame decode ignore
+          }
+        );
+      } catch (err) {
+        console.error('Camera scanner start error:', err);
       }
-    } catch {
-      alert('Camera access failed or not permitted.');
-      setShowCameraScanner(false);
-    }
+    }, 150);
   };
 
-  const stopCameraScan = () => {
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
+  const stopCameraScan = async () => {
+    if (html5QrcodeScannerRef.current) {
+      try {
+        if (html5QrcodeScannerRef.current.isScanning) {
+          await html5QrcodeScannerRef.current.stop();
+        }
+      } catch {}
+      html5QrcodeScannerRef.current = null;
     }
     setShowCameraScanner(false);
   };
@@ -918,10 +933,7 @@ export default function CreateBillPage() {
               <button className="bills-action-btn" onClick={stopCameraScan}><X size={18} /></button>
             </div>
 
-            <div style={{ position: 'relative', width: '100%', height: 240, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-              <video ref={videoRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} playsInline muted />
-              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 220, height: 110, border: '2px dashed #00FF00', borderRadius: 8, pointerEvents: 'none', boxShadow: '0 0 0 9999px rgba(0,0,0,0.35)' }} />
-            </div>
+            <div id="camera-scanner-view" style={{ width: '100%', minHeight: 240, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} />
 
             {/* Manual Barcode Input & Scanner Support */}
             <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
