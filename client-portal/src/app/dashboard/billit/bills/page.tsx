@@ -70,17 +70,28 @@ export default function BillsPage() {
   }
 
   async function handleResendWhatsApp(bill: any) {
+    // Pre-open window synchronously to bypass browser popup blockers
+    const waWin = typeof window !== 'undefined' ? window.open('about:blank', '_blank') : null;
+
     try {
       const [templateRes, settingsRes] = await Promise.all([
         fetchBillWhatsAppTemplateAction(),
         fetchBillSettingsAction()
       ]);
+
       const businessName = settingsRes.settings?.business_name || 'our store';
       const clientSlug = settingsRes.settings?.slug;
-      const billUrl = `${window.location.origin}/bill/${bill.billSlug}`;
-      const reviewLink = clientSlug ? `${window.location.origin}/review/${clientSlug}` : '';
+      const modulesEnabled = settingsRes.settings?.modules_enabled || {};
+      const appointerEnabled = modulesEnabled.appointer === true;
+
+      const origin = window.location.origin;
+      const billUrl = `${origin}/bill/${bill.billSlug}`;
+      const reviewLink = clientSlug ? `${origin}/review/${clientSlug}` : '';
+      const appointmentLink = (appointerEnabled && clientSlug) ? `${origin}/book/${clientSlug}` : '';
+
       const rawTemplate = templateRes.template?.content as string | undefined;
       let message = rawTemplate || `Hi {customer_name}, here is your bill from {business_name}.\nAmount: ₹{grand_total}.\nView Bill:\n{bill_link}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n{review_link}\n\nThankYou!`;
+
       message = message
         .replace(/\{customer_name\}/g, bill.customerName || 'Customer')
         .replace(/\{business_name\}/g, businessName)
@@ -88,14 +99,32 @@ export default function BillsPage() {
         .replace(/\{bill_number\}/g, bill.billNumber || '')
         .replace(/\{grand_total\}/g, Number(bill.grandTotal || 0).toLocaleString('en-IN'))
         .replace(/\{review_link\}/g, reviewLink);
+
+      if (appointmentLink) {
+        message = message.replace(/\{appointment_link\}/g, appointmentLink);
+      } else {
+        if (rawTemplate && rawTemplate.includes('{review_link}')) {
+          message = message.replace(/\{appointment_link\}/g, reviewLink);
+        } else {
+          message = message
+            .split('\n')
+            .filter(line => !line.includes('{appointment_link}'))
+            .join('\n');
+        }
+      }
+
       const encoded = encodeURIComponent(message);
       const phone = bill.customerPhone ? bill.customerPhone.replace(/\D/g, '') : '';
-      if (phone) {
-        window.open(`https://wa.me/91${phone.replace(/^91/, '')}?text=${encoded}`, '_blank');
+      const cleanPhone = phone ? `91${phone.replace(/^91/, '')}` : '';
+      const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
+
+      if (waWin && !waWin.closed) {
+        waWin.location.href = waUrl;
       } else {
-        window.open(`https://wa.me/?text=${encoded}`, '_blank');
+        window.location.href = waUrl;
       }
     } catch {
+      if (waWin && !waWin.closed) waWin.close();
       alert('Failed to load WhatsApp template.');
     }
   }
