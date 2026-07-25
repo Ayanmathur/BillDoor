@@ -972,16 +972,9 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
         });
 
         await scanner.start(
+          { facingMode: 'environment' },
           {
-            facingMode: { ideal: 'environment' },
-            width: { min: 1280, ideal: 1920, max: 3840 },
-            height: { min: 720, ideal: 1080, max: 2160 },
-            advanced: [
-              { focusMode: 'continuous' } as any,
-            ],
-          },
-          {
-            fps: 20,
+            fps: 15,
             qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
               const w = Math.min(viewfinderWidth * 0.9, 360);
               const h = Math.min(viewfinderHeight * 0.65, 180);
