@@ -926,8 +926,7 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
         await scanner.start(
           { facingMode: 'environment' },
           {
-            fps: 15,
-            qrbox: { width: 280, height: 140 },
+            fps: 20,
           },
           (decodedText) => {
             if (decodedText && decodedText.trim()) {
@@ -964,13 +963,13 @@ function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
 
   return (
     <div className="void-modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="void-modal" style={{ maxWidth: 440, width: '92%', textAlign: 'center', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)', padding: 16 }}>
+      <div className="void-modal" style={{ maxWidth: 460, width: '92%', textAlign: 'center', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)' }}><Camera size={16} /> Live Camera Barcode Scanner</h3>
           <button className="bills-action-btn" onClick={onClose}><X size={18} /></button>
         </div>
 
-        <div id="camera-scanner-view" style={{ width: '100%', minHeight: 220, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} />
+        <div id="camera-scanner-view" style={{ width: '100%', minHeight: 280, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} />
 
         {scanFeedback && (
           <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 'var(--radius-md)', background: scanFeedback.isError ? 'var(--color-error-subtle, rgba(239,68,68,0.15))' : 'var(--color-success-subtle, rgba(16,185,129,0.15))', color: scanFeedback.isError ? 'var(--color-error, #ef4444)' : 'var(--color-success, #10b981)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)' }}>
