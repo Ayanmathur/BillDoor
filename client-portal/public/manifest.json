@@ -1,0 +1,47 @@
+{
+  "name": "BillDoor — Smart Billing & Reviews",
+  "short_name": "BillDoor",
+  "description": "Digital billing, appointment scheduling, review collection, and WhatsApp automation for Indian businesses.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#088395",
+  "orientation": "any",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/logo-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "finance", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Create Bill",
+      "short_name": "New Bill",
+      "description": "Create a new digital bill",
+      "url": "/dashboard/billit/create",
+      "icons": [{ "src": "/logo-icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Financial Reports",
+      "short_name": "Reports",
+      "description": "View revenue and expense reports",
+      "url": "/dashboard/billit/reports",
+      "icons": [{ "src": "/logo-icon.png", "sizes": "192x192" }]
+    }
+  ]
+}
