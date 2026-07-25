@@ -36,10 +36,25 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4);
   margin-bottom: var(--space-3);
   text-decoration: none;
   color: var(--color-sidebar-text-active);
+}
+
+.sidebar-brand-img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+
+.collapsed .sidebar-brand {
+  padding: var(--space-4) 0;
+  justify-content: center;
+}
+
+.collapsed .sidebar-brand-img {
+  height: 34px;
 }
 
 .sidebar-brand-icon {
@@ -280,9 +295,10 @@
 /* ---- Mobile Responsive ---- */
 /* ---- Mobile Responsive (Portrait Only) ---- */
 @media (max-width: 768px) {
-  .app-shell {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+  .app-shell,
+  .app-shell.collapsed {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto 1fr !important;
     min-height: 100dvh;
   }
 
@@ -305,7 +321,7 @@
     top: 0;
     left: 0;
     right: 0;
-    width: 100%;
+    width: 100% !important;
     bottom: auto;
     max-height: 85vh; /* leave some room at bottom */
     z-index: var(--z-sidebar);
@@ -321,8 +337,17 @@
     transform: translateY(0);
   }
 
-  /* Reset sidebar internals for top drawer */
-  .sidebar-brand,
+  /* Reset sidebar internals for top drawer & override desktop collapsed state */
+  .sidebar-brand {
+    display: flex !important;
+    padding: var(--space-4) !important;
+    justify-content: flex-start !important;
+  }
+
+  .sidebar-brand-img {
+    height: 36px !important;
+  }
+
   .sidebar-divider {
     display: flex;
   }
@@ -333,7 +358,7 @@
   }
 
   .sidebar-nav {
-    flex: 0 0 auto; /* Keep items tightly packed from top; empty space sits at bottom */
+    flex: 0 0 auto;
     padding: 0 var(--space-2);
   }
 
@@ -343,18 +368,22 @@
     padding: var(--space-3);
   }
 
-  .nav-item-label {
+  .nav-item-label,
+  .collapsed .nav-item-label,
+  .collapsed .sidebar-brand-text {
     opacity: 1 !important;
     width: auto !important;
     font-size: var(--text-sm);
+    display: inline-block !important;
   }
 
   .sidebar-collapse-btn {
-    display: none;
+    display: none !important;
   }
 
-  /* Fixed Top Bar on Mobile — strictly 56px, never inflates */
+  /* Fixed Top Bar on Mobile — strictly 56px */
   .topbar {
+    position: relative;
     height: 56px;
     min-height: 56px;
     max-height: 56px;
@@ -366,26 +395,33 @@
     box-sizing: border-box;
   }
 
-  /* Shell content occupies remaining vertical space; empty space sits at bottom */
-  .shell-content {
-    padding: var(--space-3);
-    flex: 1 1 auto;
-    overflow-y: auto;
-  }
-
-  .topbar-left, .topbar-right {
+  /* Left-aligned Title & Back Button */
+  .topbar-left {
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    z-index: 1;
   }
 
+  /* Centered Mobile Menu / Drawer Handle Pill */
   .mobile-menu-btn {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: var(--space-1);
     background: transparent;
     border: none;
+    z-index: 2;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    z-index: 1;
   }
 
   .mobile-handle-line {
@@ -398,6 +434,13 @@
 
   .mobile-menu-btn:active .mobile-handle-line {
     background: var(--color-accent);
+  }
+
+  /* Shell content occupies remaining vertical space */
+  .shell-content {
+    padding: var(--space-3);
+    flex: 1 1 auto;
+    overflow-y: auto;
   }
 }
 

@@ -161,13 +161,13 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
 
       {/* Sidebar */}
       <nav className="sidebar" role="navigation" aria-label="Main navigation">
-        <Link href="/dashboard" className="sidebar-brand" style={{ padding: collapsed ? 'var(--space-4) 0' : 'var(--space-4)', display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start', alignItems: 'center' }}>
+        <Link href="/dashboard" className="sidebar-brand">
           <img
             src={collapsed
               ? (theme === 'dark' ? "/favicon.png" : "/logo-icon.png")
               : (theme === 'dark' ? "/logo-dark.png" : "/logo-light.png")}
             alt="BillDoor Logo"
-            style={{ height: collapsed ? '34px' : '36px', width: 'auto', objectFit: 'contain' }}
+            className="sidebar-brand-img"
           />
         </Link>
 
@@ -208,7 +208,7 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
             <span className="nav-item-icon">
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </span>
-            {!collapsed && <span className="nav-item-label">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+            <span className="nav-item-label">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
           </button>
 
           {/* Logout */}
@@ -228,7 +228,7 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
             <span className="nav-item-icon">
               <LogOut size={20} />
             </span>
-            {!collapsed && <span className="nav-item-label">Logout</span>}
+            <span className="nav-item-label">Logout</span>
           </button>
 
           <div className="sidebar-divider" style={{ margin: 'var(--space-2) 0' }} />
@@ -243,10 +243,6 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
 
       {/* Top Bar */}
       <div className="topbar">
-        <button className="mobile-menu-btn" onClick={() => setMobileOpen(true)} aria-label="Open menu">
-          <div className="mobile-handle-line"></div>
-        </button>
-
         <div className="topbar-left">
           <button 
             className="topbar-btn back-btn" 
@@ -258,6 +254,10 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
           </button>
           <h1 className="topbar-title">{pageTitle}</h1>
         </div>
+
+        <button className="mobile-menu-btn" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+          <div className="mobile-handle-line"></div>
+        </button>
         <div className="topbar-right">
           {canSwitchShops && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
