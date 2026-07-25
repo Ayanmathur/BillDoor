@@ -57,100 +57,17 @@ export default function CreateBillPage() {
   const [barcodeEnabled, setBarcodeEnabled] = useState(true);
   const [cameraBarcodeEnabled, setCameraBarcodeEnabled] = useState(false);
   const [showCameraScanner, setShowCameraScanner] = useState(false);
-  const [manualBarcode, setManualBarcode] = useState('');
-  const [scanFeedback, setScanFeedback] = useState<{ text: string; isError?: boolean } | null>(null);
-  const html5QrcodeScannerRef = useRef<Html5Qrcode | null>(null);
-  const lastScanTimeRef = useRef<{ code: string; time: number }>({ code: '', time: 0 });
   const searchRef = useRef<HTMLDivElement>(null);
 
-  async function handleCameraContinuousScan(code: string) {
-    if (!code || !code.trim()) return;
+  async function handleContinuousScan(code: string) {
     const clean = code.trim();
     const result = await lookupBarcodeAction(clean);
     if (result.item) {
       addItemFromSearch(result.item, 'barcode');
-      setScanFeedback({ text: `✅ Added: ${result.item.name} (₹${result.item.price})` });
-      setTimeout(() => setScanFeedback(null), 2500);
-    } else {
-      setScanFeedback({ text: `⚠️ No product found for barcode: ${clean}`, isError: true });
-      setTimeout(() => setScanFeedback(null), 3000);
+      return { success: true, name: result.item.name, price: result.item.price };
     }
+    return { success: false, code: clean };
   }
-
-  const startCameraBarcodeScan = async () => {
-    setShowCameraScanner(true);
-    setManualBarcode('');
-    setScanFeedback(null);
-    lastScanTimeRef.current = { code: '', time: 0 };
-
-    setTimeout(async () => {
-      try {
-        const scannerElement = document.getElementById('camera-scanner-view');
-        if (!scannerElement) return;
-
-        if (html5QrcodeScannerRef.current) {
-          try {
-            if (html5QrcodeScannerRef.current.isScanning) {
-              await html5QrcodeScannerRef.current.stop();
-            }
-          } catch {}
-        }
-
-        const scanner = new Html5Qrcode('camera-scanner-view', {
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.CODE_93,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.QR_CODE,
-          ],
-          verbose: false,
-        });
-
-        html5QrcodeScannerRef.current = scanner;
-
-        await scanner.start(
-          { facingMode: 'environment' },
-          {
-            fps: 15,
-            qrbox: { width: 260, height: 130 },
-          },
-          (decodedText) => {
-            if (decodedText && decodedText.trim()) {
-              const clean = decodedText.trim();
-              const now = Date.now();
-              // 1.5s cooldown for identical barcode to prevent rapid camera repeat-scans
-              if (lastScanTimeRef.current.code === clean && now - lastScanTimeRef.current.time < 1500) {
-                return;
-              }
-              lastScanTimeRef.current = { code: clean, time: now };
-              handleCameraContinuousScan(clean);
-            }
-          },
-          () => {
-            // Frame decode ignore
-          }
-        );
-      } catch (err) {
-        console.error('Camera scanner start error:', err);
-      }
-    }, 150);
-  };
-
-  const stopCameraScan = async () => {
-    if (html5QrcodeScannerRef.current) {
-      try {
-        if (html5QrcodeScannerRef.current.isScanning) {
-          await html5QrcodeScannerRef.current.stop();
-        }
-      } catch {}
-      html5QrcodeScannerRef.current = null;
-    }
-    setShowCameraScanner(false);
-  };
 
   const [businessName, setBusinessName] = useState('');
   const [clientSlug, setClientSlug] = useState('');
@@ -758,7 +675,7 @@ export default function CreateBillPage() {
               {cameraBarcodeEnabled && (
                 <button
                   type="button"
-                  onClick={showCameraScanner ? stopCameraScan : startCameraBarcodeScan}
+                  onClick={() => setShowCameraScanner(!showCameraScanner)}
                   title={showCameraScanner ? 'Close Camera Scanner' : 'Scan with Camera'}
                   style={{
                     position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)',
@@ -775,61 +692,6 @@ export default function CreateBillPage() {
             <Plus size={14} /> Manual
           </button>
         </div>
-
-        {/* Option 3: Inline Embedded Camera Viewfinder */}
-        {showCameraScanner && (
-          <div
-            style={{
-              marginBottom: 'var(--space-4)',
-              padding: 'var(--space-3)',
-              background: 'var(--color-bg-elevated)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
-              boxShadow: 'var(--shadow-sm)',
-              position: 'sticky',
-              top: 0,
-              zIndex: 5,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Camera size={14} style={{ color: 'var(--color-accent)' }} /> Live Camera Barcode Scanner
-              </span>
-              <button
-                type="button"
-                className="bills-action-btn"
-                onClick={stopCameraScan}
-                style={{ fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 4 }}
-              >
-                <X size={14} /> Close Camera
-              </button>
-            </div>
-
-            <div id="camera-scanner-view" style={{ width: '100%', height: 200, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} />
-
-            {/* Scan Feedback Toast */}
-            {scanFeedback && (
-              <div
-                style={{
-                  marginTop: 8,
-                  padding: '6px 10px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: scanFeedback.isError
-                    ? 'var(--color-error-subtle, rgba(239,68,68,0.15))'
-                    : 'var(--color-success-subtle, rgba(16,185,129,0.15))',
-                  color: scanFeedback.isError
-                    ? 'var(--color-error, #ef4444)'
-                    : 'var(--color-success, #10b981)',
-                  fontSize: 'var(--text-xs)',
-                  fontWeight: 'var(--weight-semibold)',
-                  textAlign: 'center',
-                }}
-              >
-                {scanFeedback.text}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Line items table */}
         {items.length > 0 && (
@@ -984,8 +846,164 @@ export default function CreateBillPage() {
       ) : (
         <StandardCalculatorWidget />
       )}
+      {/* Camera Barcode Scanner Modal with Body Scroll Lock & Isolated Stream */}
+      {showCameraScanner && (
+        <CameraBarcodeModal
+          onScan={handleContinuousScan}
+          onClose={() => setShowCameraScanner(false)}
+        />
+      )}
+    </div>
+  );
+}
 
+interface CameraBarcodeModalProps {
+  onScan: (code: string) => Promise<{ success: boolean; name?: string; price?: number; code?: string }>;
+  onClose: () => void;
+}
 
+function CameraBarcodeModal({ onScan, onClose }: CameraBarcodeModalProps) {
+  const [manualBarcode, setManualBarcode] = useState('');
+  const [scanFeedback, setScanFeedback] = useState<{ text: string; isError?: boolean } | null>(null);
+  const lastScanTimeRef = useRef<{ code: string; time: number }>({ code: '', time: 0 });
+
+  // Body scroll lock on mount
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  const handleScanCode = async (code: string) => {
+    if (!code || !code.trim()) return;
+    const clean = code.trim();
+    const res = await onScan(clean);
+    if (res.success && res.name) {
+      setScanFeedback({ text: `✅ Added: ${res.name} (₹${res.price})` });
+      setTimeout(() => setScanFeedback(null), 2500);
+    } else {
+      setScanFeedback({ text: `⚠️ No product found for barcode: ${res.code || clean}`, isError: true });
+      setTimeout(() => setScanFeedback(null), 3000);
+    }
+  };
+
+  useEffect(() => {
+    let scanner: Html5Qrcode | null = null;
+    let isMounted = true;
+
+    async function initScanner() {
+      try {
+        const scannerElement = document.getElementById('camera-scanner-view');
+        if (!scannerElement || !isMounted) return;
+
+        scanner = new Html5Qrcode('camera-scanner-view', {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.CODE_93,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.QR_CODE,
+          ],
+          verbose: false,
+        });
+
+        await scanner.start(
+          { facingMode: 'environment' },
+          {
+            fps: 15,
+            qrbox: { width: 260, height: 130 },
+          },
+          (decodedText) => {
+            if (decodedText && decodedText.trim()) {
+              const clean = decodedText.trim();
+              const now = Date.now();
+              if (lastScanTimeRef.current.code === clean && now - lastScanTimeRef.current.time < 1500) {
+                return;
+              }
+              lastScanTimeRef.current = { code: clean, time: now };
+              handleScanCode(clean);
+            }
+          },
+          () => {}
+        );
+      } catch (err) {
+        console.error('Camera scanner start error:', err);
+      }
+    }
+
+    const timer = setTimeout(initScanner, 150);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+      if (scanner) {
+        try {
+          if (scanner.isScanning) {
+            scanner.stop();
+          }
+        } catch {}
+      }
+    };
+  }, []);
+
+  return (
+    <div className="void-modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="void-modal" style={{ maxWidth: 440, width: '92%', textAlign: 'center', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)', padding: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)' }}><Camera size={16} /> Live Camera Barcode Scanner</h3>
+          <button className="bills-action-btn" onClick={onClose}><X size={18} /></button>
+        </div>
+
+        <div id="camera-scanner-view" style={{ width: '100%', minHeight: 220, background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden' }} />
+
+        {scanFeedback && (
+          <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 'var(--radius-md)', background: scanFeedback.isError ? 'var(--color-error-subtle, rgba(239,68,68,0.15))' : 'var(--color-success-subtle, rgba(16,185,129,0.15))', color: scanFeedback.isError ? 'var(--color-error, #ef4444)' : 'var(--color-success, #10b981)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)' }}>
+            {scanFeedback.text}
+          </div>
+        )}
+
+        <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+          <input
+            type="text"
+            placeholder="Or type/scan barcode (e.g. BLUEBERR-0003)"
+            value={manualBarcode}
+            onChange={(e) => setManualBarcode(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && manualBarcode.trim()) {
+                handleScanCode(manualBarcode.trim());
+                setManualBarcode('');
+              }
+            }}
+            className="input-field"
+            style={{ flex: 1, fontSize: 'var(--text-xs)', textTransform: 'uppercase' }}
+          />
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              if (manualBarcode.trim()) {
+                handleScanCode(manualBarcode.trim());
+                setManualBarcode('');
+              }
+            }}
+            style={{ fontSize: 'var(--text-xs)' }}
+          >
+            Add Product
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+            Continuous multi-scan active
+          </span>
+          <button className="btn btn-primary" onClick={onClose} style={{ fontSize: 'var(--text-xs)' }}>
+            Done / Close Camera
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
