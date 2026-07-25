@@ -3,8 +3,8 @@
 /**
  * Billit — Module Landing Page
  *
- * Featured 4-slot Create Bill hero tile on the left / top,
- * flanked by 6 standard quick action tiles (Bills, Catalog, Customers, Financials, Templates, Settings).
+ * Featured 4-slot Create Bill hero tile on the left (desktop) / top (mobile),
+ * flanked by 6 standard quick action tiles (2 per row on mobile, 4-col grid on desktop).
  */
 
 import { useRouter } from 'next/navigation';
@@ -27,19 +27,12 @@ export default function BillitPage() {
       <style>{`
         .billit-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          grid-template-columns: repeat(2, 1fr);
           gap: var(--space-3);
         }
-        @media (min-width: 768px) {
-          .billit-grid {
-            grid-template-columns: repeat(4, 1fr);
-          }
-          .billit-hero-tile {
-            grid-column: span 2;
-            grid-row: span 2;
-          }
-        }
         .billit-hero-tile {
+          grid-column: span 2;
+          grid-row: span 2;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
@@ -53,6 +46,14 @@ export default function BillitPage() {
         .billit-hero-tile:hover {
           transform: translateY(-2px);
         }
+        @media (min-width: 768px) {
+          .billit-grid {
+            grid-template-columns: repeat(4, 1fr);
+          }
+          .billit-hero-tile {
+            min-height: 200px;
+          }
+        }
       `}</style>
 
       <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--text-xl)', marginBottom: 'var(--space-4)' }}>
@@ -60,7 +61,7 @@ export default function BillitPage() {
       </h2>
 
       <div className="billit-grid">
-        {/* Create Bill Hero Tile (Exclusive Accent Style - Spans 4 slots on Desktop, top on Mobile) */}
+        {/* Create Bill Hero Tile (Spans 2 cols x 2 rows = 4 tile slots at top on Mobile, left on Desktop) */}
         <button
           className="btn btn-primary billit-hero-tile"
           onClick={() => router.push('/dashboard/billit/create')}
@@ -76,7 +77,7 @@ export default function BillitPage() {
           </div>
         </button>
 
-        {/* 6 Standard Actions (Simple elevated box styling) */}
+        {/* 6 Standard Actions (2 per row on mobile) */}
         {standardActions.map((a) => (
           <button
             key={a.label}
@@ -94,6 +95,7 @@ export default function BillitPage() {
               background: 'var(--color-bg-elevated)',
               color: 'var(--color-text-primary)',
               borderRadius: 'var(--radius-lg)',
+              width: '100%',
             }}
           >
             {a.icon}
