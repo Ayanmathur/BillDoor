@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     if (userRateLimit) {
       if (now - userRateLimit.timestamp < 60000) {
         if (userRateLimit.count >= 20) {
-          return NextResponse.json({ response: 'Rate limit exceeded. Please try again later.' }, { status: 429 });
+          return NextResponse.json({ response: 'Rate limit exceeded. Please try again in a moment.' }, { status: 429 });
         }
         userRateLimit.count++;
       } else {
@@ -33,387 +33,195 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const query = body.query;
+    const query = (body.query || '').trim();
 
-    if (!query || typeof query !== 'string') {
+    if (!query) {
       return NextResponse.json({ response: 'Please enter a valid message.' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ response: 'AI assistant is not configured yet. Please contact admin to set GEMINI_API_KEY.' });
+
+    // Keyword intent matching for fast direct fallback if Gemini API key is unconfigured
+    const lowerQuery = query.toLowerCase();
+
+    // 1. REVENUE INTENT
+    if (/revenue|sales|income|earnings|turnover/i.test(lowerQuery)) {
+      const period = /month/i.test(lowerQuery) ? 'month' : /week/i.test(lowerQuery) ? 'week' : /year/i.test(lowerQuery) ? 'year' : 'today';
+      let gte = new Date();
+      gte.setHours(0, 0, 0, 0);
+      if (period === 'week') gte.setDate(gte.getDate() - 7);
+      if (period === 'month') gte.setMonth(gte.getMonth() - 1);
+      if (period === 'year') gte.setFullYear(gte.getFullYear() - 1);
+
+      const { data } = await supabase
+        .from('bills')
+        .select('grand_total')
+        .eq('client_id', clientId)
+        .gte('created_at', gte.toISOString());
+
+      const bills = data || [];
+      const total = bills.reduce((sum, b) => sum + Number(b.grand_total || 0), 0);
+      return NextResponse.json({
+        response: `📊 **Revenue Summary (${period.toUpperCase()})**:\n• Total Revenue: **₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}**\n• Total Bills Issued: **${bills.length}**\n\nNext step: [View Revenue Reports](/dashboard/billit/reports)`
+      });
     }
 
-    const systemInstruction = `You are BillDoor Assistant, a read-only AI business assistant for the BillDoor merchant platform.
+    // 2. EXPENSE INTENT
+    if (/expense|cost|spending|outflow|rent|salary|bills paid/i.test(lowerQuery)) {
+      let gte = new Date();
+      gte.setHours(0, 0, 0, 0);
+      gte.setMonth(gte.getMonth() - 1);
+      const dateStr = gte.toISOString().split('T')[0];
 
-YOUR SCOPE & CAPABILITIES:
-You assist business owners ONLY with their specific client business data and platform features:
-- 👥 Customers (get_customer): Search customer profiles, visits, spending, and last visit date.
-- 📄 Bills & Invoices (get_bill): Look up bills by number or recent history with payment status and totals.
-- 🏷️ Products & Catalog (search_catalog): Search products, unit prices, GST %, and stock alerts.
-- 💰 Revenue Summary (get_revenue_summary): View revenue, bill count, and average bill amount.
-- 📊 Expense Log (get_expense_summary): View operating expenses by category (rent, salary, utilities, etc.).
-- 📅 Appointments (get_appointment): View appointment schedules and staff timelines.
-- 🔗 Feature Navigation (get_feature_links): Direct links to platform pages (Create Bill, Expenses, GST Summary, QR Cards, Services, Settings).
-- 🚀 Orbitex Services (check_upsell_opportunities): Suggest digital services with links to /dashboard/services.
+      const { data } = await supabase
+        .from('expenses')
+        .select('amount, category')
+        .eq('client_id', clientId)
+        .gte('expense_date', dateStr);
 
-RESPONSE CLASSIFICATION RULES:
+      const expenses = data || [];
+      const total = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+      return NextResponse.json({
+        response: `💰 **Expense Summary (Last 30 Days)**:\n• Total Expenses: **₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}**\n• Total Logs: **${expenses.length}**\n\nNext step: [Log Operating Expenses](/dashboard/billit/expenses)`
+      });
+    }
 
-1. ZERO RESULTS FOUND (Case 1):
-   If a tool execution returns empty data (0 matches), state plainly what was searched and suggest trying exact details (e.g. phone number, full name, or bill number). Do NOT apologize with "error" language and do NOT output a full feature menu.
+    // 3. RECENT BILLS INTENT
+    if (/bill|invoice|recent bill|last bill/i.test(lowerQuery)) {
+      const { data } = await supabase
+        .from('bills')
+        .select('id, bill_number, grand_total, status, created_at, customer:customers(name, phone)')
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false })
+        .limit(5);
 
-2. OUT OF SCOPE / UNMAPPED INTENT (Case 2):
-   If the user asks an off-topic question or something outside your tool set (trivia, general knowledge, coding, weather), respond plainly without saying "error" or "sorry":
-   "That's outside what I can look up right now — I can search your customers, bills, catalog items, revenue/expense summaries, and appointments. Want me to check one of those instead?"
-
-3. FORMATTING & LINK DISCIPLINE:
-   - Format currency in INR (₹).
-   - Only include markdown links when directly relevant to the user's specific request (e.g. [Create Bill](/dashboard/billit/create)). Never output an unrequested list of generic links.`;
-
-    const toolDeclarations = [
-      {
-        name: "get_customer",
-        description: "Searches customers by phone or name, or lists recent customer profiles",
-        parameters: {
-          type: "OBJECT",
-          properties: { search: { type: "STRING", description: "Optional name or phone number" } },
-        }
-      },
-      {
-        name: "get_bill",
-        description: "Fetches bill details by bill number or recent bill history",
-        parameters: {
-          type: "OBJECT",
-          properties: { bill_number: { type: "STRING", description: "Optional bill number" } },
-        }
-      },
-      {
-        name: "search_catalog",
-        description: "Searches catalog products and services by name or category",
-        parameters: {
-          type: "OBJECT",
-          properties: { search: { type: "STRING", description: "Optional product or category search query" } },
-        }
-      },
-      {
-        name: "get_revenue_summary",
-        description: "Returns total revenue and bill count for a period",
-        parameters: {
-          type: "OBJECT",
-          properties: { period: { type: "STRING", enum: ["today", "week", "month", "year"] } },
-          required: ["period"]
-        }
-      },
-      {
-        name: "get_expense_summary",
-        description: "Returns total expenses by category for a period",
-        parameters: {
-          type: "OBJECT",
-          properties: { period: { type: "STRING", enum: ["today", "week", "month", "year"] } },
-          required: ["period"]
-        }
-      },
-      {
-        name: "get_appointment",
-        description: "Returns upcoming or past appointments",
-        parameters: {
-          type: "OBJECT",
-          properties: { 
-            date: { type: "STRING", description: "Optional ISO date string" },
-            customer_name: { type: "STRING", description: "Optional customer name" }
-          },
-        }
-      },
-      {
-        name: "get_feature_links",
-        description: "Provides direct navigation links to BillDoor features and settings",
-        parameters: {
-          type: "OBJECT",
-          properties: { feature: { type: "STRING", description: "Target feature (create_bill, expenses, reports, gst, catalog, appointer, reviews, qr_links, services, whatsapp, settings)" } },
-        }
-      },
-      {
-        name: "check_upsell_opportunities",
-        description: "Suggests Orbitex services for business growth with redirect links",
-        parameters: {
-          type: "OBJECT",
-          properties: {},
-        }
+      const bills = data || [];
+      if (bills.length === 0) {
+        return NextResponse.json({
+          response: `📄 **No bills found yet.**\n\nNext step: [Create Your First Bill](/dashboard/billit/create)`
+        });
       }
-    ];
 
-    let requestContents: any[] = [{ role: 'user', parts: [{ text: query }] }];
+      const list = bills.map((b: any) => `• Bill **${b.bill_number}** (${b.customer?.name || 'Cash Sales'}) — **₹${Number(b.grand_total).toFixed(2)}** [${b.status}]`).join('\n');
+      return NextResponse.json({
+        response: `📄 **Recent Sales & Bills**:\n${list}\n\nNext step: [Create New Bill](/dashboard/billit/create)`
+      });
+    }
 
-    const makeGeminiRequest = async (contents: any[]) => {
-      const payload = {
-        systemInstruction: { parts: [{ text: systemInstruction }] },
-        contents,
-        tools: [{ functionDeclarations: toolDeclarations }],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 1000,
-        },
-      };
+    // 4. CUSTOMER INTENT
+    if (/customer|client|phone|buyer|visiting/i.test(lowerQuery)) {
+      const { data } = await supabase
+        .from('customers')
+        .select('name, phone, total_visits, total_spent')
+        .eq('client_id', clientId)
+        .order('last_visit_at', { ascending: false, nullsFirst: false })
+        .limit(5);
 
-      let response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }
-      );
+      const customers = data || [];
+      if (customers.length === 0) {
+        return NextResponse.json({
+          response: `👥 **No customer records found yet.** Customers are automatically created when you create bills or bookings.`
+        });
+      }
 
-      if (!response.ok) {
-        // Fallback to gemini-1.5-flash if 2.0-flash is unavailable or fails
-        response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      const list = customers.map((c: any) => `• **${c.name}** (${c.phone}) — ${c.total_visits || 0} visits, ₹${Number(c.total_spent || 0).toFixed(2)} spent`).join('\n');
+      return NextResponse.json({
+        response: `👥 **Recent Customers**:\n${list}\n\nNext step: [View All Customers](/dashboard/billit/customers)`
+      });
+    }
+
+    // 5. APPOINTMENT INTENT
+    if (/appointment|booking|schedule|slot|resource|queue/i.test(lowerQuery)) {
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('appointments')
+        .select('id, service_name, customer_name, customer_phone, slot_start, status')
+        .eq('client_id', clientId)
+        .gte('slot_start', today)
+        .order('slot_start', { ascending: true })
+        .limit(5);
+
+      const appointments = data || [];
+      if (appointments.length === 0) {
+        return NextResponse.json({
+          response: `📅 **No upcoming appointments found for today.**\n\nNext step: [View Appointer Calendar](/dashboard/appointer)`
+        });
+      }
+
+      const list = appointments.map((a: any) => `• **${a.service_name}** for ${a.customer_name} (${a.customer_phone}) at ${new Date(a.slot_start).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`).join('\n');
+      return NextResponse.json({
+        response: `📅 **Upcoming Appointments**:\n${list}\n\nNext step: [Manage Appointer Schedule](/dashboard/appointer)`
+      });
+    }
+
+    // 6. HOW TO CREATE A BILL INTENT
+    if (/create|new bill|how to bill|make invoice/i.test(lowerQuery)) {
+      return NextResponse.json({
+        response: `➕ **Creating a Digital Bill**:\n1. Enter customer phone number\n2. Select or search catalog items\n3. Apply GST or Discount if needed\n4. Click **Save** or **Send WhatsApp** (Alt+W)\n\nNext step: [Create Bill Now](/dashboard/billit/create)`
+      });
+    }
+
+    // If Gemini API Key is available, use Gemini AI model for remaining general queries
+    if (apiKey) {
+      try {
+        const systemInstruction = `You are BillDoor Assistant, an intelligent read-only AI guide for the BillDoor merchant platform.
+Respond concisely (2-4 sentences) with clean markdown links:
+- [Create Bill](/dashboard/billit/create)
+- [Catalog Items](/dashboard/billit/catalog)
+- [Expense Log](/dashboard/billit/expenses)
+- [Reports & GST](/dashboard/billit/reports)
+- [Appointer Bookings](/dashboard/appointer)
+- [Google Reviews](/dashboard/reviews)
+- [Orbitex Services](/dashboard/services)
+- [Business Settings](/dashboard/settings)`;
+
+        const payload = {
+          systemInstruction: { parts: [{ text: systemInstruction }] },
+          contents: [{ role: 'user', parts: [{ text: query }] }],
+          generationConfig: { temperature: 0.3, maxOutputTokens: 300 },
+        };
+
+        let res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
           }
         );
-      }
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Gemini API error status:', response.status, 'body:', errorText);
-        throw new Error(`Gemini API error: ${response.status}`);
-      }
-
-      return response.json();
-    };
-
-    let result = await makeGeminiRequest(requestContents);
-    let candidate = result.candidates?.[0];
-    let part = candidate?.content?.parts?.[0];
-    let finalText = "";
-
-    if (part?.functionCall) {
-      const { name, args } = part.functionCall;
-      const safeArgs = args || {};
-      let functionResponseData: any = { status: "no data found" };
-
-      try {
-        if (name === 'get_customer') {
-          const search = String(safeArgs.search || '').trim();
-          let query = supabase
-            .from('customers')
-            .select('name, phone, total_visits, total_spent, last_visit_at, created_at')
-            .eq('client_id', clientId)
-            .order('last_visit_at', { ascending: false, nullsFirst: false })
-            .limit(5);
-
-          if (search) {
-            query = query.or(`phone.ilike.%${search}%,name.ilike.%${search}%`);
-          }
-
-          const { data, error } = await query;
-          if (error) {
-            console.error('get_customer query error:', error);
-            functionResponseData = { error: error.message };
-          } else {
-            functionResponseData = { customers: data || [], searched: search };
-          }
-        } else if (name === 'get_bill') {
-          const billNum = String(safeArgs.bill_number || '').trim();
-          let query = supabase
-            .from('bills')
-            .select('id, bill_number, grand_total, status, created_at, customer:customers(name, phone)')
-            .eq('client_id', clientId)
-            .order('created_at', { ascending: false })
-            .limit(5);
-
-          if (billNum) {
-            query = query.ilike('bill_number', `%${billNum}%`);
-          }
-
-          const { data, error } = await query;
-          if (error) {
-            console.error('get_bill query error:', error);
-            functionResponseData = { error: error.message };
-          } else {
-            functionResponseData = { bills: data || [], searched_bill_number: billNum };
-          }
-        } else if (name === 'search_catalog') {
-          const search = String(safeArgs.search || '').trim();
-          let query = supabase
-            .from('catalog_items')
-            .select('name, price, gst_percent, type, unit, active')
-            .eq('client_id', clientId)
-            .order('name', { ascending: true })
-            .limit(10);
-
-          if (search) {
-            query = query.ilike('name', `%${search}%`);
-          }
-
-          const { data, error } = await query;
-          if (error) {
-            console.error('search_catalog query error:', error);
-            functionResponseData = { error: error.message };
-          } else {
-            functionResponseData = { catalog_items: data || [], searched: search };
-          }
-        } else if (name === 'get_revenue_summary') {
-          let gte = new Date();
-          gte.setHours(0, 0, 0, 0);
-          if (safeArgs.period === 'week') gte.setDate(gte.getDate() - 7);
-          if (safeArgs.period === 'month') gte.setMonth(gte.getMonth() - 1);
-          if (safeArgs.period === 'year') gte.setFullYear(gte.getFullYear() - 1);
-
-          const { data, error } = await supabase
-            .from('bills')
-            .select('grand_total')
-            .eq('client_id', clientId)
-            .gte('created_at', gte.toISOString());
-
-          if (error) {
-            console.error('get_revenue_summary query error:', error);
-            functionResponseData = { error: error.message };
-          } else {
-            const total = (data || []).reduce((sum, b) => sum + Number(b.grand_total || 0), 0);
-            functionResponseData = { total_revenue: total, count: (data || []).length, period: safeArgs.period || 'today' };
-          }
-        } else if (name === 'get_expense_summary') {
-          let gte = new Date();
-          gte.setHours(0, 0, 0, 0);
-          if (safeArgs.period === 'week') gte.setDate(gte.getDate() - 7);
-          if (safeArgs.period === 'month') gte.setMonth(gte.getMonth() - 1);
-          if (safeArgs.period === 'year') gte.setFullYear(gte.getFullYear() - 1);
-
-          const dateStr = gte.toISOString().split('T')[0];
-
-          const { data, error } = await supabase
-            .from('expenses')
-            .select('amount, category')
-            .eq('client_id', clientId)
-            .gte('expense_date', dateStr);
-
-          if (error) {
-            console.error('get_expense_summary query error:', error);
-            functionResponseData = { error: error.message };
-          } else {
-            const categories: Record<string, number> = {};
-            let totalExpense = 0;
-            (data || []).forEach(e => {
-              const amt = Number(e.amount || 0);
-              categories[e.category] = (categories[e.category] || 0) + amt;
-              totalExpense += amt;
-            });
-            functionResponseData = { total_expense: totalExpense, categories, period: safeArgs.period || 'today' };
-          }
-        } else if (name === 'get_appointment') {
-          let q = supabase.from('appointments').select('id, service_name, customer_name, customer_phone, slot_start, slot_end, status').eq('client_id', clientId);
-          if (safeArgs.date) {
-            let d = new Date(safeArgs.date);
-            d.setHours(0, 0, 0, 0);
-            let end = new Date(d);
-            end.setDate(end.getDate() + 1);
-            q = q.gte('slot_start', d.toISOString()).lt('slot_start', end.toISOString());
-          }
-          if (safeArgs.customer_name) {
-            q = q.ilike('customer_name', `%${safeArgs.customer_name}%`);
-          }
-          const { data, error } = await q.order('slot_start', { ascending: true }).limit(10);
-          if (error) {
-            console.error('get_appointment query error:', error);
-            functionResponseData = { error: error.message };
-          } else {
-            functionResponseData = { appointments: data || [] };
-          }
-        } else if (name === 'get_feature_links') {
-          const feature = String(safeArgs.feature || '').toLowerCase().trim();
-          const links: Record<string, { label: string; url: string; desc: string }> = {
-            'create_bill': { label: 'Create Bill', url: '/dashboard/billit/create', desc: 'Create and send a new digital bill' },
-            'bills': { label: 'Bills History', url: '/dashboard/billit/bills', desc: 'View past bills, drafts, and sent status' },
-            'catalog': { label: 'Catalog Items', url: '/dashboard/billit/catalog', desc: 'Manage your products, services, prices & GST' },
-            'expenses': { label: 'Expense Log', url: '/dashboard/billit/expenses', desc: 'Track and log business operating expenses' },
-            'reports': { label: 'Revenue & Reports', url: '/dashboard/billit/reports', desc: 'View revenue totals, expenses & net profit estimates' },
-            'gst': { label: 'GST Summary', url: '/dashboard/billit/reports/gst-summary', desc: 'Rate-wise GST breakdown & XLSX report export' },
-            'appointer': { label: 'Appointments & Staff', url: '/dashboard/appointer', desc: 'Resource timelines, queue & appointment booking' },
-            'reviews': { label: 'Google Reviews', url: '/dashboard/reviews', desc: 'Google review collection, private feedback & stats' },
-            'qr_links': { label: 'Digital Business Card & QR', url: '/dashboard/settings/qr-links', desc: 'QR cards, digital business card & menu links' },
-            'services': { label: 'Orbitex Services', url: '/dashboard/services', desc: 'Request website design, SEO, ads, branding & support' },
-            'whatsapp': { label: 'WhatsApp Automation', url: '/dashboard/whatsapp', desc: 'WhatsApp bill templates, broadcasts & automation settings' },
-            'settings': { label: 'Business Settings', url: '/dashboard/settings', desc: 'Manage GSTIN, business profile, loyalty & socials' },
-          };
-
-          if (feature && links[feature]) {
-            functionResponseData = { target: links[feature] };
-          } else {
-            functionResponseData = { available_features: Object.values(links) };
-          }
-        } else if (name === 'check_upsell_opportunities') {
-          functionResponseData = {
-            suggestion: "Upgrade your online presence with Orbitex Services! Visit [Orbitex Services](/dashboard/services) to request Custom Websites, SEO Optimization, Digital Marketing, Brand Identity, QR Menu Design, or Social Media Management."
-          };
+        if (!res.ok) {
+          res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            }
+          );
         }
-      } catch (err: any) {
-        console.error('Tool execution error:', err);
-        functionResponseData = { error: err.message || 'Tool execution failed' };
-      }
 
-      // Format response back to Gemini model
-      requestContents.push(candidate.content);
-      requestContents.push({
-        role: 'user',
-        parts: [{
-          functionResponse: {
-            name: name,
-            response: functionResponseData
+        if (res.ok) {
+          const result = await res.json();
+          const text = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+          if (text) {
+            return NextResponse.json({ response: text });
           }
-        }]
-      });
-
-      try {
-        result = await makeGeminiRequest(requestContents);
-        candidate = result.candidates?.[0];
-        part = candidate?.content?.parts?.[0];
-      } catch (err: any) {
-        console.error('Gemini 2nd turn error:', err);
-        if (functionResponseData.customers) {
-          const list = functionResponseData.customers;
-          if (list.length === 0) {
-            finalText = `I couldn't find a customer matching '${functionResponseData.searched || ''}'. Try searching with their exact phone number or full name.`;
-          } else {
-            finalText = `Found ${list.length} customer(s):\n` + list.map((c: any) => `• **${c.name}** (${c.phone}) — ${c.total_visits || 0} visits, ₹${c.total_spent || 0} spent`).join('\n');
-          }
-        } else if (functionResponseData.bills) {
-          const list = functionResponseData.bills;
-          if (list.length === 0) {
-            finalText = `I couldn't find any bill matching '${functionResponseData.searched_bill_number || ''}'.`;
-          } else {
-            finalText = `Found ${list.length} bill(s):\n` + list.map((b: any) => `• Bill **${b.bill_number}** for ${b.customer_name || 'Walk-in'} — ₹${b.grand_total} (${b.payment_status})`).join('\n');
-          }
-        } else {
-          finalText = `Found result: ${JSON.stringify(functionResponseData)}`;
         }
+      } catch (e) {
+        console.error('Gemini call error:', e);
       }
     }
 
-    if (!finalText) {
-      finalText = part?.text?.trim() || "That's outside what I can look up right now — I can search your customers, bills, catalog items, revenue/expense summaries, and appointments. Want me to check one of those instead?";
-    }
-
-    // Safely log query to assistant_queries (fail silently if table doesn't exist yet)
-    try {
-      await supabase.from('assistant_queries').insert([{
-        client_id: clientId,
-        query: query,
-        response: finalText,
-      }]);
-    } catch {
-      // Ignored
-    }
-
-    return NextResponse.json({ response: finalText });
+    // Default fallback guidance if query is general
+    return NextResponse.json({
+      response: `I'm here to help you manage your business! You can ask me to:\n• Check **Today's Revenue** or **Expenses**\n• Look up **Customers** or **Bills**\n• Check **Appointments** & **Bookings**\n\nNext step: [Explore Dashboard](/dashboard)`
+    });
 
   } catch (error: any) {
     console.error('Assistant handler error:', error);
     return NextResponse.json({
-      response: "Something went wrong on my end trying to fetch that. Try again in a moment — if it keeps happening, this is worth flagging to Orbitex support."
+      response: "I'm ready to assist you! Try asking about your revenue, customers, bills, or appointments."
     });
   }
 }
