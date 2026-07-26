@@ -30,7 +30,15 @@
       "package": "in.billdoor.app",
       "permissions": [
         "CAMERA"
-      ]
+      ],
+      "statusBar": {
+        "hidden": true,
+        "translucent": true
+      },
+      "navigationBar": {
+        "visible": "sticky-immersive",
+        "backgroundColor": "#111111"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
