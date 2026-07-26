@@ -3,15 +3,13 @@
   "appName": "BillDoor",
   "webDir": "out",
   "server": {
-    "url": "https://app.billdoor.in",
+    "url": "https://billdoor-rho.vercel.app",
     "cleartext": true
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 2000,
-      "backgroundColor": "#111111",
-      "showSpinner": false,
-      "androidScaleType": "CENTER_CROP"
+      "launchShowDuration": 1500,
+      "backgroundColor": "#111111"
     },
     "StatusBar": {
       "style": "DARK",

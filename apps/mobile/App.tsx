@@ -1,240 +1,177 @@
 import 'react-native-url-polyfill/auto';
-import React, { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
+import React, { useState, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { lightTheme, darkTheme } from './src/theme/tokens';
-import { supabase } from './src/lib/supabase';
-import { LoginScreen } from './src/screens/LoginScreen';
-import { DashboardScreen } from './src/screens/DashboardScreen';
-import { CreateBillScreen } from './src/screens/CreateBillScreen';
-import { CatalogScreen } from './src/screens/CatalogScreen';
-import { AppointerScreen } from './src/screens/AppointerScreen';
-import { ReviewFlowScreen } from './src/screens/ReviewFlowScreen';
-import { WhatsAppScreen } from './src/screens/WhatsAppScreen';
-import { ServicesScreen } from './src/screens/ServicesScreen';
-import { SettingsScreen } from './src/screens/SettingsScreen';
-import { LayoutDashboard, Receipt, Calendar, Star, MessageSquare, Briefcase, Settings, RefreshCw } from 'lucide-react-native';
+import {
+  SafeAreaView,
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Modal,
+  Alert,
+} from 'react-native';
+import { WebView } from 'react-native-webview';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { RefreshCw, X } from 'lucide-react-native';
 
-interface ErrorBoundaryProps {
-  children: ReactNode;
-}
-
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error?: Error;
-}
-
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  public state: ErrorBoundaryState = {
-    hasError: false,
-  };
-
-  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
-  }
-
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.log('App ErrorBoundary caught error:', error, errorInfo);
-  }
-
-  public render() {
-    if (this.state.hasError) {
-      return (
-        <SafeAreaView style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>BillDoor Native Mobile</Text>
-          <Text style={styles.errorText}>Something went wrong while loading this screen.</Text>
-          <Text style={styles.errorDetail}>{this.state.error?.message}</Text>
-          <TouchableOpacity
-            style={styles.retryBtn}
-            onPress={() => this.setState({ hasError: false, error: undefined })}
-          >
-            <RefreshCw size={18} color="#FFF" />
-            <Text style={styles.retryBtnText}>Reload App</Text>
-          </TouchableOpacity>
-        </SafeAreaView>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-function MainApp() {
-  const [session, setSession] = useState<any>(null);
-  const [currentScreen, setCurrentScreen] = useState<string>('dashboard');
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
-
-  const activeTheme = isDarkMode ? darkTheme : lightTheme;
-
-  useEffect(() => {
-    let isMounted = true;
-    try {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (isMounted) setSession(session);
-      }).catch(err => {
-        console.log('Supabase session fetch error:', err);
-      });
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (isMounted) setSession(session);
-      });
-
-      return () => {
-        isMounted = false;
-        subscription.unsubscribe();
-      };
-    } catch (err) {
-      console.log('Supabase init auth listener catch:', err);
-    }
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (e) {
-      console.log('Logout error:', e);
-    }
-    setSession(null);
-  };
-
-  if (!session) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: activeTheme.bgPrimary }]}>
-        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-        <LoginScreen onLoginSuccess={() => setCurrentScreen('dashboard')} />
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: activeTheme.bgPrimary }]}>
-      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-      <View style={styles.mainView}>
-        {currentScreen === 'dashboard' && (
-          <DashboardScreen
-            onNavigate={(screen) => setCurrentScreen(screen)}
-            onLogout={handleLogout}
-          />
-        )}
-
-        {currentScreen === 'createBill' && (
-          <CreateBillScreen
-            onBack={() => setCurrentScreen('dashboard')}
-            initialCameraOpen={false}
-          />
-        )}
-
-        {currentScreen === 'scanBarcode' && (
-          <CreateBillScreen
-            onBack={() => setCurrentScreen('dashboard')}
-            initialCameraOpen={true}
-          />
-        )}
-
-        {currentScreen === 'catalog' && (
-          <CatalogScreen onBack={() => setCurrentScreen('dashboard')} />
-        )}
-
-        {currentScreen === 'appointer' && (
-          <AppointerScreen theme={activeTheme} onBack={() => setCurrentScreen('dashboard')} />
-        )}
-
-        {currentScreen === 'reviews' && (
-          <ReviewFlowScreen theme={activeTheme} onBack={() => setCurrentScreen('dashboard')} />
-        )}
-
-        {currentScreen === 'whatsapp' && (
-          <WhatsAppScreen theme={activeTheme} onBack={() => setCurrentScreen('dashboard')} />
-        )}
-
-        {currentScreen === 'services' && (
-          <ServicesScreen theme={activeTheme} onBack={() => setCurrentScreen('dashboard')} />
-        )}
-
-        {currentScreen === 'settings' && (
-          <SettingsScreen
-            theme={activeTheme}
-            isDarkMode={isDarkMode}
-            onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
-            onBack={() => setCurrentScreen('dashboard')}
-          />
-        )}
-      </View>
-
-      {/* Bottom Navigation Bar */}
-      <View style={[styles.bottomBar, { backgroundColor: activeTheme.bgSecondary, borderTopColor: activeTheme.border }]}>
-        <TouchableOpacity style={styles.navItem} onPress={() => setCurrentScreen('dashboard')}>
-          <LayoutDashboard size={20} color={currentScreen === 'dashboard' ? activeTheme.accent : activeTheme.textSecondary} />
-          <Text style={[styles.navText, { color: currentScreen === 'dashboard' ? activeTheme.accent : activeTheme.textSecondary }]}>Dash</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem} onPress={() => setCurrentScreen('createBill')}>
-          <Receipt size={20} color={currentScreen === 'createBill' ? activeTheme.accent : activeTheme.textSecondary} />
-          <Text style={[styles.navText, { color: currentScreen === 'createBill' ? activeTheme.accent : activeTheme.textSecondary }]}>Billit</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem} onPress={() => setCurrentScreen('appointer')}>
-          <Calendar size={20} color={currentScreen === 'appointer' ? activeTheme.accent : activeTheme.textSecondary} />
-          <Text style={[styles.navText, { color: currentScreen === 'appointer' ? activeTheme.accent : activeTheme.textSecondary }]}>Book</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem} onPress={() => setCurrentScreen('reviews')}>
-          <Star size={20} color={currentScreen === 'reviews' ? activeTheme.accent : activeTheme.textSecondary} />
-          <Text style={[styles.navText, { color: currentScreen === 'reviews' ? activeTheme.accent : activeTheme.textSecondary }]}>Review</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem} onPress={() => setCurrentScreen('whatsapp')}>
-          <MessageSquare size={20} color={currentScreen === 'whatsapp' ? activeTheme.accent : activeTheme.textSecondary} />
-          <Text style={[styles.navText, { color: currentScreen === 'whatsapp' ? activeTheme.accent : activeTheme.textSecondary }]}>WA</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem} onPress={() => setCurrentScreen('services')}>
-          <Briefcase size={20} color={currentScreen === 'services' ? activeTheme.accent : activeTheme.textSecondary} />
-          <Text style={[styles.navText, { color: currentScreen === 'services' ? activeTheme.accent : activeTheme.textSecondary }]}>Orbitex</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem} onPress={() => setCurrentScreen('settings')}>
-          <Settings size={20} color={currentScreen === 'settings' ? activeTheme.accent : activeTheme.textSecondary} />
-          <Text style={[styles.navText, { color: currentScreen === 'settings' ? activeTheme.accent : activeTheme.textSecondary }]}>Settings</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-}
+const APP_URL = 'https://billdoor-rho.vercel.app';
 
 export default function App() {
+  const webViewRef = useRef<WebView>(null);
+  const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraVisible, setCameraVisible] = useState(false);
+  const [lastScannedCode, setLastScannedCode] = useState('');
+
+  const handleBarcodeScanned = ({ data }: { data: string }) => {
+    if (!data || data === lastScannedCode) return;
+    setLastScannedCode(data);
+    setTimeout(() => setLastScannedCode(''), 1500);
+
+    // Send scanned barcode back to web app via window.postMessage
+    webViewRef.current?.injectJavaScript(`
+      (function() {
+        if (window.handleNativeBarcodeScan) {
+          window.handleNativeBarcodeScan("${data}");
+        } else {
+          var activeInput = document.activeElement;
+          if (activeInput && (activeInput.tagName === 'INPUT' || activeInput.tagName === 'TEXTAREA')) {
+            activeInput.value = "${data}";
+            activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        }
+      })();
+      true;
+    `);
+
+    Alert.alert('Barcode Scanned', `Scanned code: ${data}`);
+    setCameraVisible(false);
+  };
+
+  const handleMessage = async (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === 'OPEN_CAMERA') {
+        if (!permission?.granted) {
+          const res = await requestPermission();
+          if (!res.granted) {
+            Alert.alert('Permission Required', 'Camera permission is required to scan barcodes.');
+            return;
+          }
+        }
+        setCameraVisible(true);
+      }
+    } catch (e) {
+      // Non-JSON postMessage ignored
+    }
+  };
+
   return (
-    <ErrorBoundary>
-      <MainApp />
-    </ErrorBoundary>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="light" backgroundColor="#111111" />
+
+      {/* Main Native WebView Container */}
+      <View style={styles.webViewWrapper}>
+        <WebView
+          ref={webViewRef}
+          source={{ uri: APP_URL }}
+          style={styles.webView}
+          onLoadStart={() => {
+            setLoading(true);
+            setHasError(false);
+          }}
+          onLoadEnd={() => setLoading(false)}
+          onError={() => {
+            setLoading(false);
+            setHasError(true);
+          }}
+          onMessage={handleMessage}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          startInLoadingState={true}
+          scalesPageToFit={true}
+          allowsBackForwardNavigationGestures={true}
+          renderLoading={() => (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#088395" />
+              <Text style={styles.loadingText}>Loading BillDoor...</Text>
+            </View>
+          )}
+        />
+
+        {hasError && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorTitle}>BillDoor Mobile App</Text>
+            <Text style={styles.errorText}>Could not connect to live application server.</Text>
+            <TouchableOpacity
+              style={styles.retryBtn}
+              onPress={() => {
+                setHasError(false);
+                setLoading(true);
+                webViewRef.current?.reload();
+              }}
+            >
+              <RefreshCw size={18} color="#FFF" />
+              <Text style={styles.retryBtnText}>Retry Connection</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
+      {/* Native Camera Barcode Scanner Overlay Modal */}
+      <Modal visible={cameraVisible} animationType="slide">
+        <View style={styles.cameraContainer}>
+          <CameraView
+            style={StyleSheet.absoluteFillObject}
+            facing="back"
+            onBarcodeScanned={handleBarcodeScanned}
+            barcodeScannerSettings={{
+              barcodeTypes: ['code128', 'code39', 'ean13', 'qr'],
+            }}
+          />
+          <View style={styles.cameraOverlay}>
+            <TouchableOpacity style={styles.closeCameraBtn} onPress={() => setCameraVisible(false)}>
+              <X size={20} color="#FFF" />
+            </TouchableOpacity>
+
+            <View style={styles.aimingBox} />
+
+            <Text style={styles.cameraFooterText}>Position barcode inside frame to scan</Text>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#111111',
   },
-  mainView: {
+  webViewWrapper: {
     flex: 1,
   },
-  bottomBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingVertical: 8,
-    borderTopWidth: 1,
+  webView: {
+    flex: 1,
+    backgroundColor: '#111111',
   },
-  navItem: {
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#111111',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    gap: 12,
   },
-  navText: {
-    fontSize: 10,
-    marginTop: 2,
+  loadingText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
   errorContainer: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: '#111111',
     alignItems: 'center',
     justifyContent: 'center',
@@ -249,12 +186,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14,
     color: '#A0A0A5',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  errorDetail: {
-    fontSize: 12,
-    color: '#D94452',
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -271,5 +202,38 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 14,
+  },
+  cameraContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  cameraOverlay: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 32,
+  },
+  closeCameraBtn: {
+    alignSelf: 'flex-end',
+    marginRight: 16,
+    padding: 8,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 9999,
+  },
+  aimingBox: {
+    width: 280,
+    height: 140,
+    borderWidth: 2,
+    borderColor: '#088395',
+    borderStyle: 'dashed',
+    borderRadius: 10,
+  },
+  cameraFooterText: {
+    color: '#FFF',
+    fontSize: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
 });
