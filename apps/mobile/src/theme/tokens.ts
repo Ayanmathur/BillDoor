@@ -1,6 +1,6 @@
 /**
  * BillDoor Native Mobile App — Design Tokens & Dynamic Theme Engine
- * Supports Light & Dark themes dynamically
+ * Supports Light & Dark themes dynamically with backwards compatible theme object.
  */
 
 export interface ThemeColors {
@@ -102,4 +102,11 @@ export const themeDimensions = {
     fontXl: 22,
     font2xl: 26,
   },
+};
+
+export const theme = {
+  colors: darkTheme,
+  spacing: themeDimensions.spacing,
+  radius: themeDimensions.radius,
+  typography: themeDimensions.typography,
 };

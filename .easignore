@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.expo/
+dist/
+build/
+client-portal/node_modules/
+admin-portal/node_modules/
+apps/mobile/node_modules/
+apps/desktop-tauri/src-tauri/target/
+*.apk
+*.aab
