@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import {
   Star, Receipt, Users, TrendingUp, Eye, Plus,
   CalendarPlus, Loader2, IndianRupee, CreditCard, Copy, Download, Check, QrCode,
-  Wallet, BarChart3, FileSpreadsheet,
+  Wallet, BarChart3, FileSpreadsheet, User, ExternalLink,
 } from 'lucide-react';
 import { fetchDashboardData } from './actions';
 import ChatBubble from '@/components/ai-assistant/chat-bubble';
@@ -126,6 +126,15 @@ export default function DashboardPage() {
         <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/create')}>
           <Plus size={16} /> Create Bill
         </button>
+        <a 
+          href={data?.clientSlug ? `/card/${data.clientSlug}` : '/dashboard/settings/qr-links'} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="quick-action-btn"
+          style={{ textDecoration: 'none', background: 'var(--color-accent-subtle)', color: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+        >
+          <User size={16} /> Open Digital Card <ExternalLink size={12} />
+        </a>
         <button className="quick-action-btn" onClick={() => router.push('/dashboard/appointer/create')}>
           <CalendarPlus size={16} /> New Appointment
         </button>

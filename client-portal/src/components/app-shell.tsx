@@ -40,7 +40,6 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'reviews', label: 'Review Flow', href: '/dashboard/reviews', icon: <Star size={20} />, moduleKey: 'review_flow' },
   { key: 'whatsapp', label: 'WhatsApp Auto', href: '/dashboard/whatsapp', icon: <MessageSquare size={20} />, moduleKey: 'whatsapp_auto' },
   { key: 'services', label: 'Orbitex Services', href: '/dashboard/services', icon: <Briefcase size={20} />, dividerBefore: true },
-  { key: 'qr-links', label: 'QR & Digital Cards', href: '/dashboard/settings/qr-links', icon: <QrCode size={20} /> },
   { key: 'settings', label: 'Settings', href: '/dashboard/settings', icon: <Settings size={20} /> },
 ];
 
