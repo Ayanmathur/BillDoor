@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import 'react-native-url-polyfill/auto';
+import React, { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { lightTheme, darkTheme } from './src/theme/tokens';
@@ -12,9 +13,52 @@ import { ReviewFlowScreen } from './src/screens/ReviewFlowScreen';
 import { WhatsAppScreen } from './src/screens/WhatsAppScreen';
 import { ServicesScreen } from './src/screens/ServicesScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
-import { LayoutDashboard, Receipt, Calendar, Star, MessageSquare, Briefcase, Settings } from 'lucide-react-native';
+import { LayoutDashboard, Receipt, Calendar, Star, MessageSquare, Briefcase, Settings, RefreshCw } from 'lucide-react-native';
 
-export default function App() {
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = {
+    hasError: false,
+  };
+
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.log('App ErrorBoundary caught error:', error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <SafeAreaView style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>BillDoor Native Mobile</Text>
+          <Text style={styles.errorText}>Something went wrong while loading this screen.</Text>
+          <Text style={styles.errorDetail}>{this.state.error?.message}</Text>
+          <TouchableOpacity
+            style={styles.retryBtn}
+            onPress={() => this.setState({ hasError: false, error: undefined })}
+          >
+            <RefreshCw size={18} color="#FFF" />
+            <Text style={styles.retryBtnText}>Reload App</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function MainApp() {
   const [session, setSession] = useState<any>(null);
   const [currentScreen, setCurrentScreen] = useState<string>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
@@ -22,19 +66,33 @@ export default function App() {
   const activeTheme = isDarkMode ? darkTheme : lightTheme;
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    let isMounted = true;
+    try {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (isMounted) setSession(session);
+      }).catch(err => {
+        console.log('Supabase session fetch error:', err);
+      });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (isMounted) setSession(session);
+      });
 
-    return () => subscription.unsubscribe();
+      return () => {
+        isMounted = false;
+        subscription.unsubscribe();
+      };
+    } catch (err) {
+      console.log('Supabase init auth listener catch:', err);
+    }
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.log('Logout error:', e);
+    }
     setSession(null);
   };
 
@@ -143,6 +201,14 @@ export default function App() {
   );
 }
 
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <MainApp />
+    </ErrorBoundary>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -166,5 +232,44 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 2,
     fontWeight: '600',
+  },
+  errorContainer: {
+    flex: 1,
+    backgroundColor: '#111111',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  errorTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#A0A0A5',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  errorDetail: {
+    fontSize: 12,
+    color: '#D94452',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#088395',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  retryBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });
