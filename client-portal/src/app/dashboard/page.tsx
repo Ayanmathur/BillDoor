@@ -127,13 +127,13 @@ export default function DashboardPage() {
           <Plus size={16} /> Create Bill
         </button>
         <a 
-          href={data?.clientSlug ? `/card/${data.clientSlug}` : '/dashboard/settings/qr-links'} 
+          href={data?.slug ? `/card/${data.slug}` : '/dashboard/settings'} 
           target="_blank" 
           rel="noopener noreferrer" 
           className="quick-action-btn"
           style={{ textDecoration: 'none', background: 'var(--color-accent-subtle)', color: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
         >
-          <User size={16} /> Open Digital Card <ExternalLink size={12} />
+          <User size={16} /> Open Digital Business Card <ExternalLink size={12} />
         </a>
         <button className="quick-action-btn" onClick={() => router.push('/dashboard/appointer/create')}>
           <CalendarPlus size={16} /> New Appointment

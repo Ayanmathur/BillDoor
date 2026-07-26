@@ -981,15 +981,17 @@ a:hover {
 }
 
 /* ============================================================
-   Global Mobile View & Notch Safeguards
-   - Prevents top header hiding under notch / camera cutout
-   - Prevents horizontal scrolling (left-to-right) across screens
-   - Enables clean top-to-bottom vertical scrolling
+   MANDATORY HARD RULE: Zero Horizontal Scroll Enforcement
+   - Applies across PWA, mobile Web, and native WebViews
+   - Forces containers, text, tables, and buttons to scale/wrap
+   - Prevents any X-axis overflow across all viewport widths
    ============================================================ */
 html, body {
-  max-width: 100vw;
+  width: 100% !important;
+  max-width: 100vw !important;
   overflow-x: hidden !important;
-  padding-top: env(safe-area-inset-top, 0px);
+  overscroll-behavior-x: none !important;
+  touch-action: pan-y !important; /* Only top-to-bottom vertical scrolling */
 }
 
 .topnav,
@@ -1000,27 +1002,45 @@ header {
 }
 
 *, *::before, *::after {
-  box-sizing: border-box;
+  box-sizing: border-box !important;
+  max-width: 100vw;
 }
 
 @media (max-width: 768px) {
-  .shell-content,
-  .main-content,
-  .dashboard-grid,
-  .dash-card,
-  .card,
-  .table-container,
-  .grid {
+  html, body, #__next, div[data-reactroot], main, section,
+  .shell-content, .main-content, .dashboard-grid, .dash-card,
+  .card, .settings-section, .table-container, .grid, .quick-actions {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Force word wrapping on text, headings, and URLs */
+  h1, h2, h3, h4, h5, h6, p, span, a, label, div, td, th {
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+
+  /* Tables scale to 100% width instead of forcing wide scrolling */
+  table, .table, .data-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  /* Flex containers wrap elements cleanly */
+  .btn-group, .action-grid, .action-bar-right-group, .action-bar-left-group {
+    flex-wrap: wrap !important;
+    max-width: 100% !important;
+  }
+
+  /* Prevent iOS input zoom while maintaining responsiveness */
+  input, select, textarea, .input-field {
+    font-size: 16px !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
   }
-
-  /* Prevent iOS Safari automatic zoom on input focus */
-  input,
-  select,
-  textarea,
-  .input-field {
-    font-size: 16px !important;
-  }
 }
+
 
