@@ -1,6 +1,6 @@
 import 'react-native-url-polyfill/auto';
 import React, { useState, useRef } from 'react';
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import {
   SafeAreaView,
   StyleSheet,
@@ -10,12 +10,17 @@ import {
   ActivityIndicator,
   Modal,
   Alert,
+  StatusBar as RNStatusBar,
+  Platform,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { RefreshCw, X } from 'lucide-react-native';
 
 const APP_URL = 'https://billdoor-rho.vercel.app';
+
+// Calculate top status bar / camera notch spacer height for Expo Android native shell
+const TOP_SPACER_HEIGHT = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 36) : 40;
 
 export default function App() {
   const webViewRef = useRef<WebView>(null);
@@ -70,7 +75,10 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" backgroundColor="#111111" />
+      <ExpoStatusBar style="light" backgroundColor="#111111" />
+
+      {/* Expo Native Top Blank Row / Notch Spacer */}
+      <View style={styles.topNotchSpacer} />
 
       {/* Main Native WebView Container */}
       <View style={styles.webViewWrapper}>
@@ -150,6 +158,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#111111',
+  },
+  topNotchSpacer: {
+    height: TOP_SPACER_HEIGHT,
+    backgroundColor: '#111111',
+    width: '100%',
   },
   webViewWrapper: {
     flex: 1,

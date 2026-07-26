@@ -237,6 +237,28 @@ export default function SettingsPage() {
         ))}
       </div>
 
+      {/* Quick Public Links Bar */}
+      {slug && (
+        <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
+          <a
+            href={`/card/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-xs)' }}
+          >
+            <User size={14} /> Open Digital Business Card <ExternalLink size={12} />
+          </a>
+          <a
+            href="/dashboard/settings/qr-links"
+            className="btn"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-xs)' }}
+          >
+            <Globe size={14} /> View All QR Codes & Links
+          </a>
+        </div>
+      )}
+
       {/* Status Messages */}
       {error && (
         <div style={{ padding: 'var(--space-3)', background: 'var(--color-error-subtle)', color: 'var(--color-error)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }} role="alert">

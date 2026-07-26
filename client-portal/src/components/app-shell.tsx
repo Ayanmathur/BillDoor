@@ -18,7 +18,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Star, Receipt, CalendarClock, MessageSquare,
   Briefcase, Settings, Bell, Moon, Sun, LogOut, PanelLeftClose,
-  PanelLeft, DoorOpen, ChevronRight, Menu, X, ArrowLeft
+  PanelLeft, DoorOpen, ChevronRight, Menu, X, ArrowLeft, QrCode
 } from 'lucide-react';
 import { fetchUnreadCountAction } from '@/app/dashboard/notifications/actions';
 import './app-shell.css';
@@ -33,7 +33,6 @@ interface NavItem {
 }
 
 // Display order per spec §10: Dashboard → Billit → Appointer → Review Flow → WhatsApp Auto → [divider] → Orbitex Services → Settings
-// This order follows how a business owner thinks about their day, NOT the build order.
 const NAV_ITEMS: NavItem[] = [
   { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} /> },
   { key: 'billit', label: 'Billit', href: '/dashboard/billit', icon: <Receipt size={20} />, moduleKey: 'billit' },
@@ -41,6 +40,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'reviews', label: 'Review Flow', href: '/dashboard/reviews', icon: <Star size={20} />, moduleKey: 'review_flow' },
   { key: 'whatsapp', label: 'WhatsApp Auto', href: '/dashboard/whatsapp', icon: <MessageSquare size={20} />, moduleKey: 'whatsapp_auto' },
   { key: 'services', label: 'Orbitex Services', href: '/dashboard/services', icon: <Briefcase size={20} />, dividerBefore: true },
+  { key: 'qr-links', label: 'QR & Digital Cards', href: '/dashboard/settings/qr-links', icon: <QrCode size={20} /> },
   { key: 'settings', label: 'Settings', href: '/dashboard/settings', icon: <Settings size={20} /> },
 ];
 
