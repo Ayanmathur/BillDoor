@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Download, Monitor, Check, X } from 'lucide-react';
+import { Download, Monitor, X } from 'lucide-react';
 
 export default function PosShortcuts() {
   const router = useRouter();
   const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
-  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     // 1. Check if running in standalone PWA mode
@@ -22,27 +22,22 @@ export default function PosShortcuts() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShowInstallBanner(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     // 3. Register Global POS Keyboard Shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore key shortcuts if user is typing inside an input/textarea
       const target = e.target as HTMLElement;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
-        // Exception: F2 and F4 work everywhere
         if (e.key !== 'F2' && e.key !== 'F4') return;
       }
 
-      // F2: Create New Bill
       if (e.key === 'F2') {
         e.preventDefault();
         router.push('/dashboard/billit/create');
       }
 
-      // F4: Trigger Camera Barcode Scanner click if on bill creation screen
       if (e.key === 'F4') {
         e.preventDefault();
         if (pathname.includes('/dashboard/billit/create')) {
@@ -68,12 +63,13 @@ export default function PosShortcuts() {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       setIsInstalled(true);
-      setShowInstallBanner(false);
     }
     setDeferredPrompt(null);
   };
 
-  if (!showInstallBanner || isInstalled) return null;
+  // Only display popup when strictly on the Settings page (/dashboard/settings) and prompt is available
+  const isSettingsPage = pathname === '/dashboard/settings';
+  if (!isSettingsPage || !deferredPrompt || isInstalled || dismissed) return null;
 
   return (
     <div
@@ -98,10 +94,10 @@ export default function PosShortcuts() {
       </div>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)', color: 'var(--color-text-primary)' }}>
-          Install BillDoor App
+          Install BillDoor Web App
         </div>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
-          Fast desktop & mobile access with POS shortcuts (F2/F4).
+          Install for fast desktop & mobile home screen access.
         </div>
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
@@ -114,7 +110,7 @@ export default function PosShortcuts() {
         </button>
         <button
           className="bills-action-btn"
-          onClick={() => setShowInstallBanner(false)}
+          onClick={() => setDismissed(true)}
           style={{ padding: 4 }}
           title="Dismiss"
         >

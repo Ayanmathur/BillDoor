@@ -802,46 +802,51 @@ export default function CreateBillPage() {
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: 'var(--space-4)', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: 'var(--space-2)', marginRight: 'auto' }}>
-          <button className="btn" onClick={handleClear} style={{ padding: '0 var(--space-2)' }} title="Clear (Alt+C)">
-             <X size={14} /> {posModeEnabled && <span style={{ fontSize: 10, background: 'var(--color-bg-secondary)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+C</span>}
-          </button>
-          <button className="btn" onClick={handleClear} title="New Bill (Alt+C)">
-             <Plus size={14} /> New Bill
-          </button>
+      <div className="create-bill-action-bar" style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'space-between', flexWrap: 'wrap', marginTop: 'var(--space-4)', alignItems: 'flex-start' }}>
+        <div className="action-bar-left-group" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginRight: 'auto' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+            <button className="btn" onClick={handleClear} style={{ padding: '0 var(--space-2)' }} title="Clear (Alt+C)">
+               <X size={14} /> {posModeEnabled && <span style={{ fontSize: 10, background: 'var(--color-bg-secondary)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+C</span>}
+            </button>
+            <button className="btn" onClick={handleClear} title="New Bill (Alt+C)">
+               <Plus size={14} /> New Bill
+            </button>
+          </div>
+
+          {/* Send WhatsApp Button under Clear and New Bill */}
+          {billResult ? (
+            <a href={getWhatsAppUrl(billResult)} target="_blank" rel="noopener noreferrer" className="btn btn-primary whatsapp-btn-mobile" style={{ backgroundColor: '#25D366', borderColor: '#25D366', alignSelf: 'flex-start' }} title="Send WhatsApp (Alt+W)" onClick={() => { logWhatsAppSendAction(billResult.id, billResult.customerPhone); if (billResult.billNumber.startsWith('DRAFT')) handleCreateBill(false); }}>
+               <MessageSquare size={14} /> Send WhatsApp {posModeEnabled && <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+W</span>}
+            </a>
+          ) : (
+            <button className="btn btn-primary whatsapp-btn-mobile" onClick={() => handleWhatsAppDirectly(window.open('about:blank', '_blank'))} disabled={saving || items.length === 0} style={{ backgroundColor: '#25D366', borderColor: '#25D366', alignSelf: 'flex-start' }} title="Send WhatsApp (Alt+W)">
+               <MessageSquare size={14} /> Send WhatsApp {posModeEnabled && <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+W</span>}
+            </button>
+          )}
         </div>
 
-        {(billResult || previewBillNumber) && (
-          <span style={{ fontWeight: 'var(--weight-bold)', color: billResult ? 'var(--color-success)' : '#888', fontFamily: 'monospace', display: 'flex', alignItems: 'center', marginRight: 'var(--space-1)' }}>
-            {billResult ? <Check size={16} style={{ marginRight: 4 }} /> : <span style={{ fontSize: 12, marginRight: 4 }}>NEW</span>} 
-            {billResult ? billResult.billNumber : previewBillNumber}
-          </span>
-        )}
+        <div className="action-bar-right-group" style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
+          {(billResult || previewBillNumber) && (
+            <span style={{ fontWeight: 'var(--weight-bold)', color: billResult ? 'var(--color-success)' : '#888', fontFamily: 'monospace', display: 'flex', alignItems: 'center', marginRight: 'var(--space-1)' }}>
+              {billResult ? <Check size={16} style={{ marginRight: 4 }} /> : <span style={{ fontSize: 12, marginRight: 4 }}>NEW</span>} 
+              {billResult ? billResult.billNumber : previewBillNumber}
+            </span>
+          )}
 
-        {billResult ? (
-          <>
+          {billResult ? (
             <a href={`${billResult.billUrl}?print=1`} target="_blank" rel="noopener noreferrer" className="btn" title="Print (Alt+P)" onClick={() => { if (billResult.billNumber.startsWith('DRAFT')) handleCreateBill(false); }}>
                <Printer size={14} /> Print {posModeEnabled && <span style={{ fontSize: 10, background: 'var(--color-bg-secondary)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+P</span>}
             </a>
-            <a href={getWhatsAppUrl(billResult)} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)" onClick={() => { logWhatsAppSendAction(billResult.id, billResult.customerPhone); if (billResult.billNumber.startsWith('DRAFT')) handleCreateBill(false); }}>
-               <MessageSquare size={14} /> Send WhatsApp {posModeEnabled && <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+W</span>}
-            </a>
-          </>
-        ) : (
-          <>
+          ) : (
             <button className="btn" onClick={() => handlePrintDirectly(window.open('about:blank', '_blank'))} disabled={saving || items.length === 0} title="Print (Alt+P)">
                <Printer size={14} /> Print {posModeEnabled && <span style={{ fontSize: 10, background: 'var(--color-bg-secondary)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+P</span>}
             </button>
-            <button className="btn btn-primary" onClick={() => handleWhatsAppDirectly(window.open('about:blank', '_blank'))} disabled={saving || items.length === 0} style={{ backgroundColor: '#25D366', borderColor: '#25D366' }} title="Send WhatsApp (Alt+W)">
-               <MessageSquare size={14} /> Send WhatsApp {posModeEnabled && <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '1px 5px', borderRadius: 4, marginLeft: 4, fontFamily: 'monospace' }}>Alt+W</span>}
-            </button>
-          </>
-        )}
-        
-        <button className="btn btn-primary" onClick={() => handleCreateBill(false)} disabled={saving || items.length === 0} title="Save (Alt+C)">
-          {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save
-        </button>
+          )}
+          
+          <button className="btn btn-primary" onClick={() => handleCreateBill(false)} disabled={saving || items.length === 0} title="Save (Alt+C)">
+            {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save
+          </button>
+        </div>
       </div>
 
       {/* Calculator Widget */}

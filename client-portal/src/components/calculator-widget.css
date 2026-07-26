@@ -1,12 +1,12 @@
 /* ============================================================
-   Standard Shop Calculator Widget
+   Standard Shop Calculator Widget — Refined & Compact
    ============================================================ */
 
 .calc-widget-container {
   position: fixed;
   bottom: var(--space-4);
   right: var(--space-4);
-  width: 280px;
+  width: 260px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -27,7 +27,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-2) var(--space-3);
+  padding: 8px 12px;
   background: var(--color-bg-secondary);
   border-bottom: 1px solid var(--color-border);
   cursor: grab;
@@ -42,14 +42,15 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  letter-spacing: 0.3px;
 }
 
 .calc-widget-actions {
   display: flex;
-  gap: var(--space-2);
+  gap: 4px;
 }
 
 .calc-widget-actions button {
@@ -70,51 +71,54 @@
 }
 
 .calc-widget-body {
-  padding: var(--space-3);
+  padding: 10px;
   background: var(--color-bg-primary);
 }
 
 .calc-screen {
   background: var(--color-bg-secondary);
   border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-3);
+  padding: 6px 10px;
   text-align: right;
-  margin-bottom: var(--space-3);
+  margin-bottom: 8px;
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
   border: 1px solid var(--color-border);
 }
 
 .calc-equation {
-  font-size: var(--text-xs);
+  font-size: 11px;
   color: var(--color-text-tertiary);
-  min-height: 16px;
-  margin-bottom: 4px;
+  min-height: 14px;
+  margin-bottom: 2px;
 }
 
 .calc-display {
-  font-size: var(--text-2xl);
+  font-size: 20px;
   font-weight: var(--weight-bold);
   color: var(--color-text-primary);
   font-family: monospace;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
 }
 
 .calc-keypad {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-2);
+  gap: 4px;
 }
 
 .calc-btn {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: var(--space-2) 0;
-  font-size: var(--text-lg);
+  height: 36px;
+  font-size: 13px;
   font-weight: var(--weight-medium);
   color: var(--color-text-primary);
   cursor: pointer;
-  transition: background 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, transform 0.05s;
 }
 
 .calc-btn:hover {
@@ -123,6 +127,7 @@
 
 .calc-btn:active {
   background: var(--color-border);
+  transform: scale(0.97);
 }
 
 .calc-btn-op {
@@ -140,32 +145,32 @@
   background: var(--color-accent, var(--color-brand-primary));
   color: white;
   border-color: var(--color-accent, var(--color-brand-primary));
+  font-weight: var(--weight-bold);
 }
 
 .calc-btn-equal:hover {
-  filter: brightness(0.9);
+  filter: brightness(0.95);
 }
 
-/* Portrait Media Query for Mobile overrides */
-@media (max-width: 768px) and (orientation: portrait) {
+/* Portrait & Mobile Sidebar Widget Overrides */
+@media (max-width: 768px) {
   .calc-widget-container {
-    /* Reset floating behavior inside the portrait portal */
     position: static;
     transform: none !important;
     width: 100%;
+    max-width: 100%;
     border-radius: var(--radius-md);
     box-shadow: none;
     border: 1px solid var(--color-border);
-    margin-top: var(--space-4);
+    margin-top: var(--space-3);
   }
 
   .calc-widget-header {
-    cursor: default; /* disable drag cursor on mobile */
+    cursor: default;
   }
 
-  /* Shrink elements for portrait */
   .calc-btn {
-    padding: var(--space-2) 0;
-    font-size: var(--text-md);
+    height: 34px;
+    font-size: 12px;
   }
 }
