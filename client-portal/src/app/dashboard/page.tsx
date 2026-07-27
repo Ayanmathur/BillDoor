@@ -126,15 +126,6 @@ export default function DashboardPage() {
         <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/create')}>
           <Plus size={16} /> Create Bill
         </button>
-        <a 
-          href={data?.slug ? `/card/${data.slug}` : '/dashboard/settings'} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="quick-action-btn"
-          style={{ textDecoration: 'none', background: 'var(--color-accent-subtle)', color: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
-        >
-          <User size={16} /> Open Digital Business Card <ExternalLink size={12} />
-        </a>
         <button className="quick-action-btn" onClick={() => router.push('/dashboard/appointer/create')}>
           <CalendarPlus size={16} /> New Appointment
         </button>
@@ -205,6 +196,15 @@ export default function DashboardPage() {
                   >
                     <Download size={14} /> Download QR
                   </button>
+                  <a
+                    href={`/card/${data.clientSlug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', textDecoration: 'none' }}
+                  >
+                    <User size={14} /> Open Digital Card <ExternalLink size={12} />
+                  </a>
                   <button
                     className="btn"
                     style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)' }}
