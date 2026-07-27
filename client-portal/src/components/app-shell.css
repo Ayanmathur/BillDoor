@@ -381,18 +381,17 @@
     display: none !important;
   }
 
-  /* Fixed Top Bar on Mobile — strictly 56px */
+  /* Fixed Top Bar on Mobile — safe-area aware */
   .topbar {
     position: relative;
-    height: 56px;
+    height: auto;
     min-height: 56px;
-    max-height: 56px;
-    flex: 0 0 56px;
-    padding: 0 var(--space-3);
+    padding: max(8px, env(safe-area-inset-top, 8px)) var(--space-3) 8px var(--space-3);
     display: flex;
     align-items: center;
     justify-content: space-between;
     box-sizing: border-box;
+    overflow: hidden;
   }
 
   /* Left-aligned Title & Back Button */
@@ -400,7 +399,26 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    max-width: 45%;
+    min-width: 0;
+    overflow: hidden;
+    flex-shrink: 1;
     z-index: 1;
+  }
+
+  .topbar-title {
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .topbar-btn.back-btn {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
   }
 
   /* Centered Mobile Menu / Drawer Handle Pill */
