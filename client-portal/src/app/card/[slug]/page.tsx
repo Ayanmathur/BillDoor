@@ -1,10 +1,40 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { MapPin, Phone, Globe, Instagram, Linkedin, Twitter, MessageCircle, ExternalLink, Star, Calendar, ShoppingBag, Download, Loader2, User } from 'lucide-react';
+import {
+  MapPin, Phone, Globe, Instagram, Linkedin, Twitter, MessageCircle, ExternalLink, Star, Calendar,
+  ShoppingBag, Download, Loader2, User, Receipt, Star as StarIcon, CalendarClock, Store, Cake,
+  Scissors, Stethoscope, GraduationCap, Building2, Utensils, Heart
+} from 'lucide-react';
 import PoweredByFooter from '@/components/powered-by-footer';
 import { fetchBusinessCardAction } from './actions';
 import './card.css';
+
+function CardBackground() {
+  const icons = [Receipt, StarIcon, CalendarClock, Store, Cake, Scissors, Stethoscope, GraduationCap, Building2, Utensils, Heart];
+  const pattern = Array.from({ length: 40 }).map((_, i) => {
+    const Icon = icons[i % icons.length];
+    const top = `${((i * 17) % 100)}%`;
+    const left = `${((i * 23) % 100)}%`;
+    const size = 24 + ((i * 7) % 24);
+    const opacity = 0.03 + (((i * 3) % 5) * 0.01);
+    const rotation = ((i * 45) % 360);
+    return (
+      <div key={i} style={{ position: 'absolute', top, left, opacity, transform: `rotate(${rotation}deg)` }}>
+        <Icon size={size} color="currentColor" />
+      </div>
+    );
+  });
+
+  return (
+    <div className="login-background-pattern" style={{
+      position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0,
+      color: 'var(--color-text-primary)'
+    }}>
+      {pattern}
+    </div>
+  );
+}
 
 export default function BusinessCardPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -87,8 +117,9 @@ END:VCARD`;
   };
 
   return (
-    <div className="card-page">
-      <div className="card-container">
+    <div className="card-page" style={{ position: 'relative' }}>
+      <CardBackground />
+      <div className="card-container" style={{ position: 'relative', zIndex: 10 }}>
         <div className="card-header">
           {client.logo_url ? (
             <img src={client.logo_url} alt={client.business_name} className="card-logo" />

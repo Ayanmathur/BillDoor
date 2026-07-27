@@ -17,10 +17,33 @@
   margin-bottom: var(--space-8);
 }
 
+.login-logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}
+
 .login-logo {
-  width: 56px;
   height: 56px;
-  margin: 0 auto var(--space-4);
+  width: auto;
+  object-fit: contain;
+}
+
+/* Theme-aware logo visibility rules */
+html[data-theme='light'] .logo-light-mode { display: none !important; }
+html[data-theme='light'] .logo-dark-mode { display: block !important; }
+
+html[data-theme='dark'] .logo-light-mode { display: block !important; }
+html[data-theme='dark'] .logo-dark-mode { display: none !important; }
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']) .logo-light-mode { display: block !important; }
+  html:not([data-theme='light']) .logo-dark-mode { display: none !important; }
+}
+
+@media (prefers-color-scheme: light) {
+  html:not([data-theme='dark']) .logo-light-mode { display: none !important; }
+  html:not([data-theme='dark']) .logo-dark-mode { display: block !important; }
 }
 
 .login-brand {

@@ -118,6 +118,9 @@ export default function QrLinksPage() {
                       <button className="btn btn-primary" onClick={() => downloadQR(link.path, link.key)}>
                         <Download size={14} /> Download QR
                       </button>
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }} title="Open in new tab">
+                        <ExternalLink size={14} /> Open Link
+                      </a>
                     </div>
                     <div className="qr-suggestion">{link.suggestion}</div>
                   </div>
