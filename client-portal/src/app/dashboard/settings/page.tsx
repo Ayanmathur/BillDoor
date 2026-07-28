@@ -46,7 +46,7 @@ export default function SettingsPage() {
 
   const [hasGst, setHasGst] = useState(false);
   const [gstNumber, setGstNumber] = useState('');
-
+  const [fssaiNumber, setFssaiNumber] = useState('');
   const [instagramUrl, setInstagramUrl] = useState('');
   const [facebookUrl, setFacebookUrl] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
@@ -100,6 +100,7 @@ export default function SettingsPage() {
         setPhone(s.phone);
         setHasGst(s.hasGst);
         setGstNumber(s.gstNumber);
+        setFssaiNumber(s.fssaiNumber || '');
         setInstagramUrl(s.instagramUrl);
         setFacebookUrl(s.facebookUrl);
         setWebsiteUrl(s.websiteUrl);
@@ -161,7 +162,7 @@ export default function SettingsPage() {
 
   async function handleSaveGst() {
     setSaving(true); setError('');
-    const result = await updateGstAction({ hasGst, gstNumber });
+    const result = await updateGstAction({ hasGst, gstNumber, fssaiNumber });
     if (result.error) setError(result.error); else flash();
     setSaving(false);
   }
@@ -393,7 +394,24 @@ export default function SettingsPage() {
               </div>
             </div>
           )}
-          <button className="btn btn-primary" onClick={handleSaveGst} disabled={saving} style={{ marginTop: 'var(--space-3)' }}>
+          {/* FSSAI License Number */}
+          <div className="settings-row full" style={{ marginTop: 'var(--space-3)' }}>
+            <div className="input-group">
+              <label className="input-label">FSSAI License Number (Optional for Bakeries, Cafes & Food Services)</label>
+              <input
+                className="input-field"
+                value={fssaiNumber}
+                onChange={(e) => setFssaiNumber(e.target.value.replace(/\D/g, ''))}
+                maxLength={14}
+                placeholder="13620014000372"
+              />
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>
+                14-digit FSSAI Lic. No. printed on receipts (e.g. FSSAI No: 13620014000372)
+              </span>
+            </div>
+          </div>
+
+          <button className="btn btn-primary" onClick={handleSaveGst} disabled={saving} style={{ marginTop: 'var(--space-4)' }}>
             {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save
           </button>
         </div>

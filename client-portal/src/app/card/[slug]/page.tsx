@@ -141,10 +141,17 @@ END:VCARD`;
             </a>
           )}
           {client.address && (
-            <div className="card-info-row">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(client.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="card-info-row"
+              title="Open location in Google Maps"
+            >
               <MapPin size={18} className="card-info-icon" />
               <span>{client.address}</span>
-            </div>
+              <ExternalLink size={12} style={{ opacity: 0.6, marginLeft: 'auto' }} />
+            </a>
           )}
         </div>
 

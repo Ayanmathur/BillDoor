@@ -50,6 +50,7 @@ export async function fetchSettingsAction() {
       logoUrl: client.logo_url || '',
       hasGst: client.has_gst || false,
       gstNumber: client.gst_number || '',
+      fssaiNumber: client.fssai_number || '',
       instagramUrl: client.instagram_url || '',
       facebookUrl: client.facebook_url || '',
       websiteUrl: client.website_url || '',
@@ -163,9 +164,9 @@ export async function updateBusinessInfoAction(data: z.infer<typeof businessInfo
 }
 
 // ============================================================
-// Update GST
+// Update GST & FSSAI
 // ============================================================
-export async function updateGstAction(data: { hasGst: boolean; gstNumber: string }) {
+export async function updateGstAction(data: { hasGst: boolean; gstNumber: string; fssaiNumber?: string }) {
   const { supabase, user, error } = await getAuthenticatedClient();
   if (error || !user) return { error: error || 'Unauthorized.' };
 
@@ -178,6 +179,7 @@ export async function updateGstAction(data: { hasGst: boolean; gstNumber: string
     .update({
       has_gst: data.hasGst,
       gst_number: data.hasGst ? data.gstNumber.toUpperCase() : null,
+      fssai_number: data.fssaiNumber ? data.fssaiNumber.trim() : null,
     })
     .eq('id', user.id);
 
