@@ -27,7 +27,7 @@ export async function fetchClientBySlugAction(slug: string) {
 
   const { data: client } = await supabase
     .from('clients')
-    .select('id, business_name, slug, about, business_type, logo_url, google_place_id, status, reward_settings, whatsapp_url')
+    .select('id, business_name, slug, about, business_type, logo_url, google_place_id, status, reward_settings, whatsapp_url, phone')
     .eq('slug', slug)
     .is('deleted_at', null)
     .single();

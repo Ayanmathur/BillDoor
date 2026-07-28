@@ -53,6 +53,13 @@ export default async function ReviewSlugPage({ params }: Props) {
     );
   }
 
+  const cleanPhone = (client.phone || '').replace(/\D/g, '');
+  const formattedWaUrl = client.whatsapp_url && client.whatsapp_url.trim().startsWith('http')
+    ? client.whatsapp_url.trim()
+    : cleanPhone
+    ? `https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}`
+    : '';
+
   return (
     <ReviewPage
       clientId={client.id}
@@ -61,7 +68,7 @@ export default async function ReviewSlugPage({ params }: Props) {
       about={client.about || ''}
       logoUrl={client.logo_url || ''}
       googlePlaceId={client.google_place_id || ''}
-      whatsappUrl={client.whatsapp_url || ''}
+      whatsappUrl={formattedWaUrl}
       rewardSettings={client.reward_settings || null}
     />
   );
