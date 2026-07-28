@@ -12,7 +12,7 @@
  * - Mobile: sidebar becomes bottom tab bar
  */
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, useRef, ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -151,6 +151,23 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
     .join('')
     .toUpperCase();
 
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    if (!mobileOpen && deltaY > 30) {
+      setMobileOpen(true);
+    } else if (mobileOpen && deltaY < -30) {
+      setMobileOpen(false);
+    }
+    touchStartY.current = null;
+  };
+
   return (
     <div className={`app-shell ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
       {/* Mobile Overlay */}
@@ -158,8 +175,14 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
         <div className="mobile-overlay" onClick={() => setMobileOpen(false)} aria-hidden="true" />
       )}
 
-      {/* Sidebar */}
-      <nav className="sidebar" role="navigation" aria-label="Main navigation">
+      {/* Sidebar Drawer */}
+      <nav
+        className="sidebar"
+        role="navigation"
+        aria-label="Main navigation"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <Link href="/dashboard" className="sidebar-brand">
           <img
             src={collapsed
@@ -241,7 +264,7 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
       </nav>
 
       {/* Top Bar */}
-      <div className="topbar">
+      <div className="topbar" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         <div className="topbar-left">
           <button 
             className="topbar-btn back-btn" 

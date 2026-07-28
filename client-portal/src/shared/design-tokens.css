@@ -1043,4 +1043,34 @@ header {
   }
 }
 
+/* ============================================================
+   Table & Sub-section Inner Horizontal Scroll Rules
+   - Main page UI remains strictly 100% vertical-only
+   - Data tables (catalog items, customers, GST summary) get inner horizontal scroll inside card box
+   - EXCEPTION: .bills-table / .bills-table-container stays non-scrolling
+   ============================================================ */
+.table-responsive,
+.table-container:not(.bills-table-container) {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  box-sizing: border-box !important;
+}
+
+.table-responsive table:not(.bills-table),
+.table-container:not(.bills-table-container) table:not(.bills-table) {
+  min-width: 580px;
+  table-layout: auto !important;
+}
+
+.bills-table-container {
+  overflow: hidden !important;
+}
+
+.bills-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
 
