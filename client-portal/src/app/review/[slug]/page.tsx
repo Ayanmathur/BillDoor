@@ -61,6 +61,7 @@ export default async function ReviewSlugPage({ params }: Props) {
       about={client.about || ''}
       logoUrl={client.logo_url || ''}
       googlePlaceId={client.google_place_id || ''}
+      whatsappUrl={client.whatsapp_url || ''}
       rewardSettings={client.reward_settings || null}
     />
   );

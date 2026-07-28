@@ -19,6 +19,8 @@ import {
   archiveReviewAction,
   fetchReviewLinkAction,
   fetchReviewsForExportAction,
+  fetchReviewFlowSettingsAction,
+  updateReviewFlowSettingsAction,
 } from './actions';
 
 import './reviews.css';
@@ -48,6 +50,13 @@ export default function ReviewsDashboard() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
+  // Settings & Compliance state
+  const [connectWithClient, setConnectWithClient] = useState(true);
+  const [whatsappContact, setWhatsappContact] = useState(true);
+  const [customResolutionText, setCustomResolutionText] = useState('');
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsSaved, setSettingsSaved] = useState(false);
+
   const getDateFilters = useCallback(() => {
     const now = new Date();
     switch (dateRange) {
@@ -73,17 +82,35 @@ export default function ReviewsDashboard() {
   const loadData = useCallback(async () => {
     setLoading(true);
     const filters = getDateFilters();
-    const [reviewResult, linkResult] = await Promise.all([
+    const [reviewResult, linkResult, flowSettingsResult] = await Promise.all([
       fetchReviewsAction({ ...filters, archived: showArchived }),
       fetchReviewLinkAction(),
+      fetchReviewFlowSettingsAction(),
     ]);
     if (reviewResult.reviews) setReviews(reviewResult.reviews as Review[]);
     if (reviewResult.stats) setStats(reviewResult.stats);
     if (linkResult.slug) setLinkInfo(linkResult);
+    if (flowSettingsResult.settings) {
+      setConnectWithClient(flowSettingsResult.settings.connectWithClient);
+      setWhatsappContact(flowSettingsResult.settings.whatsappContact);
+      setCustomResolutionText(flowSettingsResult.settings.customResolutionText);
+    }
     setLoading(false);
   }, [getDateFilters, showArchived]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  async function handleSaveSettings() {
+    setSavingSettings(true);
+    await updateReviewFlowSettingsAction({
+      connectWithClient,
+      whatsappContact,
+      customResolutionText,
+    });
+    setSavingSettings(false);
+    setSettingsSaved(true);
+    setTimeout(() => setSettingsSaved(false), 3000);
+  }
 
   async function handleMarkRead(id: string) {
     setActionLoading(id);
@@ -243,6 +270,81 @@ export default function ReviewsDashboard() {
             )}
           </div>
         )}
+      </div>
+
+      {/* Review Flow Settings & Compliance Controls */}
+      <div className="dash-card" style={{ marginTop: 'var(--space-4)', padding: 'var(--space-4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-3)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+          <div>
+            <span className="dash-card-label" style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-primary)' }}>Review Flow & Google Compliance Settings</span>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 2 }}>
+              Configure 1–3 star private feedback resolution & Google Policy compliance pathways.
+            </div>
+          </div>
+          <button
+            className="btn"
+            onClick={handleSaveSettings}
+            disabled={savingSettings}
+            style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            {savingSettings ? <Loader2 size={14} className="spinner" /> : settingsSaved ? <Check size={14} /> : null}
+            {settingsSaved ? 'Saved!' : 'Save Settings'}
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 'var(--space-4)', marginTop: 'var(--space-3)' }}>
+          {/* Toggle 1: Connect with Client */}
+          <div style={{ background: 'var(--color-bg-secondary)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+              <span style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)' }}>Connect with Client</span>
+              <input
+                type="checkbox"
+                checked={connectWithClient}
+                onChange={(e) => setConnectWithClient(e.target.checked)}
+                style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--color-accent)' }}
+              />
+            </div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+              Enables the <code style={{ fontSize: 11, background: 'var(--color-bg-primary)', padding: '2px 4px', borderRadius: 4 }}>&quot;Looking for public assistance options?&quot;</code> link for 1–3 star feedback.
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--color-success)', marginTop: 6, fontWeight: 'var(--weight-medium)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              ✓ Recommended to prevent Google review gating liability.
+            </div>
+          </div>
+
+          {/* Toggle 2: WhatsApp Contact */}
+          <div style={{ background: 'var(--color-bg-secondary)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+              <span style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)' }}>WhatsApp Resolution Card</span>
+              <input
+                type="checkbox"
+                checked={whatsappContact}
+                onChange={(e) => setWhatsappContact(e.target.checked)}
+                style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--color-accent)' }}
+              />
+            </div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+              Displays the green <code style={{ fontSize: 11, background: 'var(--color-bg-primary)', padding: '2px 4px', borderRadius: 4 }}>&quot;Contact Business via WhatsApp&quot;</code> card inside your resolution box.
+            </div>
+          </div>
+
+          {/* Custom Resolution Text Area */}
+          <div style={{ gridColumn: '1 / -1', background: 'var(--color-bg-secondary)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+            <label style={{ display: 'block', fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)', marginBottom: 4 }}>
+              Custom Resolution Message (1–3 Stars)
+            </label>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-2)' }}>
+              Message displayed to customers inside the resolution box. If left blank, default text will be used.
+            </div>
+            <textarea
+              value={customResolutionText}
+              onChange={(e) => setCustomResolutionText(e.target.value)}
+              placeholder="Our management personally reviews all private notes within 2 hours to resolve issues directly."
+              rows={2}
+              style={{ width: '100%', padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', fontSize: 'var(--text-xs)', fontFamily: 'inherit', resize: 'vertical' }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Filters */}

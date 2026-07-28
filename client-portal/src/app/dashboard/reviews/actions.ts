@@ -154,3 +154,70 @@ export async function fetchReviewsForExportAction(dateFrom?: string, dateTo?: st
 
   return { data };
 }
+
+// ============================================================
+// Fetch Review Flow settings (Connect with client, WhatsApp, Resolution Text)
+// ============================================================
+export async function fetchReviewFlowSettingsAction() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized.', settings: null };
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('reward_settings, whatsapp_url')
+    .eq('id', user.id)
+    .single();
+
+  if (!client) return { error: 'Client not found.', settings: null };
+
+  const rs = client.reward_settings || {};
+
+  return {
+    settings: {
+      connectWithClient: rs.connect_with_client_enabled !== false, // default true
+      whatsappContact: rs.whatsapp_contact_enabled !== false, // default true
+      customResolutionText: rs.custom_resolution_text || '',
+      hasWhatsappUrl: !!client.whatsapp_url,
+    },
+  };
+}
+
+// ============================================================
+// Update Review Flow settings
+// ============================================================
+export async function updateReviewFlowSettingsAction(data: {
+  connectWithClient: boolean;
+  whatsappContact: boolean;
+  customResolutionText: string;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized.' };
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('reward_settings')
+    .eq('id', user.id)
+    .single();
+
+  if (!client) return { error: 'Client not found.' };
+
+  const currentRs = client.reward_settings || {};
+  const updatedRs = {
+    ...currentRs,
+    connect_with_client_enabled: data.connectWithClient,
+    whatsapp_contact_enabled: data.whatsappContact,
+    custom_resolution_text: data.customResolutionText.trim(),
+  };
+
+  const { error } = await supabase
+    .from('clients')
+    .update({ reward_settings: updatedRs })
+    .eq('id', user.id);
+
+  if (error) return { error: 'Failed to save review flow settings.' };
+
+  return { success: true };
+}
+

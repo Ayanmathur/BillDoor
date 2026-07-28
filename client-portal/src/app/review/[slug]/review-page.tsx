@@ -14,7 +14,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Star, Copy, RefreshCw, Check, Loader2, ExternalLink, Heart,
+  Star, Copy, RefreshCw, Check, Loader2, ExternalLink, Heart, MessageCircle,
 } from 'lucide-react';
 import PoweredByFooter from '@/components/powered-by-footer';
 import {
@@ -32,13 +32,14 @@ interface ReviewPageProps {
   about: string;
   logoUrl: string;
   googlePlaceId: string;
+  whatsappUrl?: string;
   rewardSettings: Record<string, any> | null;
 }
 
 type Stage = 'rating' | 'feedback' | 'ai_draft' | 'thank_you';
 
 export default function ReviewPage({
-  clientId, businessName, businessType, about, logoUrl, googlePlaceId, rewardSettings,
+  clientId, businessName, businessType, about, logoUrl, googlePlaceId, whatsappUrl, rewardSettings,
 }: ReviewPageProps) {
   const [stage, setStage] = useState<Stage>('rating');
   const [stars, setStars] = useState(0);
@@ -60,6 +61,12 @@ export default function ReviewPage({
 
   // Reward state
   const [reward, setReward] = useState<{ code: string; type: string; value: number; businessName: string } | null>(null);
+
+  // Resolution & Compliance state
+  const [showResolutionBox, setShowResolutionBox] = useState(false);
+  const connectWithClientEnabled = rewardSettings?.connect_with_client_enabled !== false;
+  const whatsappContactEnabled = rewardSettings?.whatsapp_contact_enabled !== false;
+  const customResolutionText = rewardSettings?.custom_resolution_text || '';
 
   const initials = businessName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
@@ -387,12 +394,57 @@ export default function ReviewPage({
                 Your feedback has been shared with {businessName}. We appreciate you taking the time.
               </div>
 
+              {/* Resolution Box (when user clicks 'Looking for public assistance options?') */}
+              {showResolutionBox && (
+                <div className="resolution-card">
+                  <div className="resolution-text">
+                    {customResolutionText || `Our management personally reviews all private notes within 2 hours to resolve issues directly.`}
+                  </div>
+
+                  {whatsappContactEnabled && (whatsappUrl || rewardSettings?.whatsapp_url) && (
+                    <a
+                      href={whatsappUrl || rewardSettings?.whatsapp_url || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="whatsapp-resolution-card"
+                    >
+                      <MessageCircle size={18} />
+                      <span>Contact Business via WhatsApp</span>
+                      <ExternalLink size={14} />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
 
         <PoweredByFooter />
       </div>
+
+      {/* Way-Bottom Footer Link (Absolute bottom of viewport) */}
+      {stage === 'thank_you' && connectWithClientEnabled && (
+        <div className="review-way-bottom-footer">
+          {!showResolutionBox ? (
+            <button
+              type="button"
+              className="way-bottom-subtle-link"
+              onClick={() => setShowResolutionBox(true)}
+            >
+              Looking for public assistance options?
+            </button>
+          ) : (
+            <a
+              href={googleReviewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="way-bottom-subtle-link"
+            >
+              Continue to Google Maps <ExternalLink size={12} style={{ display: 'inline', marginLeft: 4 }} />
+            </a>
+          )}
+        </div>
+      )}
     </div>
   );
 }
