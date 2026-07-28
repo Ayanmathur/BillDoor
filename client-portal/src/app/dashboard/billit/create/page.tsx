@@ -109,6 +109,11 @@ export default function CreateBillPage() {
   // Calculator
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
 
+  // Dynamic GST & Discount state for Shop Calculator
+  const [defaultGstPercent, setDefaultGstPercent] = useState(18);
+  const [defaultDiscountVal, setDefaultDiscountVal] = useState(10);
+  const [defaultDiscountType, setDefaultDiscountType] = useState<'percent' | 'flat'>('percent');
+
   // Extra charges
   const [extraCharges, setExtraCharges] = useState(0);
   const [extraChargesNote, setExtraChargesNote] = useState('');
@@ -139,6 +144,12 @@ export default function CreateBillPage() {
         setHasGst(settings.has_gst || false);
         setBillWhatsAppTemplate(settings.bill_whatsapp_template || '');
         setPosModeEnabled(settings.bill_settings?.pos_mode_enabled === true);
+
+        if (settings.bill_settings) {
+          if (settings.bill_settings.default_gst_percent) setDefaultGstPercent(settings.bill_settings.default_gst_percent);
+          if (settings.bill_settings.default_discount) setDefaultDiscountVal(settings.bill_settings.default_discount);
+          if (settings.bill_settings.default_discount_type) setDefaultDiscountType(settings.bill_settings.default_discount_type);
+        }
         // Multi-template state (defaults to off — no change for existing clients)
         setAutoSelectTemplate(settings.billit_auto_select_template ?? false);
         setFirstVisitTemplate(settings.first_visit_template ?? null);
@@ -852,10 +863,21 @@ export default function CreateBillPage() {
       {/* Calculator Widget */}
       {isPortraitMobile ? (
         typeof document !== 'undefined' && document.getElementById('mobile-sidebar-widget-area') 
-          ? createPortal(<StandardCalculatorWidget />, document.getElementById('mobile-sidebar-widget-area')!)
+          ? createPortal(
+              <StandardCalculatorWidget
+                defaultGstPercent={defaultGstPercent}
+                defaultDiscountPercent={defaultDiscountVal}
+                defaultDiscountType={defaultDiscountType}
+              />,
+              document.getElementById('mobile-sidebar-widget-area')!
+            )
           : null
       ) : (
-        <StandardCalculatorWidget />
+        <StandardCalculatorWidget
+          defaultGstPercent={defaultGstPercent}
+          defaultDiscountPercent={defaultDiscountVal}
+          defaultDiscountType={defaultDiscountType}
+        />
       )}
       {/* Camera Barcode Scanner Modal with Body Scroll Lock & Isolated Stream */}
       {showCameraScanner && (

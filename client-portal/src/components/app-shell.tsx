@@ -21,6 +21,7 @@ import {
   PanelLeft, DoorOpen, ChevronRight, Menu, X, ArrowLeft, QrCode
 } from 'lucide-react';
 import { fetchUnreadCountAction } from '@/app/dashboard/notifications/actions';
+import DashboardShortcut from '@/components/dashboard-shortcut';
 import './app-shell.css';
 
 interface NavItem {
@@ -338,6 +339,9 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
       <main className="shell-content">
         {children}
       </main>
+
+      {/* Mobile Dashboard POS Shortcut Button */}
+      <DashboardShortcut />
     </div>
   );
 }

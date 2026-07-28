@@ -6,9 +6,17 @@ import './calculator-widget.css';
 
 interface StandardCalculatorWidgetProps {
   onClose?: () => void;
+  defaultGstPercent?: number;
+  defaultDiscountPercent?: number;
+  defaultDiscountType?: 'percent' | 'flat';
 }
 
-export default function StandardCalculatorWidget({ onClose }: StandardCalculatorWidgetProps) {
+export default function StandardCalculatorWidget({
+  onClose,
+  defaultGstPercent = 18,
+  defaultDiscountPercent = 10,
+  defaultDiscountType = 'percent',
+}: StandardCalculatorWidgetProps) {
   const [display, setDisplay] = useState('0');
   const [equation, setEquation] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -153,15 +161,20 @@ export default function StandardCalculatorWidget({ onClose }: StandardCalculator
   };
 
   // Quick GST & Discount helpers
-  const handlePlusGst = (gstPercent: number = 18) => {
+  const handlePlusGst = (gstPercent: number = defaultGstPercent) => {
     const val = parseFloat(display) || 0;
     const withGst = val + (val * (gstPercent / 100));
     setDisplay(String(Math.round(withGst * 100) / 100));
   };
 
-  const handleMinusDisc = (discPercent: number = 10) => {
+  const handleMinusDisc = (discValue: number = defaultDiscountPercent, type: 'percent' | 'flat' = defaultDiscountType) => {
     const val = parseFloat(display) || 0;
-    const afterDisc = val - (val * (discPercent / 100));
+    let afterDisc = val;
+    if (type === 'flat') {
+      afterDisc = Math.max(0, val - discValue);
+    } else {
+      afterDisc = val - (val * (discValue / 100));
+    }
     setDisplay(String(Math.round(afterDisc * 100) / 100));
   };
 
@@ -238,8 +251,12 @@ export default function StandardCalculatorWidget({ onClose }: StandardCalculator
           <div className="calc-keypad">
             <button className="calc-btn calc-btn-clear" onClick={handleClear}>C</button>
             <button className="calc-btn" onClick={handleBackspace} title="Backspace (Backspace)">⌫</button>
-            <button className="calc-btn" onClick={() => handlePlusGst(18)} title="Add 18% GST">+18%</button>
-            <button className="calc-btn" onClick={() => handleMinusDisc(10)} title="Subtract 10% Disc">-10%</button>
+            <button className="calc-btn" onClick={() => handlePlusGst(defaultGstPercent)} title={`Add ${defaultGstPercent}% GST`}>
+              +{defaultGstPercent}%
+            </button>
+            <button className="calc-btn" onClick={() => handleMinusDisc(defaultDiscountPercent, defaultDiscountType)} title={`Subtract ${defaultDiscountType === 'flat' ? '₹' : ''}${defaultDiscountPercent}${defaultDiscountType === 'percent' ? '%' : ''} Discount`}>
+              -{defaultDiscountType === 'flat' ? '₹' : ''}{defaultDiscountPercent}{defaultDiscountType === 'percent' ? '%' : ''}
+            </button>
 
             <button className="calc-btn" onClick={() => handleOp('÷')}>÷</button>
             <button className="calc-btn" onClick={() => handleOp('×')}>×</button>

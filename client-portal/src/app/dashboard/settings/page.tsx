@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import {
   Building2, Hash, Globe, Gift, Lock, AlertTriangle, Save, Loader2,
   Instagram, Facebook, ExternalLink, MapPin, Check, Trophy,
-  Upload, User, Trash2, Image, Linkedin, Twitter, MessageCircle
+  Upload, User, Trash2, Image, Linkedin, Twitter, MessageCircle, Monitor
 } from 'lucide-react';
 import {
   fetchSettingsAction,
@@ -24,9 +24,10 @@ import {
   changeUsernameAction,
   uploadLogoAction,
   deleteAccountAction,
+  updatePosSettingsAction,
 } from './actions';
 
-type SettingsTab = 'business' | 'gst' | 'socials' | 'rewards' | 'account';
+type SettingsTab = 'business' | 'gst' | 'socials' | 'rewards' | 'pos' | 'account';
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<SettingsTab>('business');
@@ -123,6 +124,12 @@ export default function SettingsPage() {
           setTrack2RewardType(s.loyaltyConfig.track2?.reward_type || 'flat_discount');
           setTrack2FlatValue(s.loyaltyConfig.track2?.reward_flat_value || 100);
         }
+        if (s.posSettings) {
+          setPosModeEnabled(s.posSettings.posModeEnabled);
+          setMobileShortcutAction(s.posSettings.mobileShortcutAction);
+          if (s.posSettings.customPcHotkeys) setCustomPcHotkeys(s.posSettings.customPcHotkeys);
+        }
+
         setUsername(s.username || '');
         setNewUsername(s.username || '');
         setLogoUrl(s.logoUrl || '');
@@ -133,6 +140,17 @@ export default function SettingsPage() {
   }, []);
 
   function flash() { setSaved(true); setTimeout(() => setSaved(false), 2000); }
+
+  async function handleSavePosSettings() {
+    setSaving(true); setError('');
+    const result = await updatePosSettingsAction({
+      posModeEnabled,
+      mobileShortcutAction,
+      customPcHotkeys,
+    });
+    if (result.error) setError(result.error); else flash();
+    setSaving(false);
+  }
 
   async function handleSaveBusiness() {
     setSaving(true); setError('');
@@ -218,11 +236,22 @@ export default function SettingsPage() {
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '20vh' }}><Loader2 size={24} className="spinner" /></div>;
 
+  // POS Settings State
+  const [posModeEnabled, setPosModeEnabled] = useState(true);
+  const [mobileShortcutAction, setMobileShortcutAction] = useState<'new_bill' | 'new_appointment'>('new_bill');
+  const [customPcHotkeys, setCustomPcHotkeys] = useState<Record<string, string>>({
+    newBill: 'F2',
+    scanBarcode: 'F4',
+    appointerToday: 'F3',
+    printBill: 'F8',
+  });
+
   const tabs: { key: SettingsTab; label: string; icon: React.ReactNode }[] = [
     { key: 'business', label: 'Business', icon: <Building2 size={14} /> },
     { key: 'gst', label: 'GST', icon: <Hash size={14} /> },
     { key: 'socials', label: 'Socials', icon: <Globe size={14} /> },
     { key: 'rewards', label: 'Rewards', icon: <Gift size={14} /> },
+    { key: 'pos', label: 'POS Settings', icon: <Monitor size={14} /> },
     { key: 'account', label: 'Account', icon: <Lock size={14} /> },
   ];
 
@@ -560,6 +589,82 @@ export default function SettingsPage() {
 
           <button className="btn btn-primary" onClick={handleSaveLoyalty} disabled={saving} style={{ marginTop: 'var(--space-4)' }}>
             {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Loyalty
+          </button>
+        </div>
+      )}
+
+      {/* POS Settings Section (Placed right before Account section) */}
+      {tab === 'pos' && (
+        <div className="settings-section">
+          <h3 className="settings-section-title"><Monitor size={18} /> POS & Hotkey Settings</h3>
+
+          {/* Master POS Toggle */}
+          <div className="toggle-field" style={{ marginBottom: 'var(--space-4)' }}>
+            <div>
+              <div className="toggle-field-label">POS Toggle</div>
+              <div className="toggle-field-desc">Master switch for mobile dashboard floating shortcut & PC keyboard hotkeys</div>
+            </div>
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={posModeEnabled}
+                onChange={(e) => setPosModeEnabled(e.target.checked)}
+              />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
+          {posModeEnabled && (
+            <>
+              {/* Mobile Dashboard Floating Action Selector */}
+              <div className="settings-row" style={{ marginTop: 'var(--space-4)' }}>
+                <div className="input-group">
+                  <label className="input-label">Mobile Floating Shortcut Action</label>
+                  <select
+                    className="input-field"
+                    value={mobileShortcutAction}
+                    onChange={(e) => setMobileShortcutAction(e.target.value as any)}
+                  >
+                    <option value="new_bill">Create New Bill (/dashboard/billit/create)</option>
+                    <option value="new_appointment">Book Appointment (/dashboard/appointer/create)</option>
+                  </select>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 4 }}>
+                    Draggable shortcut button displayed on Mobile Dashboard (&lt; 640px)
+                  </span>
+                </div>
+              </div>
+
+              {/* PC Keyboard Hotkey Customization */}
+              <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)' }}>
+                <label className="input-label" style={{ marginBottom: 'var(--space-2)' }}>
+                  PC Keyboard Hotkey Assignments
+                </label>
+                <div className="settings-row">
+                  <div className="input-group">
+                    <label className="input-label" style={{ fontSize: 'var(--text-xs)' }}>New Bill Shortcut</label>
+                    <input
+                      className="input-field"
+                      value={customPcHotkeys.newBill || 'F2'}
+                      onChange={(e) => setCustomPcHotkeys(prev => ({ ...prev, newBill: e.target.value.toUpperCase() }))}
+                      placeholder="F2"
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label" style={{ fontSize: 'var(--text-xs)' }}>Scan Barcode Shortcut</label>
+                    <input
+                      className="input-field"
+                      value={customPcHotkeys.scanBarcode || 'F4'}
+                      onChange={(e) => setCustomPcHotkeys(prev => ({ ...prev, scanBarcode: e.target.value.toUpperCase() }))}
+                      placeholder="F4"
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          <button className="btn btn-primary" onClick={handleSavePosSettings} disabled={saving} style={{ marginTop: 'var(--space-4)' }}>
+            {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save POS Settings
           </button>
         </div>
       )}

@@ -15,7 +15,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CalendarClock, Plus, Users2, ChevronLeft, ChevronRight, Loader2,
-  Check, XCircle, Clock, Send, AlertTriangle, Settings,
+  Check, XCircle, Clock, Send, AlertTriangle, Settings, User,
 } from 'lucide-react';
 import {
   fetchTodayAppointmentsAction,
@@ -155,6 +155,9 @@ export default function AppointerPage() {
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <button className="btn" onClick={() => router.push('/dashboard/appointer/settings')} style={{ border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
             <Settings size={14} /> Settings
+          </button>
+          <button className="btn" onClick={() => router.push('/dashboard/billit/customers')} style={{ border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+            <User size={14} /> Customers
           </button>
           <button className="btn" onClick={() => router.push('/dashboard/appointer/resources')} style={{ border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
             <Users2 size={14} /> Resources

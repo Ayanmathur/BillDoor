@@ -1,0 +1,82 @@
+/* Floating Dashboard POS Shortcut (Mobile View) */
+
+.dashboard-shortcut-container {
+  position: fixed;
+  bottom: 80px; /* Above mobile bottom nav */
+  right: 16px;
+  z-index: 9998;
+  user-select: none;
+  touch-action: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.shortcut-trigger-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-accent-text, #ffffff);
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease-out, background 0.15s;
+}
+
+.shortcut-trigger-btn:active {
+  transform: scale(0.92);
+}
+
+.shortcut-popover-menu {
+  position: absolute;
+  bottom: 56px;
+  right: 0;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
+  animation: popoverExpand 0.2s ease-out forwards;
+}
+
+.shortcut-popover-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.shortcut-popover-item.primary {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+.shortcut-popover-item:hover {
+  background: var(--color-bg-secondary);
+}
+
+@keyframes popoverExpand {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

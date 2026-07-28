@@ -63,9 +63,48 @@ export async function fetchSettingsAction() {
         review_reward_mode: 'all_feedback',
         max_per_customer_per_day: 1,
       },
+      posSettings: {
+        posModeEnabled: (client.reward_settings as any)?.pos_mode_enabled !== false,
+        mobileShortcutAction: (client.reward_settings as any)?.mobile_shortcut_action || 'new_bill',
+        customPcHotkeys: (client.reward_settings as any)?.custom_pc_hotkeys || {
+          newBill: 'F2',
+          scanBarcode: 'F4',
+          appointerToday: 'F3',
+          printBill: 'F8',
+        },
+      },
       loyaltyConfig: client.loyalty_config || null,
     },
   };
+}
+
+// ============================================================
+// Update POS Settings
+// ============================================================
+export async function updatePosSettingsAction(data: {
+  posModeEnabled: boolean;
+  mobileShortcutAction: 'new_bill' | 'new_appointment';
+  customPcHotkeys: Record<string, string>;
+}) {
+  const { supabase, client, user, error } = await getAuthenticatedClient();
+  if (error || !client || !user) return { error: error || 'Unauthorized.' };
+
+  const currentRs = client.reward_settings || {};
+  const updatedRs = {
+    ...currentRs,
+    pos_mode_enabled: data.posModeEnabled,
+    mobile_shortcut_action: data.mobileShortcutAction,
+    custom_pc_hotkeys: data.customPcHotkeys,
+  };
+
+  const { error: updateErr } = await supabase
+    .from('clients')
+    .update({ reward_settings: updatedRs })
+    .eq('id', user.id);
+
+  if (updateErr) return { error: 'Failed to update POS settings.' };
+
+  return { success: true };
 }
 
 // ============================================================
