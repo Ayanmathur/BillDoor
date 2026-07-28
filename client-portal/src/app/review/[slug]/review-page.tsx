@@ -153,34 +153,46 @@ export default function ReviewPage({
       // Private feedback path
       setStage('feedback');
     } else {
-      // AI draft path (4-5★)
-      setAiLoading(true);
-      setStage('ai_draft');
+      // 4-5★ Path
+      if (!connectWithClientEnabled) {
+        // Mode 2 (Toggle OFF — Internal Feedback Kiosk):
+        // Save rating to DB and show Thank You screen directly (No AI draft, No Google redirect)
+        setLoading(true);
+        const submitResult = await submitReviewAction({ clientId, stars: rating, sessionId: sessionId || undefined });
+        if (submitResult.sessionId) setSessionId(submitResult.sessionId);
+        setLoading(false);
+        setStage('thank_you');
+      } else {
+        // Mode 1 (Toggle ON — Public Google Booster):
+        // Generate AI draft, auto-copy to clipboard, and start 3s countdown redirect
+        setAiLoading(true);
+        setStage('ai_draft');
 
-      // Submit the rating first to get a session
-      const submitResult = await submitReviewAction({ clientId, stars: rating, sessionId: sessionId || undefined });
-      if (submitResult.sessionId) setSessionId(submitResult.sessionId);
+        // Submit the rating first to get a session
+        const submitResult = await submitReviewAction({ clientId, stars: rating, sessionId: sessionId || undefined });
+        if (submitResult.sessionId) setSessionId(submitResult.sessionId);
 
-      // Generate AI draft
-      const aiResult = await generateAiReviewAction({
-        clientId,
-        businessName,
-        businessType,
-        about,
-        stars: rating,
-        previousDrafts: [],
-        sessionId: submitResult.sessionId || '',
-      });
+        // Generate AI draft
+        const aiResult = await generateAiReviewAction({
+          clientId,
+          businessName,
+          businessType,
+          about,
+          stars: rating,
+          previousDrafts: [],
+          sessionId: submitResult.sessionId || '',
+        });
 
-      if (aiResult.draft) {
-        setAiDraft(aiResult.draft);
-        setPreviousDrafts([aiResult.draft]);
-        const isCopied = await copyTextToClipboard(aiResult.draft);
-        setCopied(isCopied);
-        setTimeout(() => setCopied(false), 4000);
-        startCountdown();
+        if (aiResult.draft) {
+          setAiDraft(aiResult.draft);
+          setPreviousDrafts([aiResult.draft]);
+          const isCopied = await copyTextToClipboard(aiResult.draft);
+          setCopied(isCopied);
+          setTimeout(() => setCopied(false), 4000);
+          startCountdown();
+        }
+        setAiLoading(false);
       }
-      setAiLoading(false);
     }
   }
 
