@@ -1,0 +1,47 @@
+name: Automated Supabase Database Backup
+
+on:
+  schedule:
+    # Runs every day at 18:30 UTC (12:00 AM IST Midnight)
+    - cron: '30 18 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  backup:
+    name: Backup Supabase PostgreSQL
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL Client Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client gzip
+
+      - name: Run Database Dump (pg_dump)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p backups
+          TIMESTAMP=$(date +'%Y-%m-%d_%H-%M-%S')
+          BACKUP_FILE="backups/billdoor_db_backup_${TIMESTAMP}.sql.gz"
+          
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::SUPABASE_DB_URL secret is not set in GitHub repository settings!"
+            exit 1
+          fi
+
+          echo "Starting database dump..."
+          pg_dump "$SUPABASE_DB_URL" --clean --if-exists --no-owner --no-privileges | gzip > "$BACKUP_FILE"
+          
+          echo "Backup created successfully: $BACKUP_FILE"
+          ls -lh "$BACKUP_FILE"
+
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: backups/
+          retention-days: 30
