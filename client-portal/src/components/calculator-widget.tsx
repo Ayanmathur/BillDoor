@@ -151,28 +151,13 @@ export default function StandardCalculatorWidget({
       const newLeft = Math.max(8, Math.min(winW - initial.width - 8, initial.left + dx));
       const newTop = Math.max(8, Math.min(winH - initial.height - 8, initial.top + dy));
 
-      const centerX = newLeft + initial.width / 2;
-      const centerY = newTop + initial.height / 2;
-      const isRight = centerX > winW / 2;
-      const isBottom = centerY > winH / 2;
-
-      if (isBottom && isRight) {
-        setQuadrant('bottom-right');
-        setCoords({ bottom: Math.max(8, winH - (newTop + initial.height)), right: Math.max(8, winW - (newLeft + initial.width)) });
-      } else if (isBottom && !isRight) {
-        setQuadrant('bottom-left');
-        setCoords({ bottom: Math.max(8, winH - (newTop + initial.height)), left: newLeft });
-      } else if (!isBottom && isRight) {
-        setQuadrant('top-right');
-        setCoords({ top: newTop, right: Math.max(8, winW - (newLeft + initial.width)) });
-      } else {
-        setQuadrant('top-left');
-        setCoords({ top: newTop, left: newLeft });
-      }
+      // Use top & left during active drag for fluid 60fps movement without anchor jumping
+      setCoords({ top: newTop, left: newLeft });
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDragging || e.touches.length === 0) return;
+      e.preventDefault(); // Prevent touch scroll during widget drag
       const touch = e.touches[0];
       const dx = touch.clientX - dragStartRef.current.x;
       const dy = touch.clientY - dragStartRef.current.y;
@@ -187,29 +172,42 @@ export default function StandardCalculatorWidget({
       const newLeft = Math.max(8, Math.min(winW - initial.width - 8, initial.left + dx));
       const newTop = Math.max(8, Math.min(winH - initial.height - 8, initial.top + dy));
 
-      const centerX = newLeft + initial.width / 2;
-      const centerY = newTop + initial.height / 2;
-      const isRight = centerX > winW / 2;
-      const isBottom = centerY > winH / 2;
-
-      if (isBottom && isRight) {
-        setQuadrant('bottom-right');
-        setCoords({ bottom: Math.max(8, winH - (newTop + initial.height)), right: Math.max(8, winW - (newLeft + initial.width)) });
-      } else if (isBottom && !isRight) {
-        setQuadrant('bottom-left');
-        setCoords({ bottom: Math.max(8, winH - (newTop + initial.height)), left: newLeft });
-      } else if (!isBottom && isRight) {
-        setQuadrant('top-right');
-        setCoords({ top: newTop, right: Math.max(8, winW - (newLeft + initial.width)) });
-      } else {
-        setQuadrant('top-left');
-        setCoords({ top: newTop, left: newLeft });
-      }
+      // Use top & left during active drag for fluid 60fps movement without anchor jumping
+      setCoords({ top: newTop, left: newLeft });
     };
 
     const handleEnd = () => {
       if (isDragging) {
         setIsDragging(false);
+        // On drag end, lock final quadrant anchor relative to screen center
+        if (hasDraggedRef.current && widgetRef.current) {
+          const rect = widgetRef.current.getBoundingClientRect();
+          const winW = window.innerWidth;
+          const winH = window.innerHeight;
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+
+          const isRight = centerX > winW / 2;
+          const isBottom = centerY > winH / 2;
+
+          const headerHeight = 36;
+          const headerBottom = isMinimized ? rect.bottom : (quadrant.startsWith('bottom') ? rect.bottom - (rect.height - headerHeight) : rect.top + headerHeight);
+          const bottomDist = Math.max(8, winH - headerBottom);
+
+          if (isBottom && isRight) {
+            setQuadrant('bottom-right');
+            setCoords({ bottom: bottomDist, right: Math.max(8, winW - rect.right) });
+          } else if (isBottom && !isRight) {
+            setQuadrant('bottom-left');
+            setCoords({ bottom: bottomDist, left: Math.max(8, rect.left) });
+          } else if (!isBottom && isRight) {
+            setQuadrant('top-right');
+            setCoords({ top: Math.max(8, rect.top), right: Math.max(8, winW - rect.right) });
+          } else {
+            setQuadrant('top-left');
+            setCoords({ top: Math.max(8, rect.top), left: Math.max(8, rect.left) });
+          }
+        }
       }
     };
 
