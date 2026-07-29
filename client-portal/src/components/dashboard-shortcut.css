@@ -1,43 +1,42 @@
-/* POS Shortcut Button inside Mobile Sidebar Navigation (#mobile-sidebar-widget-area) */
-
-#mobile-sidebar-widget-area {
-  margin-top: var(--space-2);
-  width: 100%;
-}
+/* Floating Dashboard POS Shortcut Pill Button — Floating Screen Division (Mobile View) */
 
 .dashboard-shortcut-container {
+  position: fixed;
+  bottom: 80px; /* Floating above mobile bottom nav / screen corner */
+  right: 16px;
+  z-index: 9998;
+  user-select: none;
+  touch-action: none;
   display: flex;
   align-items: center;
-  width: 100%;
-  padding: 0 4px;
+  width: auto;
 }
 
 .shortcut-pill-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
   background: var(--color-accent);
   color: var(--color-accent-text, #ffffff);
   border: 1px solid var(--color-accent);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   font-family: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   font-weight: var(--weight-bold);
   letter-spacing: 0.2px;
   cursor: pointer;
   white-space: nowrap;
-  transition: transform 0.15s ease-out, background 0.15s, opacity 0.15s;
+  transition: transform 0.15s ease-out, background 0.15s, box-shadow 0.15s;
 }
 
 .shortcut-pill-btn:hover {
-  opacity: 0.95;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.32);
 }
 
 .shortcut-pill-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.94);
   background: var(--color-accent-hover);
 }
