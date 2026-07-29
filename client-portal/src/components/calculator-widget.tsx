@@ -69,18 +69,26 @@ export default function StandardCalculatorWidget({
     }
   };
 
-  // Initial calculation on mount
+  // Initial calculation on mount (preserve default bottom-right placement until dragged)
   useEffect(() => {
-    updateQuadrantAnchor();
-    const handleResize = () => updateQuadrantAnchor();
+    const handleResize = () => {
+      if (hasDraggedRef.current) {
+        updateQuadrantAnchor();
+      }
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const toggleMinimize = () => {
-    const rect = widgetRef.current?.getBoundingClientRect();
-    if (rect) {
-      updateQuadrantAnchor(rect);
+    if (hasDraggedRef.current) {
+      const rect = widgetRef.current?.getBoundingClientRect();
+      if (rect) {
+        updateQuadrantAnchor(rect);
+      }
+    } else {
+      setQuadrant('bottom-right');
+      setCoords({ bottom: 16, right: 16 });
     }
     setIsMinimized(prev => !prev);
   };
