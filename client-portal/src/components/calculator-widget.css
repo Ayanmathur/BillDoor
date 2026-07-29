@@ -3,9 +3,6 @@
    ============================================================ */
 
 .calc-widget-container {
-  position: fixed;
-  bottom: var(--space-4);
-  right: var(--space-4);
   width: 260px;
   max-width: 90vw;
   max-height: 85vh;
@@ -15,12 +12,11 @@
   box-shadow: var(--shadow-xl);
   z-index: 10000;
   display: flex;
-  flex-direction: column;
   overflow: hidden;
   cursor: grab;
   user-select: none;
   touch-action: none;
-  transition: transform-origin 0.15s ease-out, opacity 0.2s;
+  transition: transform-origin 0.15s ease-out, opacity 0.2s, width 0.15s ease-out;
   box-sizing: border-box;
 }
 
@@ -40,7 +36,7 @@
 }
 
 .calc-widget-container.minimized {
-  width: 180px;
+  width: 180px !important;
   border-radius: var(--radius-md);
 }
 
@@ -173,7 +169,7 @@
   filter: brightness(0.95);
 }
 
-/* Portrait & Mobile Sidebar Widget Overrides */
+/* Portrait & Mobile Overrides */
 @media (max-width: 768px) {
   .calc-widget-container {
     width: 260px;

@@ -19,77 +19,66 @@ export default function StandardCalculatorWidget({
 }: StandardCalculatorWidgetProps) {
   const [display, setDisplay] = useState('0');
   const [equation, setEquation] = useState('');
-  const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isMinimized, setIsMinimized] = useState(true);
-  const [transformOrigin, setTransformOrigin] = useState('bottom right');
-  const [quadrant, setQuadrant] = useState({ vertical: 'bottom', horizontal: 'right' });
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Widget anchor state: screen coordinates
+  const [coords, setCoords] = useState<{
+    top?: number;
+    bottom?: number;
+    left?: number;
+    right?: number;
+  }>({ bottom: 16, right: 16 });
+
+  // Current quadrant: top-right, top-left, bottom-right, bottom-left
+  const [quadrant, setQuadrant] = useState<'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'>('bottom-right');
 
   const widgetRef = useRef<HTMLDivElement>(null);
-  const dragStartRef = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
-
+  const dragStartRef = useRef({ x: 0, y: 0, initialRect: { top: 0, left: 0, bottom: 0, right: 0, width: 0, height: 0 } });
   const hasDraggedRef = useRef(false);
 
-  // Calculate screen quadrant expansion origin whenever expanded
-  const updateQuadrantOrigin = () => {
-    if (!widgetRef.current) return;
-    const rect = widgetRef.current.getBoundingClientRect();
+  // Recalculate quadrant and anchor coordinates based on current screen position
+  const updateQuadrantAnchor = (currentRect?: DOMRect) => {
+    const rect = currentRect || widgetRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
     const winW = window.innerWidth;
     const winH = window.innerHeight;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
-    const isRight = rect.left + rect.width / 2 > winW / 2;
-    const isBottom = rect.top + rect.height / 2 > winH / 2;
+    const isRight = centerX > winW / 2;
+    const isBottom = centerY > winH / 2;
 
-    const vertical = isBottom ? 'bottom' : 'top';
-    const horizontal = isRight ? 'right' : 'left';
-
-    setTransformOrigin(`${vertical} ${horizontal}`);
-    setQuadrant({ vertical, horizontal });
+    if (isBottom && isRight) {
+      setQuadrant('bottom-right');
+      setCoords({ bottom: Math.max(8, winH - rect.bottom), right: Math.max(8, winW - rect.right) });
+    } else if (isBottom && !isRight) {
+      setQuadrant('bottom-left');
+      setCoords({ bottom: Math.max(8, winH - rect.bottom), left: Math.max(8, rect.left) });
+    } else if (!isBottom && isRight) {
+      setQuadrant('top-right');
+      setCoords({ top: Math.max(8, rect.top), right: Math.max(8, winW - rect.right) });
+    } else {
+      setQuadrant('top-left');
+      setCoords({ top: Math.max(8, rect.top), left: Math.max(8, rect.left) });
+    }
   };
 
-  // Initial quadrant calculation on mount and window resize
+  // Initial calculation on mount
   useEffect(() => {
-    updateQuadrantOrigin();
-    const handleResize = () => updateQuadrantOrigin();
+    updateQuadrantAnchor();
+    const handleResize = () => updateQuadrantAnchor();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const toggleMinimize = () => {
-    if (!widgetRef.current) {
-      setIsMinimized(prev => !prev);
-      return;
-    }
-    const rect = widgetRef.current.getBoundingClientRect();
-    const winW = window.innerWidth;
-    const winH = window.innerHeight;
-
-    const isRight = rect.left + rect.width / 2 > winW / 2;
-    const isBottom = rect.top + rect.height / 2 > winH / 2;
-
-    const vertical = isBottom ? 'bottom' : 'top';
-    const horizontal = isRight ? 'right' : 'left';
-
-    setTransformOrigin(`${vertical} ${horizontal}`);
-    setQuadrant({ vertical, horizontal });
-
-    setIsMinimized(prev => {
-      const nextMinimized = !prev;
-      if (horizontal === 'left') {
-        if (!nextMinimized) {
-          // Opening on left side: shift position X right by 80px so left edge remains stationary and expands RIGHT
-          setPosition(p => ({ ...p, x: p.x + 80 }));
-        } else {
-          // Closing on left side: shift position X left by 80px
-          setPosition(p => ({ ...p, x: p.x - 80 }));
-        }
-      }
-      return nextMinimized;
-    });
+    updateQuadrantAnchor();
+    setIsMinimized(prev => !prev);
   };
 
   const handleHeaderClick = (e: ReactMouseEvent) => {
-    // If clicked on close button, let close handler handle it
     if ((e.target as HTMLElement).closest('.calc-close-btn')) return;
     if (hasDraggedRef.current) {
       hasDraggedRef.current = false;
@@ -98,17 +87,25 @@ export default function StandardCalculatorWidget({
     toggleMinimize();
   };
 
-  // Start Dragging (Mouse & Touch anywhere on header)
+  // Start Dragging
   const startDrag = (clientX: number, clientY: number, target: HTMLElement) => {
     if (target.closest('.calc-close-btn')) return;
-    updateQuadrantOrigin();
+    const rect = widgetRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
     setIsDragging(true);
     hasDraggedRef.current = false;
     dragStartRef.current = {
       x: clientX,
       y: clientY,
-      posX: position.x,
-      posY: position.y,
+      initialRect: {
+        top: rect.top,
+        left: rect.left,
+        bottom: window.innerHeight - rect.bottom,
+        right: window.innerWidth - rect.right,
+        width: rect.width,
+        height: rect.height,
+      },
     };
   };
 
@@ -131,11 +128,32 @@ export default function StandardCalculatorWidget({
       if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
         hasDraggedRef.current = true;
       }
-      setPosition({
-        x: dragStartRef.current.posX + dx,
-        y: dragStartRef.current.posY + dy,
-      });
-      updateQuadrantOrigin();
+
+      const winW = window.innerWidth;
+      const winH = window.innerHeight;
+      const initial = dragStartRef.current.initialRect;
+
+      const newLeft = Math.max(8, Math.min(winW - initial.width - 8, initial.left + dx));
+      const newTop = Math.max(8, Math.min(winH - initial.height - 8, initial.top + dy));
+
+      const centerX = newLeft + initial.width / 2;
+      const centerY = newTop + initial.height / 2;
+      const isRight = centerX > winW / 2;
+      const isBottom = centerY > winH / 2;
+
+      if (isBottom && isRight) {
+        setQuadrant('bottom-right');
+        setCoords({ bottom: Math.max(8, winH - (newTop + initial.height)), right: Math.max(8, winW - (newLeft + initial.width)) });
+      } else if (isBottom && !isRight) {
+        setQuadrant('bottom-left');
+        setCoords({ bottom: Math.max(8, winH - (newTop + initial.height)), left: newLeft });
+      } else if (!isBottom && isRight) {
+        setQuadrant('top-right');
+        setCoords({ top: newTop, right: Math.max(8, winW - (newLeft + initial.width)) });
+      } else {
+        setQuadrant('top-left');
+        setCoords({ top: newTop, left: newLeft });
+      }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -146,17 +164,37 @@ export default function StandardCalculatorWidget({
       if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
         hasDraggedRef.current = true;
       }
-      setPosition({
-        x: dragStartRef.current.posX + dx,
-        y: dragStartRef.current.posY + dy,
-      });
-      updateQuadrantOrigin();
+
+      const winW = window.innerWidth;
+      const winH = window.innerHeight;
+      const initial = dragStartRef.current.initialRect;
+
+      const newLeft = Math.max(8, Math.min(winW - initial.width - 8, initial.left + dx));
+      const newTop = Math.max(8, Math.min(winH - initial.height - 8, initial.top + dy));
+
+      const centerX = newLeft + initial.width / 2;
+      const centerY = newTop + initial.height / 2;
+      const isRight = centerX > winW / 2;
+      const isBottom = centerY > winH / 2;
+
+      if (isBottom && isRight) {
+        setQuadrant('bottom-right');
+        setCoords({ bottom: Math.max(8, winH - (newTop + initial.height)), right: Math.max(8, winW - (newLeft + initial.width)) });
+      } else if (isBottom && !isRight) {
+        setQuadrant('bottom-left');
+        setCoords({ bottom: Math.max(8, winH - (newTop + initial.height)), left: newLeft });
+      } else if (!isBottom && isRight) {
+        setQuadrant('top-right');
+        setCoords({ top: newTop, right: Math.max(8, winW - (newLeft + initial.width)) });
+      } else {
+        setQuadrant('top-left');
+        setCoords({ top: newTop, left: newLeft });
+      }
     };
 
     const handleEnd = () => {
       if (isDragging) {
         setIsDragging(false);
-        updateQuadrantOrigin();
       }
     };
 
@@ -217,7 +255,6 @@ export default function StandardCalculatorWidget({
     setEquation('');
   };
 
-  // Quick GST & Discount helpers
   const handlePlusGst = (gstPercent: number = defaultGstPercent) => {
     const val = parseFloat(display) || 0;
     const withGst = val + (val * (gstPercent / 100));
@@ -235,7 +272,7 @@ export default function StandardCalculatorWidget({
     setDisplay(String(Math.round(afterDisc * 100) / 100));
   };
 
-  // Global Keyboard Listener when expanded
+  // Keyboard support when expanded
   useEffect(() => {
     if (isMinimized) return;
 
@@ -271,16 +308,23 @@ export default function StandardCalculatorWidget({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isMinimized, display, equation]);
 
+  // Compute inline position styles based on active anchor
+  const stylePos: React.CSSProperties = {
+    position: 'fixed',
+    top: coords.top !== undefined ? `${coords.top}px` : undefined,
+    bottom: coords.bottom !== undefined ? `${coords.bottom}px` : undefined,
+    left: coords.left !== undefined ? `${coords.left}px` : undefined,
+    right: coords.right !== undefined ? `${coords.right}px` : undefined,
+    transformOrigin: quadrant.replace('-', ' '),
+  };
+
   return (
     <div 
-      className={`calc-widget-container ${isMinimized ? 'minimized' : ''} quadrant-${quadrant.vertical}-${quadrant.horizontal}`}
+      className={`calc-widget-container ${isMinimized ? 'minimized' : ''} quadrant-${quadrant}`}
       ref={widgetRef}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
-      style={{
-        transform: `translate(${position.x}px, ${position.y}px)`,
-        transformOrigin,
-      }}
+      style={stylePos}
     >
       <div className="calc-widget-header" onClick={handleHeaderClick} style={{ cursor: 'pointer' }} title={isMinimized ? 'Click to Expand Calculator' : 'Click to Minimize Calculator'}>
         <div className="calc-widget-title">
