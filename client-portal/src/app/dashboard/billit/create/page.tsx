@@ -568,8 +568,8 @@ export default function CreateBillPage() {
           marginBottom: 'var(--space-4)',
           boxShadow: 'var(--shadow-md)',
           position: 'sticky',
-          top: 0,
-          zIndex: 20,
+          top: 56,
+          zIndex: 15,
         }}>
           <span style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 'bold', opacity: 0.9 }}>POS Running Total</span>
           <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 900, fontFamily: 'monospace' }}>₹{grandTotal.toFixed(2)}</span>
@@ -712,11 +712,11 @@ export default function CreateBillPage() {
 
         {/* Line items table */}
         {items.length > 0 && (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
+          <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch', marginBottom: 'var(--space-3)' }}>
+            <table style={{ width: '100%', minWidth: 540, borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--color-border)' }}>
-                  <th style={{ textAlign: 'left', padding: 'var(--space-2)', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>Description</th>
+                  <th style={{ textAlign: 'left', padding: 'var(--space-2)', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', minWidth: 160 }}>Description</th>
                   <th style={{ width: 60, padding: 'var(--space-2)', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>Qty</th>
                   <th style={{ width: 80, padding: 'var(--space-2)', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>Price</th>
                   <th style={{ width: 70, padding: 'var(--space-2)', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>Disc.</th>
@@ -731,9 +731,9 @@ export default function CreateBillPage() {
                   const gst = lineTotal * (item.gstPercent / 100);
                   return (
                     <tr key={item.id} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
-                      <td style={{ padding: 'var(--space-1)' }}>
+                      <td style={{ padding: 'var(--space-1)', minWidth: 160 }}>
                         <input className="input-field" value={item.description} onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                          style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)' }} />
+                          style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1) var(--space-2)', width: '100%' }} />
                       </td>
                       <td style={{ padding: 'var(--space-1)' }}>
                         <input className="input-field" type="number" min="0.01" step="0.01" value={item.quantity} onChange={(e) => updateItem(item.id, 'quantity', Number(e.target.value))}

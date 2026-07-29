@@ -40,11 +40,13 @@
   background: var(--color-bg-elevated, var(--color-bg-primary));
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .bills-table {
   width: 100%;
+  min-width: 600px;
   border-collapse: collapse;
 }
 

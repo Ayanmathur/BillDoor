@@ -451,8 +451,8 @@ export default function CatalogPage() {
           <p>No items yet. Add your products or services to get started.</p>
         </div>
       ) : (
-        <div className="table-responsive" style={{ background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }}>
-          <table className="table" style={{ width: '100%' }}>
+        <div className="table-responsive" style={{ background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table className="table" style={{ width: '100%', minWidth: 560 }}>
             <thead>
               <tr>
                 <th>Name</th>

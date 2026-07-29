@@ -10,6 +10,13 @@
   padding: var(--space-6, 32px);
   display: flex;
   justify-content: center;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .bill-page {
+    padding: 12px 8px;
+  }
 }
 
 .bill-container {
@@ -20,6 +27,7 @@
   border: 1px solid var(--color-border-subtle, #E5E5E5);
   box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Presentational preview widths based on clients.default_bill_size */
@@ -169,11 +177,13 @@
 /* ---- Line Items ---- */
 .bill-items {
   padding: 0 var(--space-5);
+  overflow-x: auto;
+  WebkitOverflowScrolling: touch;
 }
 
 .bill-items-header {
   display: grid;
-  grid-template-columns: 1fr 50px 70px 50px 70px;
+  grid-template-columns: minmax(100px, 1fr) 40px 60px 45px 65px;
   gap: 4px;
   padding: var(--space-2) 0;
   border-bottom: 1px solid #DDD;
@@ -186,13 +196,14 @@
 
 .bill-item-row {
   display: grid;
-  grid-template-columns: 1fr 50px 70px 50px 70px;
+  grid-template-columns: minmax(100px, 1fr) 40px 60px 45px 65px;
   gap: 4px;
   padding: var(--space-2) 0;
   border-bottom: 1px solid #F0F0F0;
   font-size: 12px;
   color: #333;
   align-items: center;
+  word-break: break-word;
 }
 
 .bill-item-row:last-child {
