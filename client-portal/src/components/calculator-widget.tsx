@@ -47,11 +47,17 @@ export default function StandardCalculatorWidget({
     setQuadrant({ vertical, horizontal });
   };
 
+  // Initial quadrant calculation on mount and window resize
+  useEffect(() => {
+    updateQuadrantOrigin();
+    const handleResize = () => updateQuadrantOrigin();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const toggleMinimize = () => {
-    if (isMinimized) {
-      updateQuadrantOrigin();
-    }
-    setIsMinimized(!isMinimized);
+    updateQuadrantOrigin();
+    setIsMinimized(prev => !prev);
   };
 
   const handleHeaderClick = (e: ReactMouseEvent) => {

@@ -260,7 +260,9 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
             {collapsed ? <PanelLeft size={18} /> : <><PanelLeftClose size={18} /> <span className="nav-item-label">Collapse</span></>}
           </button>
 
-          <div id="mobile-sidebar-widget-area"></div>
+          <div id="mobile-sidebar-widget-area">
+            <DashboardShortcut />
+          </div>
         </div>
       </nav>
 
@@ -339,9 +341,6 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
       <main className="shell-content">
         {children}
       </main>
-
-      {/* Floating Dashboard POS Shortcut Pill Button (Mobile View) */}
-      <DashboardShortcut />
     </div>
   );
 }

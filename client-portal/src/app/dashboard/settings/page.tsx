@@ -642,6 +642,7 @@ export default function SettingsPage() {
                     className="input-field"
                     value={mobileShortcutAction}
                     onChange={(e) => setMobileShortcutAction(e.target.value as any)}
+                    style={{ width: '385.6px', maxWidth: '100%', height: '40px' }}
                   >
                     <option value="new_bill">Create New Bill (/dashboard/billit/create)</option>
                     <option value="new_appointment">Book Appointment (/dashboard/appointer/create)</option>
