@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Plus, Calendar, FileText, X } from 'lucide-react';
+import { Plus, Calendar, FileText } from 'lucide-react';
 import { fetchSettingsAction } from '@/app/dashboard/settings/actions';
 import './dashboard-shortcut.css';
 
@@ -13,16 +13,14 @@ export default function DashboardShortcut() {
   const [posModeEnabled, setPosModeEnabled] = useState<boolean | null>(null);
   const [shortcutAction, setShortcutAction] = useState<'new_bill' | 'new_appointment'>('new_bill');
   const [isMobile, setIsMobile] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [transformOrigin, setTransformOrigin] = useState('bottom right');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
   const hasDraggedRef = useRef(false);
 
-  // 1. Check screen size (< 640px) and page route (/dashboard only)
+  // Check screen size (< 640px) and page route (/dashboard only)
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 640);
@@ -32,7 +30,7 @@ export default function DashboardShortcut() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // 2. Fetch POS Settings
+  // Fetch POS Settings
   useEffect(() => {
     if (pathname !== '/dashboard') return;
 
@@ -48,35 +46,20 @@ export default function DashboardShortcut() {
     loadPos();
   }, [pathname]);
 
-  // Quadrant detection for 4-corner expansion physics
-  const updateQuadrantOrigin = () => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const winW = window.innerWidth;
-    const winH = window.innerHeight;
+  const targetPath = shortcutAction === 'new_appointment' ? '/dashboard/appointer/create' : '/dashboard/billit/create';
+  const buttonText = shortcutAction === 'new_appointment' ? '+ Book' : '+ New Bill';
+  const ActionIcon = shortcutAction === 'new_appointment' ? Calendar : FileText;
 
-    const isRight = rect.left + rect.width / 2 > winW / 2;
-    const isBottom = rect.top + rect.height / 2 > winH / 2;
-
-    const vertical = isBottom ? 'bottom' : 'top';
-    const horizontal = isRight ? 'right' : 'left';
-
-    setTransformOrigin(`${vertical} ${horizontal}`);
-  };
-
-  const handleToggleOpen = () => {
+  const handleClick = () => {
     if (hasDraggedRef.current) {
       hasDraggedRef.current = false;
       return;
     }
-    updateQuadrantOrigin();
-    setIsOpen(prev => !prev);
+    router.push(targetPath);
   };
 
   // Dragging logic (Touch & Mouse)
-  const startDrag = (clientX: number, clientY: number, target: HTMLElement) => {
-    if (target.closest('.shortcut-popover-item')) return;
-    updateQuadrantOrigin();
+  const startDrag = (clientX: number, clientY: number) => {
     setIsDragging(true);
     hasDraggedRef.current = false;
     dragStartRef.current = {
@@ -88,13 +71,13 @@ export default function DashboardShortcut() {
   };
 
   const handleMouseDown = (e: ReactMouseEvent) => {
-    startDrag(e.clientX, e.clientY, e.target as HTMLElement);
+    startDrag(e.clientX, e.clientY);
   };
 
   const handleTouchStart = (e: ReactTouchEvent) => {
     if (e.touches.length > 0) {
       const touch = e.touches[0];
-      startDrag(touch.clientX, touch.clientY, e.target as HTMLElement);
+      startDrag(touch.clientX, touch.clientY);
     }
   };
 
@@ -129,7 +112,6 @@ export default function DashboardShortcut() {
     const handleEnd = () => {
       if (isDragging) {
         setIsDragging(false);
-        updateQuadrantOrigin();
       }
     };
 
@@ -151,43 +133,24 @@ export default function DashboardShortcut() {
   // Do not render if not on mobile, not on dashboard, or POS mode is OFF
   if (!isMobile || pathname !== '/dashboard' || posModeEnabled === false) return null;
 
-  const targetPath = shortcutAction === 'new_appointment' ? '/dashboard/appointer/create' : '/dashboard/billit/create';
-  const actionLabel = shortcutAction === 'new_appointment' ? 'Book Appointment' : 'Create New Bill';
-  const ActionIcon = shortcutAction === 'new_appointment' ? Calendar : FileText;
-
   return (
     <div
       ref={containerRef}
-      className={`dashboard-shortcut-container ${isOpen ? 'open' : ''}`}
+      className="dashboard-shortcut-container"
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
-        transformOrigin,
       }}
     >
-      {/* 4-Corner Expanded Popover Menu */}
-      {isOpen && (
-        <div className="shortcut-popover-menu" style={{ transformOrigin }}>
-          <button
-            type="button"
-            className="shortcut-popover-item primary"
-            onClick={() => { setIsOpen(false); router.push(targetPath); }}
-          >
-            <ActionIcon size={16} />
-            <span>{actionLabel}</span>
-          </button>
-        </div>
-      )}
-
-      {/* Floating Trigger Button */}
       <button
         type="button"
-        className="shortcut-trigger-btn"
-        onClick={handleToggleOpen}
-        title="Quick POS Shortcut"
+        className="shortcut-pill-btn"
+        onClick={handleClick}
+        title={shortcutAction === 'new_appointment' ? 'Book New Appointment' : 'Create New Bill'}
       >
-        {isOpen ? <X size={20} /> : <Plus size={20} />}
+        <ActionIcon size={16} />
+        <span>{buttonText}</span>
       </button>
     </div>
   );

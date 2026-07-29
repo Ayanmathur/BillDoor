@@ -23,6 +23,16 @@
   transition: transform-origin 0.15s ease-out, opacity 0.2s;
 }
 
+.calc-widget-container.quadrant-bottom-right,
+.calc-widget-container.quadrant-bottom-left {
+  flex-direction: column-reverse;
+}
+
+.calc-widget-container.quadrant-top-right,
+.calc-widget-container.quadrant-top-left {
+  flex-direction: column;
+}
+
 .calc-widget-container:active {
   cursor: grabbing;
 }

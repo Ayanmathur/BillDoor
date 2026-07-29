@@ -87,6 +87,16 @@ export default function SettingsPage() {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleting, setDeleting] = useState(false);
 
+  // POS Settings State
+  const [posModeEnabled, setPosModeEnabled] = useState(true);
+  const [mobileShortcutAction, setMobileShortcutAction] = useState<'new_bill' | 'new_appointment'>('new_bill');
+  const [customPcHotkeys, setCustomPcHotkeys] = useState<Record<string, string>>({
+    newBill: 'F2',
+    scanBarcode: 'F4',
+    appointerToday: 'F3',
+    printBill: 'F8',
+  });
+
   useEffect(() => {
     async function load() {
       const result = await fetchSettingsAction();
@@ -236,16 +246,6 @@ export default function SettingsPage() {
   }
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '20vh' }}><Loader2 size={24} className="spinner" /></div>;
-
-  // POS Settings State
-  const [posModeEnabled, setPosModeEnabled] = useState(true);
-  const [mobileShortcutAction, setMobileShortcutAction] = useState<'new_bill' | 'new_appointment'>('new_bill');
-  const [customPcHotkeys, setCustomPcHotkeys] = useState<Record<string, string>>({
-    newBill: 'F2',
-    scanBarcode: 'F4',
-    appointerToday: 'F3',
-    printBill: 'F8',
-  });
 
   const tabs: { key: SettingsTab; label: string; icon: React.ReactNode }[] = [
     { key: 'business', label: 'Business', icon: <Building2 size={14} /> },

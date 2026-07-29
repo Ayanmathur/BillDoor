@@ -23,6 +23,7 @@ export default function StandardCalculatorWidget({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isMinimized, setIsMinimized] = useState(true);
   const [transformOrigin, setTransformOrigin] = useState('bottom right');
+  const [quadrant, setQuadrant] = useState({ vertical: 'bottom', horizontal: 'right' });
 
   const widgetRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
@@ -41,6 +42,7 @@ export default function StandardCalculatorWidget({
     const horizontal = isRight ? 'right' : 'left';
 
     setTransformOrigin(`${vertical} ${horizontal}`);
+    setQuadrant({ vertical, horizontal });
   };
 
   const toggleMinimize = () => {
@@ -216,7 +218,7 @@ export default function StandardCalculatorWidget({
 
   return (
     <div 
-      className={`calc-widget-container ${isMinimized ? 'minimized' : ''}`}
+      className={`calc-widget-container ${isMinimized ? 'minimized' : ''} quadrant-${quadrant.vertical}-${quadrant.horizontal}`}
       ref={widgetRef}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
