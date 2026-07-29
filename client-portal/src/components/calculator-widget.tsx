@@ -312,7 +312,7 @@ export default function StandardCalculatorWidget({
               +{defaultGstPercent}%
             </button>
             <button className="calc-btn" onClick={() => handleMinusDisc(defaultDiscountPercent, defaultDiscountType)} title={`Subtract ${defaultDiscountType === 'flat' ? '₹' : ''}${defaultDiscountPercent}${defaultDiscountType === 'percent' ? '%' : ''} Discount`}>
-              -{defaultDiscountType === 'flat' ? '₹' : ''}{defaultDiscountPercent}{defaultDiscountType === 'percent' ? '%' : ''}
+              {defaultDiscountType === 'flat' ? `-₹${defaultDiscountPercent}` : `-${defaultDiscountPercent}%`}
             </button>
 
             <button className="calc-btn" onClick={() => handleOp('÷')}>÷</button>
