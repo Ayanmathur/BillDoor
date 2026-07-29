@@ -860,12 +860,25 @@ export default function CreateBillPage() {
         </div>
       </div>
 
-      {/* Floating Shop Calculator Widget with 4-Quadrant Logic */}
-      <StandardCalculatorWidget
-        defaultGstPercent={defaultGstPercent}
-        defaultDiscountPercent={defaultDiscountVal}
-        defaultDiscountType={defaultDiscountType}
-      />
+      {/* Calculator Widget */}
+      {isPortraitMobile ? (
+        typeof document !== 'undefined' && document.getElementById('mobile-sidebar-widget-area') 
+          ? createPortal(
+              <StandardCalculatorWidget
+                defaultGstPercent={defaultGstPercent}
+                defaultDiscountPercent={defaultDiscountVal}
+                defaultDiscountType={defaultDiscountType}
+              />,
+              document.getElementById('mobile-sidebar-widget-area')!
+            )
+          : null
+      ) : (
+        <StandardCalculatorWidget
+          defaultGstPercent={defaultGstPercent}
+          defaultDiscountPercent={defaultDiscountVal}
+          defaultDiscountType={defaultDiscountType}
+        />
+      )}
       {/* Camera Barcode Scanner Modal with Body Scroll Lock & Isolated Stream */}
       {showCameraScanner && (
         <CameraBarcodeModal
