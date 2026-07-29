@@ -171,15 +171,6 @@
 
 /* Portrait & Mobile Overrides */
 @media (max-width: 768px) {
-  #mobile-sidebar-widget-area .calc-widget-container {
-    position: relative !important;
-    top: auto !important;
-    bottom: auto !important;
-    left: auto !important;
-    right: auto !important;
-    transform: none !important;
-  }
-
   .calc-widget-container {
     width: 260px;
     max-width: 88vw;
