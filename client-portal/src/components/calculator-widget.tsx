@@ -74,7 +74,10 @@ export default function StandardCalculatorWidget({
   }, []);
 
   const toggleMinimize = () => {
-    updateQuadrantAnchor();
+    const rect = widgetRef.current?.getBoundingClientRect();
+    if (rect) {
+      updateQuadrantAnchor(rect);
+    }
     setIsMinimized(prev => !prev);
   };
 
