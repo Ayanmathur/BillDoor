@@ -183,6 +183,10 @@
     border: 1px solid var(--color-border);
   }
 
+  .calc-widget-container.minimized {
+    width: 180px !important;
+  }
+
   .calc-btn {
     height: 34px;
     font-size: 12px;
