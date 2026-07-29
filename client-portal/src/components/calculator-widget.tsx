@@ -56,8 +56,36 @@ export default function StandardCalculatorWidget({
   }, []);
 
   const toggleMinimize = () => {
-    updateQuadrantOrigin();
-    setIsMinimized(prev => !prev);
+    if (!widgetRef.current) {
+      setIsMinimized(prev => !prev);
+      return;
+    }
+    const rect = widgetRef.current.getBoundingClientRect();
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+
+    const isRight = rect.left + rect.width / 2 > winW / 2;
+    const isBottom = rect.top + rect.height / 2 > winH / 2;
+
+    const vertical = isBottom ? 'bottom' : 'top';
+    const horizontal = isRight ? 'right' : 'left';
+
+    setTransformOrigin(`${vertical} ${horizontal}`);
+    setQuadrant({ vertical, horizontal });
+
+    setIsMinimized(prev => {
+      const nextMinimized = !prev;
+      if (horizontal === 'left') {
+        if (!nextMinimized) {
+          // Opening on left side: shift position X right by 80px so left edge remains stationary and expands RIGHT
+          setPosition(p => ({ ...p, x: p.x + 80 }));
+        } else {
+          // Closing on left side: shift position X left by 80px
+          setPosition(p => ({ ...p, x: p.x - 80 }));
+        }
+      }
+      return nextMinimized;
+    });
   };
 
   const handleHeaderClick = (e: ReactMouseEvent) => {
