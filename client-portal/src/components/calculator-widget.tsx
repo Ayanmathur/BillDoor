@@ -259,7 +259,7 @@ export default function StandardCalculatorWidget({
           <Calculator size={14} /> Shop Calculator
         </div>
         <div className="calc-widget-actions">
-          <button type="button" onClick={toggleMinimize} title={isMinimized ? 'Expand' : 'Minimize'}>
+          <button type="button" onClick={(e) => { e.stopPropagation(); toggleMinimize(); }} title={isMinimized ? 'Expand' : 'Minimize'}>
             <Minus size={14} />
           </button>
           {onClose && (

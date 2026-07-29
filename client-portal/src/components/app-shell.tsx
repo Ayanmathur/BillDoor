@@ -259,10 +259,10 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
           <button className="sidebar-collapse-btn" onClick={toggleCollapse} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
             {collapsed ? <PanelLeft size={18} /> : <><PanelLeftClose size={18} /> <span className="nav-item-label">Collapse</span></>}
           </button>
+        </div>
 
-          <div id="mobile-sidebar-widget-area">
-            <DashboardShortcut />
-          </div>
+        <div id="mobile-sidebar-widget-area">
+          <DashboardShortcut />
         </div>
       </nav>
 
