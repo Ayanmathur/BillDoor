@@ -28,6 +28,8 @@ export default function StandardCalculatorWidget({
   const widgetRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
 
+  const hasDraggedRef = useRef(false);
+
   // Calculate screen quadrant expansion origin whenever expanded
   const updateQuadrantOrigin = () => {
     if (!widgetRef.current) return;
@@ -52,11 +54,22 @@ export default function StandardCalculatorWidget({
     setIsMinimized(!isMinimized);
   };
 
-  // Start Dragging (Mouse & Touch anywhere on container except buttons)
+  const handleHeaderClick = (e: ReactMouseEvent) => {
+    // If clicked on close button, let close handler handle it
+    if ((e.target as HTMLElement).closest('.calc-close-btn')) return;
+    if (hasDraggedRef.current) {
+      hasDraggedRef.current = false;
+      return;
+    }
+    toggleMinimize();
+  };
+
+  // Start Dragging (Mouse & Touch anywhere on header)
   const startDrag = (clientX: number, clientY: number, target: HTMLElement) => {
-    if (target.closest('button, input, select, a')) return;
+    if (target.closest('.calc-close-btn')) return;
     updateQuadrantOrigin();
     setIsDragging(true);
+    hasDraggedRef.current = false;
     dragStartRef.current = {
       x: clientX,
       y: clientY,
@@ -81,10 +94,14 @@ export default function StandardCalculatorWidget({
       if (!isDragging) return;
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        hasDraggedRef.current = true;
+      }
       setPosition({
         x: dragStartRef.current.posX + dx,
         y: dragStartRef.current.posY + dy,
       });
+      updateQuadrantOrigin();
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -92,10 +109,14 @@ export default function StandardCalculatorWidget({
       const touch = e.touches[0];
       const dx = touch.clientX - dragStartRef.current.x;
       const dy = touch.clientY - dragStartRef.current.y;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        hasDraggedRef.current = true;
+      }
       setPosition({
         x: dragStartRef.current.posX + dx,
         y: dragStartRef.current.posY + dy,
       });
+      updateQuadrantOrigin();
     };
 
     const handleEnd = () => {
@@ -227,16 +248,16 @@ export default function StandardCalculatorWidget({
         transformOrigin,
       }}
     >
-      <div className="calc-widget-header">
+      <div className="calc-widget-header" onClick={handleHeaderClick} style={{ cursor: 'pointer' }} title={isMinimized ? 'Click to Expand Calculator' : 'Click to Minimize Calculator'}>
         <div className="calc-widget-title">
           <Calculator size={14} /> Shop Calculator
         </div>
         <div className="calc-widget-actions">
-          <button onClick={toggleMinimize} title={isMinimized ? 'Expand' : 'Minimize'}>
+          <button type="button" onClick={toggleMinimize} title={isMinimized ? 'Expand' : 'Minimize'}>
             <Minus size={14} />
           </button>
           {onClose && (
-            <button onClick={onClose} title="Close">
+            <button type="button" className="calc-close-btn" onClick={onClose} title="Close">
               <X size={14} />
             </button>
           )}
