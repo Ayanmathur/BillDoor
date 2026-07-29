@@ -50,12 +50,16 @@ export default function StandardCalculatorWidget({
     const isRight = centerX > winW / 2;
     const isBottom = centerY > winH / 2;
 
+    const headerHeight = 36;
+    const headerBottom = isMinimized ? rect.bottom : (quadrant.startsWith('bottom') ? rect.bottom - (rect.height - headerHeight) : rect.top + headerHeight);
+    const bottomDist = Math.max(8, winH - headerBottom);
+
     if (isBottom && isRight) {
       setQuadrant('bottom-right');
-      setCoords({ bottom: Math.max(8, winH - rect.bottom), right: Math.max(8, winW - rect.right) });
+      setCoords({ bottom: bottomDist, right: Math.max(8, winW - rect.right) });
     } else if (isBottom && !isRight) {
       setQuadrant('bottom-left');
-      setCoords({ bottom: Math.max(8, winH - rect.bottom), left: Math.max(8, rect.left) });
+      setCoords({ bottom: bottomDist, left: Math.max(8, rect.left) });
     } else if (!isBottom && isRight) {
       setQuadrant('top-right');
       setCoords({ top: Math.max(8, rect.top), right: Math.max(8, winW - rect.right) });

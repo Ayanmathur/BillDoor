@@ -22,6 +22,7 @@
 /* ---- Sidebar ---- */
 .sidebar {
   grid-row: 1 / -1;
+  position: relative;
   background: var(--color-sidebar-bg);
   display: flex;
   flex-direction: column;
