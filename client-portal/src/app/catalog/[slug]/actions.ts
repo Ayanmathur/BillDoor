@@ -34,12 +34,26 @@ export async function fetchCatalogAction(slug: string) {
     return { error: 'Digital catalog is not available for this business.' };
   }
 
+  // Fetch categories for grouping
+  const { data: categories } = await supabase
+    .from('catalog_categories')
+    .select('id, name, display_order')
+    .eq('client_id', client.id)
+    .order('display_order', { ascending: true });
+
   const { data: items } = await supabase
     .from('catalog_items')
-    .select('name, price, type, unit')
+    .select('name, price, type, unit, is_available, category_id')
     .eq('client_id', client.id)
     .eq('active', true)
+    .eq('show_in_catalog', true)
     .order('name', { ascending: true });
+
+  // Build category lookup
+  const categoryMap = new Map<string, { name: string; order: number }>();
+  (categories || []).forEach((c: any) => {
+    categoryMap.set(c.id, { name: c.name, order: c.display_order });
+  });
 
   return {
     business: {
@@ -52,6 +66,9 @@ export async function fetchCatalogAction(slug: string) {
       price: Number(i.price),
       type: i.type,
       unit: i.unit,
+      available: i.is_available !== false,
+      categoryName: i.category_id ? categoryMap.get(i.category_id)?.name || null : null,
+      categoryOrder: i.category_id ? categoryMap.get(i.category_id)?.order ?? 999 : 999,
     })),
   };
 }

@@ -1,4 +1,4 @@
-/* Public Catalog Page — Light mode, customer-facing */
+/* Public Catalog Page — Customer-facing */
 
 .catalog-page {
   min-height: 100dvh;
@@ -12,7 +12,7 @@
   max-width: 600px;
   width: 100%;
   margin: 0 auto;
-  padding: var(--space-6) var(--space-4) 80px; /* space for footer */
+  padding: var(--space-6) var(--space-4) 80px;
   flex: 1;
 }
 
@@ -34,6 +34,10 @@
   color: #6b7280;
   margin: 0;
 }
+
+/* ============================================================
+   Search Filter
+   ============================================================ */
 
 .catalog-filter-container {
   position: relative;
@@ -67,6 +71,50 @@
   box-sizing: border-box;
 }
 
+/* ============================================================
+   Category Groups
+   ============================================================ */
+
+.catalog-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.catalog-category-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.catalog-category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2px;
+}
+
+.catalog-category-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.catalog-category-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  background: #f3f4f6;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+/* ============================================================
+   Item List & Cards
+   ============================================================ */
+
 .catalog-list {
   display: flex;
   flex-direction: column;
@@ -78,9 +126,33 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  border: 1px solid #e5e7eb;
+  border: 1.5px solid #e5e7eb;
   border-radius: 10px;
   background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+
+.catalog-item:hover {
+  border-color: #c7d2fe;
+  box-shadow: 0 2px 8px rgba(79,70,229,0.06);
+}
+
+.catalog-item--selected {
+  border-color: #4f46e5;
+  background: #eef2ff;
+  box-shadow: 0 2px 8px rgba(79,70,229,0.1);
+}
+
+.catalog-item--unavailable {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.catalog-item--unavailable:hover {
+  border-color: #e5e7eb;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
@@ -88,6 +160,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+  flex: 1;
 }
 
 .catalog-item-name {
@@ -95,6 +169,9 @@
   font-weight: 600;
   color: #1a1a2e;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .catalog-item-price {
@@ -102,6 +179,13 @@
   font-weight: 700;
   color: #4f46e5;
   margin: 0;
+}
+
+.catalog-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
 }
 
 .catalog-item-type {
@@ -112,46 +196,133 @@
   color: #4b5563;
   border-radius: 4px;
   font-weight: 500;
-  margin-top: 2px;
-  align-self: flex-start;
 }
 
-.catalog-ask-btn {
+/* ============================================================
+   Availability Badges
+   ============================================================ */
+
+.catalog-availability-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.catalog-availability-badge--available {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.catalog-availability-badge--unavailable {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ============================================================
+   Item Action (Checkbox / N/A)
+   ============================================================ */
+
+.catalog-item-action {
+  flex-shrink: 0;
+  margin-left: 12px;
   display: flex;
   align-items: center;
-  gap: 6px;
+}
+
+.catalog-item-checkbox {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 2px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  background: #fff;
+}
+
+.catalog-item-checkbox--checked {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  color: #fff;
+}
+
+.catalog-item-na-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 4px 8px;
+}
+
+/* ============================================================
+   Selection Bar (Sticky Bottom)
+   ============================================================ */
+
+.catalog-selection-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  z-index: 50;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.catalog-selection-clear {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
   padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.catalog-selection-clear:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.catalog-selection-ask {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
   background: #25d366;
   color: #fff;
   border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.1s ease;
   text-decoration: none;
 }
 
-.catalog-ask-btn:hover {
+.catalog-selection-ask:hover {
   background: #1fbb57;
+  transform: scale(1.02);
 }
 
-.catalog-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: #6b7280;
-}
-
-.catalog-empty h3 {
-  font-size: 16px;
-  color: #374151;
-  margin: 0 0 8px;
-}
-
-.catalog-empty p {
-  font-size: 14px;
-  margin: 0;
-}
+/* ============================================================
+   Footer & Utility
+   ============================================================ */
 
 .catalog-footer {
   position: fixed;
@@ -184,6 +355,23 @@
 .catalog-powered {
   font-size: 11px;
   color: #9ca3af;
+  margin: 0;
+}
+
+.catalog-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.catalog-empty h3 {
+  font-size: 16px;
+  color: #374151;
+  margin: 0 0 8px;
+}
+
+.catalog-empty p {
+  font-size: 14px;
   margin: 0;
 }
 

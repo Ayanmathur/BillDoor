@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  Plus, Search, Edit3, Trash2, Package, Loader2, X, Save, Barcode, Printer, Download, FileSpreadsheet, Upload
+  Plus, Search, Edit3, Trash2, Package, Loader2, X, Save, Barcode, Printer, Download, FileSpreadsheet, Upload, LayoutGrid, Eye, EyeOff
 } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
 import { fuzzyMatch } from '@/shared/fuzzy-search';
@@ -20,6 +20,10 @@ import {
   updateCatalogItemAction,
   deleteCatalogItemAction,
 } from './actions';
+import {
+  toggleItemCatalogVisibilityAction,
+  toggleItemAvailabilityAction,
+} from './categories/actions';
 
 interface CatalogItem {
   id: string;
@@ -36,6 +40,8 @@ interface CatalogItem {
   buffer_after_min: number;
   hsn_sac_code: string | null;
   mrp: number | null;
+  show_in_catalog: boolean;
+  is_available: boolean;
 }
 
 export default function CatalogPage() {
@@ -325,12 +331,15 @@ export default function CatalogPage() {
     <div>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flex: '1 1 220px', maxWidth: 320 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: '1 1 220px', maxWidth: 440 }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-tertiary)' }} />
             <input className="input-field" placeholder="Search items..." value={search} onChange={(e) => setSearch(e.target.value)}
               style={{ paddingLeft: 34, fontSize: 'var(--text-sm)' }} />
           </div>
+          <button className="btn" onClick={() => window.location.href = '/dashboard/billit/catalog/categories'} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)', height: '40px', padding: '0 var(--space-3)', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            <LayoutGrid size={16} /> Build Category
+          </button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <button className="btn" onClick={() => window.location.href = '/dashboard/billit/catalog/bulk-import'} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)', height: '40px', padding: '0 var(--space-4)', borderRadius: 'var(--radius-full)' }}>
@@ -469,6 +478,8 @@ export default function CatalogPage() {
                 <th>Price</th>
                 <th>GST</th>
                 <th>Barcode</th>
+                <th style={{ width: 50, textAlign: 'center' }}>Catalog</th>
+                <th style={{ width: 90, textAlign: 'center' }}>Status</th>
                 <th style={{ width: 80 }}>Actions</th>
               </tr>
             </thead>
@@ -484,6 +495,38 @@ export default function CatalogPage() {
                   <td style={{ whiteSpace: 'nowrap' }}>{item.gst_percent}%</td>
                   <td style={{ fontSize: 'var(--text-xs)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                     {item.barcode_value || <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>}
+                  </td>
+                  <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                    <button
+                      className="action-btn"
+                      title={item.show_in_catalog !== false ? 'Visible in Digital Catalog (click to hide)' : 'Hidden from Digital Catalog (click to show)'}
+                      onClick={async () => {
+                        const newVal = !(item.show_in_catalog !== false);
+                        setItems(prev => prev.map(i => i.id === item.id ? { ...i, show_in_catalog: newVal } : i));
+                        await toggleItemCatalogVisibilityAction({ itemId: item.id, show: newVal });
+                      }}
+                      style={{ color: item.show_in_catalog !== false ? 'var(--color-success, #15803d)' : 'var(--color-text-tertiary)' }}
+                    >
+                      {item.show_in_catalog !== false ? <Eye size={14} /> : <EyeOff size={14} />}
+                    </button>
+                  </td>
+                  <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                    <button
+                      onClick={async () => {
+                        const newVal = !(item.is_available !== false);
+                        setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_available: newVal } : i));
+                        await toggleItemAvailabilityAction({ itemId: item.id, available: newVal });
+                      }}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer', padding: '2px 8px', borderRadius: 'var(--radius-sm)',
+                        fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.02em',
+                        backgroundColor: item.is_available !== false ? '#dcfce7' : '#fee2e2',
+                        color: item.is_available !== false ? '#15803d' : '#dc2626',
+                      }}
+                      title={item.is_available !== false ? 'Available (click to mark unavailable)' : 'Not Available (click to mark available)'}
+                    >
+                      {item.is_available !== false ? 'Available' : 'Not Avail.'}
+                    </button>
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
