@@ -30,7 +30,12 @@ export default function PosShortcuts() {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
-        if (e.key !== 'F2' && e.key !== 'F4') return;
+        if (e.key !== 'F1' && e.key !== 'F2' && e.key !== 'F4' && e.key !== 'F8') return;
+      }
+
+      if (e.key === 'F1') {
+        e.preventDefault();
+        router.push('/dashboard');
       }
 
       if (e.key === 'F2') {
@@ -46,6 +51,11 @@ export default function PosShortcuts() {
         } else {
           router.push('/dashboard/billit/create?scan=true');
         }
+      }
+
+      if (e.key === 'F8') {
+        e.preventDefault();
+        router.push('/dashboard/appointer/create');
       }
     };
 

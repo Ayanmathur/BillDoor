@@ -148,22 +148,31 @@ export default function AppointerPage() {
   return (
     <div>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--text-xl)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <CalendarClock size={22} /> Appointer
-        </h2>
-        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <button className="btn" onClick={() => router.push('/dashboard/appointer/settings')} style={{ border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+        {/* Top Row: Title on Left + Primary "+ Book" Button on Top Right Corner */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--text-xl)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', margin: 0 }}>
+            <CalendarClock size={22} /> Appointer
+          </h2>
+          <button
+            className="btn btn-primary"
+            onClick={() => router.push('/dashboard/appointer/create')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-1)', flexShrink: 0 }}
+          >
+            <Plus size={16} /> Book
+          </button>
+        </div>
+
+        {/* Horizontally Scrollable Secondary Nav Buttons Box */}
+        <div style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+          <button className="btn" onClick={() => router.push('/dashboard/appointer/settings')} style={{ border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)', whiteSpace: 'nowrap', flexShrink: 0 }}>
             <Settings size={14} /> Settings
           </button>
-          <button className="btn" onClick={() => router.push('/dashboard/billit/customers')} style={{ border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+          <button className="btn" onClick={() => router.push('/dashboard/billit/customers')} style={{ border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)', whiteSpace: 'nowrap', flexShrink: 0 }}>
             <User size={14} /> Customers
           </button>
-          <button className="btn" onClick={() => router.push('/dashboard/appointer/resources')} style={{ border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+          <button className="btn" onClick={() => router.push('/dashboard/appointer/resources')} style={{ border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)', whiteSpace: 'nowrap', flexShrink: 0 }}>
             <Users2 size={14} /> Resources
-          </button>
-          <button className="btn btn-primary" onClick={() => router.push('/dashboard/appointer/create')} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
-            <Plus size={16} /> Book
           </button>
         </div>
       </div>
