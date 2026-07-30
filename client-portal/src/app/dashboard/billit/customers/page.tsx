@@ -15,7 +15,7 @@ import {
   Search, Users, Phone, Calendar, IndianRupee, ChevronRight,
   Loader2, MessageSquare, ArrowLeft,
 } from 'lucide-react';
-import { fetchCustomersAction, fetchCustomerDetailAction } from './actions';
+import { fetchCustomersAction, fetchCustomerDetailAction, toggleCustomerOptInAction } from './actions';
 
 type DateRange = 'today' | 'week' | 'month' | 'all' | 'custom';
 
@@ -28,6 +28,7 @@ interface Customer {
   total_spent: number;
   last_visit_at: string | null;
   created_at: string;
+  opted_in?: boolean;
 }
 
 export default function CustomersPage() {
@@ -89,20 +90,36 @@ export default function CustomersPage() {
           <ArrowLeft size={14} /> Back to Customers
         </button>
         <div className="settings-section">
-          <h3 className="settings-section-title" style={{ marginBottom: 'var(--space-3)' }}>
-            <Users size={18} /> {selectedCustomer.name}
-            {/* Customer Value Tag */}
-            <span style={{
-              marginLeft: 'var(--space-2)',
-              fontSize: 'var(--text-xs)',
-              padding: '2px 8px',
-              borderRadius: 'var(--radius-full)',
-              background: (selectedCustomer.total_visits >= 10 || selectedCustomer.total_spent >= 5000) ? 'hsl(38 90% 90%)' : 'var(--color-bg-secondary)',
-              color: (selectedCustomer.total_visits >= 10 || selectedCustomer.total_spent >= 5000) ? 'hsl(38 80% 30%)' : 'var(--color-text-tertiary)',
-              fontWeight: 'var(--weight-medium)',
-            }}>
-              {(selectedCustomer.total_visits >= 10 || selectedCustomer.total_spent >= 5000) ? 'Top Customer' : 'Regular'}
-            </span>
+          <h3 className="settings-section-title" style={{ marginBottom: 'var(--space-3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <Users size={18} /> {selectedCustomer.name}
+              {/* Customer Value Tag */}
+              <span style={{
+                fontSize: 'var(--text-xs)',
+                padding: '2px 8px',
+                borderRadius: 'var(--radius-full)',
+                background: (selectedCustomer.total_visits >= 10 || selectedCustomer.total_spent >= 5000) ? 'hsl(38 90% 90%)' : 'var(--color-bg-secondary)',
+                color: (selectedCustomer.total_visits >= 10 || selectedCustomer.total_spent >= 5000) ? 'hsl(38 80% 30%)' : 'var(--color-text-tertiary)',
+                fontWeight: 'var(--weight-medium)',
+              }}>
+                {(selectedCustomer.total_visits >= 10 || selectedCustomer.total_spent >= 5000) ? 'Top Customer' : 'Regular'}
+              </span>
+            </div>
+
+            {/* Broadcast Opt-In Toggle in far right */}
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-secondary)', padding: '4px 10px', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border)' }}>
+              <input
+                type="checkbox"
+                checked={selectedCustomer.opted_in !== false}
+                onChange={async (e) => {
+                  const val = e.target.checked;
+                  setSelectedCustomer((prev: Customer | null) => prev ? { ...prev, opted_in: val } : null);
+                  await toggleCustomerOptInAction({ customerId: selectedCustomer.id, optedIn: val });
+                }}
+                style={{ accentColor: 'var(--color-accent)' }}
+              />
+              <span>Broadcast</span>
+            </label>
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
             <div className="dash-card" style={{ padding: 'var(--space-3)' }}>

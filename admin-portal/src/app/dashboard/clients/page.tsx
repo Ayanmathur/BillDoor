@@ -165,13 +165,6 @@ export default function ClientsPage() {
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button
                           className="btn-icon"
-                          title="Reset Password"
-                          onClick={() => setResetModalClient(client)}
-                        >
-                          <KeyRound size={16} /> Reset
-                        </button>
-                        <button
-                          className="btn-icon"
                           title="Edit Details"
                           onClick={() => openEditModal(client)}
                         >

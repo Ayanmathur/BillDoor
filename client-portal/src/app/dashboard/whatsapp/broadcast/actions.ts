@@ -44,7 +44,7 @@ export async function fetchAudienceAction(filters: {
     .from('customers')
     .select('id, name, phone, total_visits, total_spent, last_visit_at')
     .eq('client_id', user.id)
-    .eq('opted_in', true);
+    .neq('opted_in', false);
 
   // Date range filter
   if (parsed.data.lastVisitDays) {
@@ -173,7 +173,7 @@ export async function sendBroadcastAction(input: {
     .from('customers')
     .select('id, name, phone')
     .eq('client_id', user.id)
-    .eq('opted_in', true);
+    .neq('opted_in', false);
 
   if (parsed.data.filters.lastVisitDays) {
     const cutoff = new Date();

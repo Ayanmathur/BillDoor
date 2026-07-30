@@ -29,6 +29,7 @@ import {
   toggleQuickToolsAction,
   toggleSubscriptionHoldAction,
   toggleDirectoryAccessAction,
+  updateWhatsAppQuotaAction,
   resetClientUsernameAction,
   resetClientPasswordAction,
   deleteClientAction,
@@ -55,6 +56,7 @@ type Client = {
   subscription_hold_enabled?: boolean;
   directory_access_enabled?: boolean;
   publicly_listed?: boolean;
+  whatsapp_quota?: number;
 };
 
 type Inquiry = {
@@ -614,7 +616,7 @@ export default function AdminDashboard() {
                     <th>Valid Till</th>
                     <th>Status</th>
                     <th>Modules</th>
-                    <th>Directory</th>
+                    <th>WhatsApp Quota</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -705,23 +707,40 @@ export default function AdminDashboard() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          className="input-field"
+                          defaultValue={client.whatsapp_quota ?? 500}
+                          key={`${client.id}-${client.whatsapp_quota}`}
+                          onBlur={async (e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val >= 0 && val !== (client.whatsapp_quota ?? 500)) {
+                              setActionLoading(client.id);
+                              const res = await updateWhatsAppQuotaAction({ clientId: client.id, quota: val });
+                              if (res.error) alert(res.error);
+                              else setClients(prev => prev.map(c => c.id === client.id ? { ...c, whatsapp_quota: val } : c));
+                              setActionLoading(null);
+                            }
+                          }}
+                          style={{ width: '75px', padding: '2px 6px', fontSize: '12px', textAlign: 'center' }}
+                          title="Custom Monthly Quota"
+                        />
                         <button
-                          className={`action-btn ${client.directory_access_enabled === false ? 'danger' : ''}`}
-                          title={client.directory_access_enabled === false ? 'Enable Directory View Access' : 'Disable Directory View Access'}
-                          onClick={() => handleToggleDirectoryAccess(client.id, client.directory_access_enabled === false, client.publicly_listed)}
+                          className="btn btn-secondary"
+                          title="Increase Quota by +500"
                           disabled={actionLoading === client.id}
-                          style={client.directory_access_enabled === false ? { background: 'var(--color-error-subtle)', color: 'var(--color-error)' } : undefined}
+                          onClick={async () => {
+                            const current = client.whatsapp_quota ?? 500;
+                            const newQuota = current + 500;
+                            setActionLoading(client.id);
+                            const res = await updateWhatsAppQuotaAction({ clientId: client.id, quota: newQuota });
+                            if (res.error) alert(res.error);
+                            else setClients(prev => prev.map(c => c.id === client.id ? { ...c, whatsapp_quota: newQuota } : c));
+                            setActionLoading(null);
+                          }}
+                          style={{ padding: '2px 6px', fontSize: '11px', fontWeight: 'bold' }}
                         >
-                          {client.directory_access_enabled === false ? <BookX size={16} /> : <BookOpen size={16} />}
-                        </button>
-                        <button
-                          className={`action-btn ${client.publicly_listed === false ? 'danger' : ''}`}
-                          title={client.publicly_listed === false ? 'Show on Public Directory' : 'Hide from Public Directory'}
-                          onClick={() => handleToggleDirectoryAccess(client.id, client.directory_access_enabled !== false, client.publicly_listed === false)}
-                          disabled={actionLoading === client.id}
-                          style={client.publicly_listed === false ? { background: 'var(--color-warning-subtle)', color: 'var(--color-warning)' } : undefined}
-                        >
-                          {client.publicly_listed === false ? <EyeOff size={16} /> : <Eye size={16} />}
+                          +500
                         </button>
                       </div>
                     </td>

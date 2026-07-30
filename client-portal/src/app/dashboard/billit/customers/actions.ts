@@ -98,3 +98,18 @@ export async function fetchCustomerDetailAction(customerId: string) {
     loyaltyProgress: loyaltyResult.data || null,
   };
 }
+
+export async function toggleCustomerOptInAction(data: { customerId: string; optedIn: boolean }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized.' };
+
+  const { error } = await supabase
+    .from('customers')
+    .update({ opted_in: data.optedIn })
+    .eq('id', data.customerId)
+    .eq('client_id', user.id);
+
+  if (error) return { error: 'Failed to update broadcast consent.' };
+  return { success: true };
+}
