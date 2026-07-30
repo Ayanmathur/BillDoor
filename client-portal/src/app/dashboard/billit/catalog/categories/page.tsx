@@ -494,23 +494,36 @@ export default function BuildCategoryPage() {
                                   {categories.map(c => (
                                     <option key={c.id} value={c.id}>{c.name}</option>
                                   ))}
-                                </select>
-
-                                <button 
+                                </select>                                 <button 
                                   className="action-btn"
-                                  onClick={() => handleToggleVisibility(item.id, !item.show_in_catalog)}
-                                  title={item.show_in_catalog ? "Hide in Catalog" : "Show in Catalog"}
+                                  onClick={() => handleToggleVisibility(item.id, !(item.show_in_catalog !== false))}
+                                  title={item.show_in_catalog !== false ? "Visible in Digital Catalog (click to hide)" : "Hidden from Digital Catalog (click to show)"}
+                                  style={{ color: item.show_in_catalog !== false ? 'var(--color-success, #15803d)' : 'var(--color-text-tertiary)' }}
                                 >
-                                  {item.show_in_catalog ? <Eye size={18} style={{ color: 'var(--color-accent)' }} /> : <EyeOff size={18} style={{ color: 'var(--color-text-tertiary)' }} />}
+                                  {item.show_in_catalog !== false ? <Eye size={18} /> : <EyeOff size={18} />}
                                 </button>
 
-                                <div 
-                                  onClick={() => handleToggleAvailability(item.id, !item.is_available)}
-                                  className={`status-badge ${item.is_available ? 'active' : 'inactive'}`}
-                                  style={{ cursor: 'pointer', userSelect: 'none', width: '100px', textAlign: 'center', justifyContent: 'center' }}
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleAvailability(item.id, !(item.is_available !== false))}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    padding: '4px 10px',
+                                    borderRadius: 'var(--radius-sm)',
+                                    fontSize: 'var(--text-xs)',
+                                    fontWeight: 700,
+                                    letterSpacing: '0.02em',
+                                    backgroundColor: item.is_available !== false ? '#dcfce7' : '#fee2e2',
+                                    color: item.is_available !== false ? '#15803d' : '#dc2626',
+                                    whiteSpace: 'nowrap',
+                                    userSelect: 'none',
+                                  }}
+                                  title={item.is_available !== false ? 'Available (click to mark unavailable)' : 'Not Available (click to mark available)'}
                                 >
-                                  {item.is_available ? 'Available' : 'Not Available'}
-                                </div>
+                                  {item.is_available !== false ? 'Available' : 'Not Available'}
+                                </button>
                               </div>
                             ))}
                           </div>
