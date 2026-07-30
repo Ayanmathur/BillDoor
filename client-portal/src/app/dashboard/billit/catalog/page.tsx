@@ -473,18 +473,18 @@ export default function CatalogPage() {
             </thead>
             <tbody>
               {filtered.map((item) => (
-                <tr key={item.id}>
-                  <td style={{ fontWeight: 'var(--weight-medium)' }}>
+                <tr key={item.id} style={{ whiteSpace: 'nowrap' }}>
+                  <td style={{ fontWeight: 'var(--weight-medium)', whiteSpace: 'nowrap' }}>
                     {item.name}
                     {item.unit && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginLeft: 4 }}>/ {item.unit}</span>}
                   </td>
-                  <td><span className={`status-badge ${item.type === 'product' ? 'active' : 'unused'}`}>{item.type}</span></td>
-                  <td>₹{item.price.toLocaleString('en-IN')}</td>
-                  <td>{item.gst_percent}%</td>
-                  <td style={{ fontSize: 'var(--text-xs)', fontFamily: 'monospace' }}>
+                  <td style={{ whiteSpace: 'nowrap' }}><span className={`status-badge ${item.type === 'product' ? 'active' : 'unused'}`}>{item.type}</span></td>
+                  <td style={{ whiteSpace: 'nowrap' }}>₹{item.price.toLocaleString('en-IN')}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{item.gst_percent}%</td>
+                  <td style={{ fontSize: 'var(--text-xs)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                     {item.barcode_value || <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>}
                   </td>
-                  <td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
                       <button className="action-btn" title="Edit" onClick={() => startEdit(item)}><Edit3 size={14} /></button>
                       {item.barcode_value && (

@@ -1081,6 +1081,15 @@ header {
   table-layout: auto !important;
 }
 
+.table-responsive td,
+.table-responsive th,
+.table-container:not(.bills-table-container) td,
+.table-container:not(.bills-table-container) th {
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
 .bills-table-container {
   overflow: hidden !important;
 }
