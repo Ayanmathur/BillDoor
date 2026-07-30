@@ -18,7 +18,7 @@ import {
   Settings, Trash2, UserPen, RotateCcw, Plus, ChevronDown, ChevronUp,
   AlertTriangle, Clock, Activity, Sparkles, LogOut, Inbox, CalendarPlus,
   FileText, CheckCircle, XCircle, ExternalLink, CreditCard, SlidersHorizontal, 
-  Phone, PauseCircle, ScrollText, Image as ImageIcon, Eye, EyeOff, X, Link2,
+  Phone, PauseCircle, ScrollText, Image as ImageIcon, Eye, EyeOff, X, Link2, Search,
 } from 'lucide-react';
 import {
   generateLicenseKeyAction,
@@ -85,7 +85,10 @@ export default function AdminDashboard() {
   const [showKeygen, setShowKeygen] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Unmasked key tracking (admin can reveal keys to resend)
+  // Real-time Search states
+  const [clientSearch, setClientSearch] = useState('');
+  const [inquirySearch, setInquirySearch] = useState('');
+  const [keySearch, setKeySearch] = useState('');
   const [unmaskedKeys, setUnmaskedKeys] = useState<Record<string, string>>({});
 
   // Confirmation modal state
@@ -137,6 +140,40 @@ export default function AdminDashboard() {
     const daysLeft = (new Date(c.valid_till).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
     return daysLeft <= 30 && daysLeft > 0;
   }).length;
+
+  // Filtered lists for search bars
+  const filteredClients = clients.filter(c => {
+    if (!clientSearch.trim()) return true;
+    const q = clientSearch.toLowerCase().trim();
+    return (
+      (c.business_name || '').toLowerCase().includes(q) ||
+      (c.username || '').toLowerCase().includes(q) ||
+      (c.slug || '').toLowerCase().includes(q) ||
+      (c.phone || '').toLowerCase().includes(q)
+    );
+  });
+
+  const filteredInquiries = inquiries.filter(inq => {
+    if (!inquirySearch.trim()) return true;
+    const q = inquirySearch.toLowerCase().trim();
+    return (
+      (inq.name || '').toLowerCase().includes(q) ||
+      (inq.phone || '').toLowerCase().includes(q) ||
+      (inq.message || '').toLowerCase().includes(q) ||
+      (inq.status || '').toLowerCase().includes(q)
+    );
+  });
+
+  const filteredKeys = keys.filter(k => {
+    if (!keySearch.trim()) return true;
+    const q = keySearch.toLowerCase().trim();
+    return (
+      (k.mobile_number || '').toLowerCase().includes(q) ||
+      (k.business_name || '').toLowerCase().includes(q) ||
+      (k.slug || '').toLowerCase().includes(q) ||
+      (k.status || '').toLowerCase().includes(q)
+    );
+  });
 
   function getStatusBadge(client: Client) {
     if (client.status === 'revoked') return <span className="status-badge revoked">Revoked</span>;
@@ -450,30 +487,41 @@ export default function AdminDashboard() {
 
       {/* Client table */}
       {activeTab === 'clients' && (
-        <div className="client-table-wrap">
-          {loading ? (
-            <div className="empty-state"><RotateCcw size={24} className="spinner" /><p>Loading...</p></div>
-          ) : clients.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon"><Users size={40} /></div>
-              <p>No clients yet. Generate a license key to get started.</p>
-            </div>
-          ) : (
-            <table className="client-table">
-              <thead>
-                <tr>
-                  <th>Business</th>
-                  <th>Username</th>
-                  <th>Phone</th>
-                  <th>Registered</th>
-                  <th>Valid Till</th>
-                  <th>Status</th>
-                  <th>Modules</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clients.map((client) => (
+        <div>
+          <div style={{ marginBottom: 'var(--space-3)', position: 'relative', maxWidth: 360 }}>
+            <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-tertiary)' }} />
+            <input
+              className="input-field"
+              placeholder="Search clients by business, username, or phone..."
+              value={clientSearch}
+              onChange={(e) => setClientSearch(e.target.value)}
+              style={{ paddingLeft: 36, fontSize: 'var(--text-sm)' }}
+            />
+          </div>
+          <div className="client-table-wrap">
+            {loading ? (
+              <div className="empty-state"><RotateCcw size={24} className="spinner" /><p>Loading...</p></div>
+            ) : filteredClients.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon"><Users size={40} /></div>
+                <p>{clientSearch ? 'No matching clients found.' : 'No clients yet. Generate a license key to get started.'}</p>
+              </div>
+            ) : (
+              <table className="client-table">
+                <thead>
+                  <tr>
+                    <th>Business</th>
+                    <th>Username</th>
+                    <th>Phone</th>
+                    <th>Registered</th>
+                    <th>Valid Till</th>
+                    <th>Status</th>
+                    <th>Modules</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredClients.map((client) => (
                   <tr key={client.id}>
                     <td style={{ fontWeight: 'var(--weight-medium)' }}>{client.business_name}</td>
                     <td><code style={{ fontSize: 'var(--text-xs)' }}>{client.username}</code></td>
@@ -598,33 +646,45 @@ export default function AdminDashboard() {
             </table>
           )}
         </div>
-      )}
+      </div>
+    )}
 
       {/* License keys table */}
       {activeTab === 'keys' && (
-        <div className="client-table-wrap">
-          {loading ? (
-            <div className="empty-state"><RotateCcw size={24} className="spinner" /><p>Loading...</p></div>
-          ) : keys.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon"><KeyRound size={40} /></div>
-              <p>No license keys generated yet.</p>
-            </div>
-          ) : (
-            <table className="client-table">
-              <thead>
-                <tr>
-                  <th>Mobile</th>
-                  <th>Key</th>
-                  <th>Pre-fill</th>
-                  <th>Status</th>
-                  <th>Activated By</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {keys.map((key: any) => (
+        <div>
+          <div style={{ marginBottom: 'var(--space-3)', position: 'relative', maxWidth: 360 }}>
+            <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-tertiary)' }} />
+            <input
+              className="input-field"
+              placeholder="Search keys by mobile, business, or status..."
+              value={keySearch}
+              onChange={(e) => setKeySearch(e.target.value)}
+              style={{ paddingLeft: 36, fontSize: 'var(--text-sm)' }}
+            />
+          </div>
+          <div className="client-table-wrap">
+            {loading ? (
+              <div className="empty-state"><RotateCcw size={24} className="spinner" /><p>Loading...</p></div>
+            ) : filteredKeys.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon"><KeyRound size={40} /></div>
+                <p>{keySearch ? 'No matching keys found.' : 'No license keys generated yet.'}</p>
+              </div>
+            ) : (
+              <table className="client-table">
+                <thead>
+                  <tr>
+                    <th>Mobile</th>
+                    <th>Key</th>
+                    <th>Pre-fill</th>
+                    <th>Status</th>
+                    <th>Activated By</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredKeys.map((key: any) => (
                   <tr key={key.id}>
                     <td>{key.mobile_number}</td>
                     <td style={{ fontSize: 'var(--text-xs)', fontFamily: 'monospace' }}>
@@ -682,30 +742,42 @@ export default function AdminDashboard() {
             </table>
           )}
         </div>
-      )}
+      </div>
+    )}
       {/* Inquiries table */}
       {activeTab === 'inquiries' && (
-        <div className="client-table-wrap">
-          {loading ? (
-            <div className="empty-state"><RotateCcw size={24} className="spinner" /><p>Loading...</p></div>
-          ) : inquiries.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon"><Inbox size={40} /></div>
-              <p>No inquiries yet. Leads will appear here when someone clicks &quot;Get a license key&quot; on the login page.</p>
-            </div>
-          ) : (
-            <table className="client-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {inquiries.map((inq) => (
+        <div>
+          <div style={{ marginBottom: 'var(--space-3)', position: 'relative', maxWidth: 360 }}>
+            <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-tertiary)' }} />
+            <input
+              className="input-field"
+              placeholder="Search inquiries by name, phone, or message..."
+              value={inquirySearch}
+              onChange={(e) => setInquirySearch(e.target.value)}
+              style={{ paddingLeft: 36, fontSize: 'var(--text-sm)' }}
+            />
+          </div>
+          <div className="client-table-wrap">
+            {loading ? (
+              <div className="empty-state"><RotateCcw size={24} className="spinner" /><p>Loading...</p></div>
+            ) : filteredInquiries.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon"><Inbox size={40} /></div>
+                <p>{inquirySearch ? 'No matching inquiries found.' : 'No inquiries yet. Leads will appear here when someone clicks "Get a license key" on the login page.'}</p>
+              </div>
+            ) : (
+              <table className="client-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredInquiries.map((inq) => (
                   <tr key={inq.id}>
                     <td style={{ fontWeight: 'var(--weight-medium)' }}>{inq.name}</td>
                     <td>{inq.phone}</td>
@@ -755,7 +827,8 @@ export default function AdminDashboard() {
             </table>
           )}
         </div>
-      )}
+      </div>
+    )}
 
       {/* Revoke/Reactivate confirmation modal */}
       {confirmModal && (
