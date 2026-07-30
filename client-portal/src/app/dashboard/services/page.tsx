@@ -78,6 +78,7 @@ const SERVICES = [
 export default function ServicesPage() {
   const [adminPhone, setAdminPhone] = useState('919422880355');
   const [clientWebsite, setClientWebsite] = useState<string | null>(null);
+  const [directoryAccessEnabled, setDirectoryAccessEnabled] = useState<boolean>(true);
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -96,6 +97,7 @@ export default function ServicesPage() {
       ]);
       if (waRes.phone) setAdminPhone(waRes.phone);
       if (webRes.url) setClientWebsite(webRes.url);
+      if (webRes.directoryAccessEnabled !== undefined) setDirectoryAccessEnabled(webRes.directoryAccessEnabled);
       if (reqRes.requests) setRequests(reqRes.requests);
       if (portRes.items) setPortfolioItems(portRes.items);
       setLoading(false);
@@ -389,9 +391,11 @@ export default function ServicesPage() {
           <a href="https://orbitex.in" target="_blank" rel="noopener noreferrer" className="btn" style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <Globe size={14} /> orbitex.in <ExternalLink size={12} />
           </a>
-          <a href="/directory" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <Share2 size={14} /> View Client Directory
-          </a>
+          {directoryAccessEnabled && (
+            <a href="/directory" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Share2 size={14} /> View Client Directory
+            </a>
+          )}
         </div>
       </div>
 

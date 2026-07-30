@@ -29,19 +29,22 @@ export async function fetchAdminWhatsAppAction() {
   return { phone: FALLBACK_ADMIN_PHONE };
 }
 
-// Fetch client's website URL
+// Fetch client's website URL and directory access setting
 export async function fetchClientWebsiteAction() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { url: null };
+  if (!user) return { url: null, directoryAccessEnabled: true };
 
   const { data } = await supabase
     .from('clients')
-    .select('website_url')
+    .select('website_url, directory_access_enabled')
     .eq('id', user.id)
     .single();
 
-  return { url: data?.website_url || null };
+  return { 
+    url: data?.website_url || null,
+    directoryAccessEnabled: data?.directory_access_enabled !== false
+  };
 }
 
 // Fetch all service requests for this client
