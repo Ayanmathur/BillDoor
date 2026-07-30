@@ -34,6 +34,7 @@ interface CatalogItem {
   barcode_auto_generated: boolean;
   buffer_after_min: number;
   hsn_sac_code: string | null;
+  mrp: number | null;
 }
 
 export default function CatalogPage() {
@@ -58,6 +59,7 @@ export default function CatalogPage() {
   const [formBarcode, setFormBarcode] = useState('');
   const [formBuffer, setFormBuffer] = useState('0');
   const [formHsnSac, setFormHsnSac] = useState('');
+  const [formMrp, setFormMrp] = useState('');
 
   const loadItems = useCallback(async () => {
     const result = await fetchCatalogAction(search || undefined);
@@ -70,7 +72,7 @@ export default function CatalogPage() {
   function resetForm() {
     setFormName(''); setFormType('product'); setFormPrice(''); setFormUnit('');
     setFormGst('0'); setFormDiscountType('₹'); setFormDiscountValue('0'); setFormFinalPrice('');
-    setFormDesc(''); setFormBarcode(''); setFormBuffer('0'); setFormHsnSac(''); setEditingId(null);
+    setFormDesc(''); setFormBarcode(''); setFormBuffer('0'); setFormHsnSac(''); setFormMrp(''); setEditingId(null);
     setShowForm(false); setError('');
   }
 
@@ -87,6 +89,7 @@ export default function CatalogPage() {
     setFormBarcode(item.barcode_value || '');
     setFormBuffer(String(item.buffer_after_min || 0));
     setFormHsnSac(item.hsn_sac_code || '');
+    setFormMrp(item.mrp ? String(item.mrp) : '');
     setShowForm(true);
     
     // Calc initial final price
@@ -138,6 +141,7 @@ export default function CatalogPage() {
       barcodeValue: formBarcode || undefined,
       bufferAfterMin: Number(formBuffer) || 0,
       hsnSacCode: formHsnSac || undefined,
+      mrp: formMrp ? Number(formMrp) : undefined,
     };
 
     const result = editingId
@@ -432,6 +436,10 @@ export default function CatalogPage() {
             <div className="input-group">
               <label className="input-label">HSN/SAC Code</label>
               <input className="input-field" value={formHsnSac} onChange={(e) => setFormHsnSac(e.target.value)} placeholder="Optional" />
+            </div>
+            <div className="input-group">
+              <label className="input-label">MRP (₹) <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'normal' }}>(Maximum Retail Price)</span></label>
+              <input className="input-field" type="number" min="0" step="0.01" value={formMrp} onChange={(e) => setFormMrp(e.target.value)} placeholder="Optional e.g. 120.00" />
             </div>
           </div>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving} style={{ marginTop: 'var(--space-2)' }}>

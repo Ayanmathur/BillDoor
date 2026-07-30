@@ -23,6 +23,7 @@ export async function fetchBillBySlugAction(slug: string) {
     .select(`
       id, bill_number, bill_slug, line_items, subtotal, discount_total,
       gst_total, extra_charges, extra_charges_note, grand_total,
+      round_off_amount, total_mrp_savings, gst_calculation_mode, payment_method,
       notes, created_at, sent_via,
       customer_id, client_id, status, void_reason
     `)
@@ -34,7 +35,7 @@ export async function fetchBillBySlugAction(slug: string) {
   // Fetch client info
   const { data: client } = await supabase
     .from('clients')
-    .select('business_name, slug, address, phone, logo_url, has_gst, gst_number, google_place_id, instagram_url, facebook_url, website_url, about, barcode_enabled, status, reward_settings')
+    .select('business_name, slug, address, phone, logo_url, has_gst, gst_number, google_place_id, instagram_url, facebook_url, website_url, about, barcode_enabled, status, reward_settings, bill_settings')
     .eq('id', bill.client_id)
     .single();
 

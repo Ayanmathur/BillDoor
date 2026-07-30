@@ -47,7 +47,7 @@ export async function lookupBarcodeAction(barcodeValue: string) {
   // 1. Try case-insensitive match on barcode_value
   let { data: item } = await supabase
     .from('catalog_items')
-    .select('id, name, price, unit, gst_percent, barcode_value')
+    .select('id, name, price, unit, gst_percent, barcode_value, mrp, hsn_sac_code')
     .eq('client_id', user.id)
     .ilike('barcode_value', clean)
     .eq('active', true)
@@ -59,7 +59,7 @@ export async function lookupBarcodeAction(barcodeValue: string) {
     if (prefix && prefix.length >= 3) {
       const { data: fallbacks } = await supabase
         .from('catalog_items')
-        .select('id, name, price, unit, gst_percent, barcode_value')
+        .select('id, name, price, unit, gst_percent, barcode_value, mrp, hsn_sac_code')
         .eq('client_id', user.id)
         .ilike('name', `%${prefix}%`)
         .eq('active', true)
@@ -153,7 +153,7 @@ export async function searchCatalogAction(query: string) {
 
   const { data } = await supabase
     .from('catalog_items')
-    .select('id, name, price, unit, gst_percent, barcode_value')
+    .select('id, name, price, unit, gst_percent, barcode_value, mrp, hsn_sac_code')
     .eq('client_id', user.id)
     .eq('active', true)
     .ilike('name', `%${query}%`)
@@ -206,6 +206,8 @@ const lineItemSchema = z.object({
   discount: z.number().min(0).default(0),
   gstPercent: z.number().min(0).max(100).default(0),
   addedVia: z.enum(['manual', 'search', 'barcode']).default('manual'),
+  mrp: z.number().min(0).optional(),
+  hsnSacCode: z.string().optional(),
 });
 
 const createBillSchema = z.object({
@@ -220,6 +222,7 @@ const createBillSchema = z.object({
   rewardDiscount: z.number().min(0).default(0),
   notes: z.string().optional(),
   asDraft: z.boolean().optional().default(false),
+  paymentMethod: z.enum(['cash', 'upi', 'credit_card', 'debit_card', 'other']).optional(),
 });
 
 export async function createBillAction(data: z.infer<typeof createBillSchema>) {
@@ -296,19 +299,64 @@ export async function createBillAction(data: z.infer<typeof createBillSchema>) {
     billSlug = `${billNumber.toLowerCase().replace(/[^a-z0-9-]/g, '-')}-${crypto.randomBytes(3).toString('hex')}`;
   }
 
-  // 3. Calculate totals
-  let subtotal = 0;
-  let gstTotal = 0;
+  // 3. Fetch client GST mode for calculation
+  const { data: clientMode } = await supabase
+    .from('clients')
+    .select('gst_calculation_mode')
+    .eq('id', clientId)
+    .single();
+  const gstMode: 'exclusive' | 'inclusive' = (clientMode?.gst_calculation_mode as any) || 'exclusive';
+  const isInclusive = gstMode === 'inclusive';
+
+  // 3a. Per-item computation (raw, unrounded)
   const processedItems = d.lineItems.map((item) => {
-    const lineTotal = item.quantity * item.unitPrice;
-    const afterDiscount = lineTotal - (item.discount || 0);
-    const gst = afterDiscount * ((item.gstPercent || 0) / 100);
-    subtotal += afterDiscount;
-    gstTotal += gst;
-    return { ...item, lineTotal: afterDiscount, gstAmount: gst };
+    const lineAmount = Math.max(0, item.quantity * item.unitPrice - (item.discount || 0));
+    const rate = item.gstPercent || 0;
+    // Inclusive: tax extracted backward from price. Exclusive: tax added on top.
+    const taxableValue = isInclusive && rate > 0
+      ? lineAmount / (1 + rate / 100)
+      : lineAmount;
+    const gstAmount = isInclusive && rate > 0
+      ? lineAmount - taxableValue
+      : lineAmount * (rate / 100);
+    return {
+      ...item,
+      lineTotal: lineAmount,
+      taxableValue,      // full float precision — NOT rounded per item
+      gstAmount,         // full float precision — NOT rounded per item
+    };
   });
 
-  const grandTotal = subtotal + gstTotal - d.rewardDiscount + d.extraCharges - d.discountTotal;
+  // 3b. Slab-aggregate rounding (correctness-critical)
+  //     Group by GST rate, sum raw values, round at slab level only.
+  const slabMap = new Map<number, { taxable: number; gst: number }>();
+  for (const item of processedItems) {
+    const rate = item.gstPercent || 0;
+    const slab = slabMap.get(rate) || { taxable: 0, gst: 0 };
+    slab.taxable += item.taxableValue;
+    slab.gst += item.gstAmount;
+    slabMap.set(rate, slab);
+  }
+
+  let subtotal = 0;
+  let gstTotal = 0;
+  for (const [, slab] of slabMap) {
+    subtotal += Math.round(slab.taxable * 100) / 100;
+    gstTotal += Math.round(slab.gst * 100) / 100;
+  }
+
+  // 3c. MRP savings (frozen at creation time)
+  const totalMrpSavings = processedItems.reduce((sum, item) => {
+    if (item.mrp && item.mrp > item.unitPrice) {
+      return sum + (item.mrp - item.unitPrice) * item.quantity;
+    }
+    return sum;
+  }, 0);
+
+  // 3d. Grand total with round-off to nearest whole rupee
+  const rawGrand = subtotal + gstTotal - d.rewardDiscount + d.extraCharges - d.discountTotal;
+  const grandTotal = Math.round(Math.max(0, rawGrand));
+  const roundOffAmount = grandTotal - Math.max(0, rawGrand);
   const billStatus = d.asDraft ? 'draft' : 'issued';
 
   // 4. Upsert bill
@@ -328,10 +376,14 @@ export async function createBillAction(data: z.infer<typeof createBillSchema>) {
         gst_total: gstTotal,
         extra_charges: d.extraCharges,
         extra_charges_note: d.extraChargesNote || null,
-        grand_total: Math.max(0, grandTotal),
+        grand_total: grandTotal,
         reward_code_id: d.asDraft ? null : (d.rewardCodeId || null),
         notes: d.notes || null,
         status: billStatus,
+        round_off_amount: Math.round(roundOffAmount * 100) / 100,
+        total_mrp_savings: Math.round(totalMrpSavings * 100) / 100,
+        gst_calculation_mode: gstMode,
+        payment_method: d.paymentMethod || null,
       })
       .eq('id', existingBill.id)
       .select('id, bill_slug, bill_number, grand_total')
@@ -352,11 +404,15 @@ export async function createBillAction(data: z.infer<typeof createBillSchema>) {
         gst_total: gstTotal,
         extra_charges: d.extraCharges,
         extra_charges_note: d.extraChargesNote || null,
-        grand_total: Math.max(0, grandTotal),
+        grand_total: grandTotal,
         reward_code_id: d.asDraft ? null : (d.rewardCodeId || null),
         notes: d.notes || null,
         sent_via: null,
         status: billStatus,
+        round_off_amount: Math.round(roundOffAmount * 100) / 100,
+        total_mrp_savings: Math.round(totalMrpSavings * 100) / 100,
+        gst_calculation_mode: gstMode,
+        payment_method: d.paymentMethod || null,
       })
       .select('id, bill_slug, bill_number, grand_total')
       .single();
@@ -546,7 +602,7 @@ export async function fetchBillSettingsAction() {
 
   const { data: client } = await supabase
     .from('clients')
-    .select('business_name, slug, barcode_enabled, has_gst, gst_number, reward_settings, billit_auto_select_template, modules_enabled, bill_settings')
+    .select('business_name, slug, barcode_enabled, has_gst, gst_number, reward_settings, billit_auto_select_template, modules_enabled, bill_settings, gst_calculation_mode')
     .eq('id', user.id)
     .single();
 

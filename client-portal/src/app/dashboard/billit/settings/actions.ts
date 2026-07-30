@@ -8,7 +8,7 @@ export async function fetchBillitSettingsAction() {
 
   const { data } = await supabase
     .from('clients')
-    .select('barcode_enabled, barcode_settings, slug, whatsapp_catalog_template, modules_enabled, bill_settings, billit_auto_select_template')
+    .select('barcode_enabled, barcode_settings, slug, whatsapp_catalog_template, modules_enabled, bill_settings, billit_auto_select_template, gst_calculation_mode')
     .eq('id', user.id)
     .single();
 
@@ -24,6 +24,11 @@ export async function updateBillitSettingsAction(data: {
   defaultBillSize?: '55mm' | '80mm' | 'A4';
   posModeEnabled?: boolean;
   cameraBarcodeEnabled?: boolean;
+  gstCalculationMode?: 'exclusive' | 'inclusive';
+  showCgstSgstSplit?: boolean;
+  showGstSlabBreakup?: boolean;
+  showMrpAndSavings?: boolean;
+  enablePaymentMethod?: boolean;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -48,10 +53,17 @@ export async function updateBillitSettingsAction(data: {
       default_bill_size: data.defaultBillSize || '55mm',
       pos_mode_enabled: data.posModeEnabled ?? false,
       camera_barcode_enabled: data.cameraBarcodeEnabled ?? false,
+      show_cgst_sgst_split: data.showCgstSgstSplit ?? existingBillSettings.show_cgst_sgst_split ?? false,
+      show_gst_slab_breakup: data.showGstSlabBreakup ?? existingBillSettings.show_gst_slab_breakup ?? false,
+      show_mrp_and_savings: data.showMrpAndSavings ?? existingBillSettings.show_mrp_and_savings ?? false,
+      enable_payment_method: data.enablePaymentMethod ?? existingBillSettings.enable_payment_method ?? false,
     },
   };
   if (data.billitAutoSelectTemplate !== undefined) {
     updatePayload.billit_auto_select_template = data.billitAutoSelectTemplate;
+  }
+  if (data.gstCalculationMode) {
+    updatePayload.gst_calculation_mode = data.gstCalculationMode;
   }
 
   const { error } = await supabase

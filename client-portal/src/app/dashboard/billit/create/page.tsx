@@ -44,6 +44,8 @@ interface LineItem {
   gstPercent: number;
   barcodeValue?: string | null;
   addedVia: 'manual' | 'search' | 'barcode';
+  mrp?: number;
+  hsnSacCode?: string;
 }
 
 interface SearchResult {
@@ -53,6 +55,8 @@ interface SearchResult {
   unit: string | null;
   gst_percent: number;
   barcode_value: string | null;
+  mrp?: number | null;
+  hsn_sac_code?: string | null;
 }
 
 export default function CreateBillPage() {
@@ -79,6 +83,10 @@ export default function CreateBillPage() {
   const [hasGst, setHasGst] = useState(false);
   const [billWhatsAppTemplate, setBillWhatsAppTemplate] = useState('');
   const [posModeEnabled, setPosModeEnabled] = useState(false);
+  const [gstCalcMode, setGstCalcMode] = useState<'exclusive' | 'inclusive'>('exclusive');
+  const [showMrpAndSavings, setShowMrpAndSavings] = useState(false);
+  const [enablePaymentMethod, setEnablePaymentMethod] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'credit_card' | 'debit_card' | 'other'>('cash');
 
   // Multi-template (Step 2/3)
   const [autoSelectTemplate, setAutoSelectTemplate] = useState(false);
@@ -144,6 +152,10 @@ export default function CreateBillPage() {
         setHasGst(settings.has_gst || false);
         setBillWhatsAppTemplate(settings.bill_whatsapp_template || '');
         setPosModeEnabled(settings.bill_settings?.pos_mode_enabled === true);
+
+        setGstCalcMode(settings.gst_calculation_mode || 'exclusive');
+        setShowMrpAndSavings(settings.bill_settings?.show_mrp_and_savings === true);
+        setEnablePaymentMethod(settings.bill_settings?.enable_payment_method === true);
 
         if (settings.bill_settings) {
           if (settings.bill_settings.default_gst_percent) setDefaultGstPercent(settings.bill_settings.default_gst_percent);
@@ -298,6 +310,8 @@ export default function CreateBillPage() {
         gstPercent: item.gst_percent || 0,
         barcodeValue: item.barcode_value,
         addedVia: via,
+        mrp: item.mrp ?? undefined,
+        hsnSacCode: item.hsn_sac_code ?? undefined,
       }];
     });
 
@@ -348,16 +362,46 @@ export default function CreateBillPage() {
     setRewardValid(result.reward);
   }
 
-  // Calculations
-  const subtotal = items.reduce((sum, i) => {
-    const line = i.quantity * i.unitPrice - i.discount;
-    return sum + Math.max(0, line);
+  // Calculations (mode-aware with slab aggregation)
+  const isInclusive = gstCalcMode === 'inclusive';
+
+  const itemCalcs = items.map(i => {
+    const lineAmount = Math.max(0, i.quantity * i.unitPrice - i.discount);
+    const rate = i.gstPercent || 0;
+    const taxableValue = isInclusive && rate > 0
+      ? lineAmount / (1 + rate / 100)
+      : lineAmount;
+    const gstAmount = isInclusive && rate > 0
+      ? lineAmount - taxableValue
+      : lineAmount * (rate / 100);
+    return { ...i, lineAmount, taxableValue, gstAmount };
+  });
+
+  const slabMap = new Map<number, { taxable: number; gst: number }>();
+  for (const c of itemCalcs) {
+    const rate = c.gstPercent || 0;
+    const slab = slabMap.get(rate) || { taxable: 0, gst: 0 };
+    slab.taxable += c.taxableValue;
+    slab.gst += c.gstAmount;
+    slabMap.set(rate, slab);
+  }
+
+  let subtotal = 0;
+  let gstTotal = 0;
+  for (const [, slab] of slabMap) {
+    subtotal += Math.round(slab.taxable * 100) / 100;
+    gstTotal += Math.round(slab.gst * 100) / 100;
+  }
+
+  const totalMrpSavings = items.reduce((sum, i) => {
+    if (i.mrp && i.mrp > i.unitPrice) {
+      return sum + (i.mrp - i.unitPrice) * i.quantity;
+    }
+    return sum;
   }, 0);
 
-  const gstTotal = items.reduce((sum, i) => {
-    const line = i.quantity * i.unitPrice - i.discount;
-    return sum + Math.max(0, line) * (i.gstPercent / 100);
-  }, 0);
+  const totalItemsCount = items.length;
+  const totalQtyCount = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
 
   // For free_item rewards, zero out the matching line item price
   // For flat/percent discount, apply to bill total
@@ -372,7 +416,9 @@ export default function CreateBillPage() {
         : rewardValid.value
     : 0;
 
-  const grandTotal = Math.max(0, subtotal + gstTotal - rewardDiscount + extraCharges);
+  const rawGrand = Math.max(0, subtotal + gstTotal - rewardDiscount + extraCharges);
+  const grandTotal = Math.round(rawGrand);
+  const roundOff = grandTotal - rawGrand;
 
   // Create bill
   async function handleCreateBill(asDraft = false) {
@@ -399,6 +445,8 @@ export default function CreateBillPage() {
         discount: i.discount,
         gstPercent: i.gstPercent,
         addedVia: i.addedVia,
+        mrp: i.mrp,
+        hsnSacCode: i.hsnSacCode,
       })),
       discountTotal: 0,
       extraCharges,
@@ -406,6 +454,7 @@ export default function CreateBillPage() {
       rewardCodeId: rewardValid?.id,
       rewardDiscount,
       asDraft,
+      paymentMethod: enablePaymentMethod ? paymentMethod : undefined,
     });
 
     if (result.error) { 
@@ -784,12 +833,12 @@ export default function CreateBillPage() {
       <div className="settings-section">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', fontSize: 'var(--text-sm)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: 'var(--color-text-secondary)' }}>Subtotal</span>
+            <span style={{ color: 'var(--color-text-secondary)' }}>{isInclusive ? 'Subtotal (Net Taxable)' : 'Subtotal'}</span>
             <span>₹{subtotal.toFixed(2)}</span>
           </div>
           {gstTotal > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--color-text-secondary)' }}>GST</span>
+              <span style={{ color: 'var(--color-text-secondary)' }}>{isInclusive ? 'GST (Included)' : 'GST'}</span>
               <span>₹{gstTotal.toFixed(2)}</span>
             </div>
           )}
@@ -805,12 +854,60 @@ export default function CreateBillPage() {
               <span>+₹{extraCharges.toFixed(2)}</span>
             </div>
           )}
+          {Math.abs(roundOff) >= 0.01 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-text-secondary)' }}>
+              <span>Round Off</span>
+              <span>{roundOff > 0 ? `+₹${roundOff.toFixed(2)}` : `−₹${Math.abs(roundOff).toFixed(2)}`}</span>
+            </div>
+          )}
           <div style={{ borderTop: '2px solid var(--color-border)', paddingTop: 'var(--space-2)', marginTop: 'var(--space-1)', display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-heading)', fontSize: 'var(--text-lg)', fontWeight: 'var(--weight-bold)' }}>
             <span>Grand Total</span>
             <span>₹{grandTotal.toFixed(2)}</span>
           </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-2)', paddingTop: 'var(--space-2)', borderTop: '1px solid var(--color-border-subtle)' }}>
+            <span>Items: {totalItemsCount} · Qty: {totalQtyCount}</span>
+            {showMrpAndSavings && totalMrpSavings > 0 && (
+              <span style={{ color: 'var(--color-success)', fontWeight: 'var(--weight-semibold)' }}>You Saved ₹{totalMrpSavings.toFixed(2)}</span>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Optional Payment Method Selector */}
+      {enablePaymentMethod && (
+        <div style={{ marginTop: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+          <label style={{ display: 'block', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-2)' }}>
+            Payment Method
+          </label>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+            {[
+              { id: 'cash', label: 'Cash' },
+              { id: 'upi', label: 'UPI' },
+              { id: 'credit_card', label: 'Credit Card' },
+              { id: 'debit_card', label: 'Debit Card' },
+              { id: 'other', label: 'Other' },
+            ].map(m => (
+              <button
+                key={m.id}
+                type="button"
+                className="btn"
+                onClick={() => setPaymentMethod(m.id as any)}
+                style={{
+                  flex: '1 1 auto',
+                  padding: 'var(--space-2) var(--space-3)',
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: paymentMethod === m.id ? 'var(--weight-bold)' : 'normal',
+                  backgroundColor: paymentMethod === m.id ? 'var(--color-accent-subtle)' : 'var(--color-bg-primary)',
+                  borderColor: paymentMethod === m.id ? 'var(--color-accent)' : 'var(--color-border)',
+                  color: paymentMethod === m.id ? 'var(--color-accent)' : 'var(--color-text-primary)',
+                }}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="create-bill-action-bar" style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'space-between', flexWrap: 'wrap', marginTop: 'var(--space-4)', alignItems: 'flex-start' }}>

@@ -37,11 +37,19 @@ interface BillPageClientProps {
   voidReason?: string;
   hasGst?: boolean;
   gstNumber?: string;
+  roundOffAmount?: number;
+  totalMrpSavings?: number;
+  gstCalcMode?: 'exclusive' | 'inclusive';
+  paymentMethod?: string | null;
+  billSettings?: Record<string, any>;
 }
 
 const EMOJIS = ['😠', '😞', '😐', '🙂', '🤩'];
 
-export default function BillPageClient({ bill, client, customer, loyaltyConfig, loyaltyProgress, status, voidReason, hasGst, gstNumber }: BillPageClientProps) {
+export default function BillPageClient({
+  bill, client, customer, loyaltyConfig, loyaltyProgress, status, voidReason, hasGst, gstNumber,
+  roundOffAmount = 0, totalMrpSavings = 0, gstCalcMode = 'exclusive', paymentMethod = null, billSettings = {}
+}: BillPageClientProps) {
   const searchParams = useSearchParams();
   const [selectedRating, setSelectedRating] = useState(0);
   const [reviewed, setReviewed] = useState(false);
@@ -274,8 +282,13 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
             <span>Total</span>
           </div>
           {lineItems.map((item: any, i: number) => {
-            const lineTotal = (item.quantity || 1) * (item.unitPrice || 0) - (item.discount || 0);
-            const gst = lineTotal * ((item.gstPercent || 0) / 100);
+            const isInclusiveMode = (gstCalcMode || bill.gst_calculation_mode) === 'inclusive';
+            const lineTotal = item.lineTotal !== undefined ? item.lineTotal : (item.quantity || 1) * (item.unitPrice || 0) - (item.discount || 0);
+            const rate = item.gstPercent || 0;
+            const itemTaxable = item.taxableValue !== undefined ? item.taxableValue : (isInclusiveMode && rate > 0 ? lineTotal / (1 + rate / 100) : lineTotal);
+            const itemGst = item.gstAmount !== undefined ? item.gstAmount : (isInclusiveMode && rate > 0 ? lineTotal - itemTaxable : lineTotal * (rate / 100));
+            const itemTotalDisplay = isInclusiveMode ? lineTotal : lineTotal + itemGst;
+
             return (
               <div key={i} className="bill-item-row">
                 <span style={{ fontWeight: 500 }}>
@@ -284,17 +297,79 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
                 </span>
                 <span>{item.quantity}</span>
                 <span>₹{(item.unitPrice || 0).toFixed(0)}</span>
-                <span style={{ fontSize: 10, color: '#999' }}>{item.gstPercent > 0 ? `${item.gstPercent}%` : '—'}</span>
-                <span style={{ fontWeight: 500 }}>₹{(lineTotal + gst).toFixed(2)}</span>
+                <span style={{ fontSize: 10, color: '#999' }}>{rate > 0 ? `${rate}%` : '—'}</span>
+                <span style={{ fontWeight: 500 }}>₹{itemTotalDisplay.toFixed(2)}</span>
               </div>
             );
           })}
         </div>
 
+        {/* GST Slab Breakup Table (Toggle-Gated) */}
+        {(() => {
+          const showGstSlabBreakup = billSettings?.show_gst_slab_breakup === true;
+          if (!showGstSlabBreakup || (!hasGst && Number(bill.gst_total) <= 0)) return null;
+
+          const isInclusiveMode = (gstCalcMode || bill.gst_calculation_mode) === 'inclusive';
+          const slabMap = new Map<number, { taxable: number; gst: number }>();
+          for (const item of lineItems) {
+            const lineTotal = item.lineTotal !== undefined ? item.lineTotal : (item.quantity || 1) * (item.unitPrice || 0) - (item.discount || 0);
+            const rate = item.gstPercent || 0;
+            const taxable = item.taxableValue !== undefined ? item.taxableValue : (isInclusiveMode && rate > 0 ? lineTotal / (1 + rate / 100) : lineTotal);
+            const gst = item.gstAmount !== undefined ? item.gstAmount : (isInclusiveMode && rate > 0 ? lineTotal - taxable : lineTotal * (rate / 100));
+
+            const existing = slabMap.get(rate) || { taxable: 0, gst: 0 };
+            existing.taxable += taxable;
+            existing.gst += gst;
+            slabMap.set(rate, existing);
+          }
+
+          const slabList = Array.from(slabMap.entries())
+            .map(([rate, { taxable, gst }]) => {
+              const roundTaxable = Math.round(taxable * 100) / 100;
+              const roundGst = Math.round(gst * 100) / 100;
+              const cgst = Math.round((roundGst / 2) * 100) / 100;
+              const sgst = Math.round((roundGst - cgst) * 100) / 100;
+              return { rate, taxable: roundTaxable, gst: roundGst, cgst, sgst, total: Math.round((roundTaxable + roundGst) * 100) / 100 };
+            })
+            .sort((a, b) => a.rate - b.rate);
+
+          if (slabList.length === 0) return null;
+
+          return (
+            <div style={{ margin: '12px 0', padding: '10px 12px', background: '#FAFAFA', border: '1px solid #EEEEEE', borderRadius: '8px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                GST Tax Breakdown
+              </div>
+              <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse', textAlign: 'right' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #DDD', color: '#666' }}>
+                    <th style={{ textAlign: 'left', paddingBottom: '4px' }}>Rate</th>
+                    <th style={{ paddingBottom: '4px' }}>Taxable</th>
+                    <th style={{ paddingBottom: '4px' }}>CGST</th>
+                    <th style={{ paddingBottom: '4px' }}>SGST</th>
+                    <th style={{ paddingBottom: '4px' }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {slabList.map((s, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #F0F0F0' }}>
+                      <td style={{ textAlign: 'left', padding: '3px 0', fontWeight: 500 }}>{s.rate}%</td>
+                      <td style={{ padding: '3px 0' }}>₹{s.taxable.toFixed(2)}</td>
+                      <td style={{ padding: '3px 0' }}>₹{s.cgst.toFixed(2)}</td>
+                      <td style={{ padding: '3px 0' }}>₹{s.sgst.toFixed(2)}</td>
+                      <td style={{ padding: '3px 0', fontWeight: 500 }}>₹{s.total.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
+
         {/* Summary */}
         <div className="bill-summary">
           <div className="bill-summary-row">
-            <span>Subtotal</span>
+            <span>{(gstCalcMode || bill.gst_calculation_mode) === 'inclusive' ? 'Subtotal (Net Taxable)' : 'Subtotal'}</span>
             <span>₹{Number(bill.subtotal || 0).toFixed(2)}</span>
           </div>
           {Number(bill.discount_total) > 0 && (
@@ -304,10 +379,23 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
             </div>
           )}
           {showGstRow && Number(bill.gst_total) > 0 && (
-            <div className="bill-summary-row">
-              <span>GST</span>
-              <span>₹{Number(bill.gst_total).toFixed(2)}</span>
-            </div>
+            billSettings?.show_cgst_sgst_split === true ? (
+              <>
+                <div className="bill-summary-row">
+                  <span>CGST</span>
+                  <span>₹{(Number(bill.gst_total || 0) / 2).toFixed(2)}</span>
+                </div>
+                <div className="bill-summary-row">
+                  <span>SGST</span>
+                  <span>₹{(Number(bill.gst_total || 0) / 2).toFixed(2)}</span>
+                </div>
+              </>
+            ) : (
+              <div className="bill-summary-row">
+                <span>{(gstCalcMode || bill.gst_calculation_mode) === 'inclusive' ? 'GST (Included)' : 'GST'}</span>
+                <span>₹{Number(bill.gst_total || 0).toFixed(2)}</span>
+              </div>
+            )
           )}
           {Number(bill.extra_charges) > 0 && (
             <div className="bill-summary-row">
@@ -315,10 +403,35 @@ export default function BillPageClient({ bill, client, customer, loyaltyConfig, 
               <span>+₹{Number(bill.extra_charges).toFixed(2)}</span>
             </div>
           )}
+          {Math.abs(Number(bill.round_off_amount || roundOffAmount || 0)) >= 0.01 && (
+            <div className="bill-summary-row">
+              <span>Round Off</span>
+              <span>
+                {Number(bill.round_off_amount || roundOffAmount) > 0
+                  ? `+₹${Number(bill.round_off_amount || roundOffAmount).toFixed(2)}`
+                  : `−₹${Math.abs(Number(bill.round_off_amount || roundOffAmount)).toFixed(2)}`}
+              </span>
+            </div>
+          )}
           <div className="bill-grand-total">
             <span>Grand Total</span>
             <span>₹{Number(bill.grand_total || 0).toFixed(2)}</span>
           </div>
+
+          {/* Items / Qty counter + Payment Method */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#777', marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed #DDD' }}>
+            <span>Items: {lineItems.length} · Qty: {lineItems.reduce((sum: number, item: any) => sum + (Number(item.quantity) || 0), 0)}</span>
+            {(paymentMethod || bill.payment_method) && (
+              <span style={{ textTransform: 'capitalize', fontWeight: 500 }}>Paid via: {(paymentMethod || bill.payment_method).replace('_', ' ')}</span>
+            )}
+          </div>
+
+          {/* Customer Savings Badge */}
+          {billSettings?.show_mrp_and_savings === true && Number(bill.total_mrp_savings || totalMrpSavings || 0) > 0 && (
+            <div style={{ marginTop: '10px', padding: '8px 12px', background: '#E8F5E9', color: '#2E7D32', borderRadius: '6px', fontSize: '12px', fontWeight: 600, textAlign: 'center' }}>
+              🎉 You Saved ₹{Number(bill.total_mrp_savings || totalMrpSavings).toFixed(2)} on MRP!
+            </div>
+          )}
         </div>
 
         {/* Offer / Discount Reveal (if enabled) */}

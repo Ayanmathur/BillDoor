@@ -47,6 +47,12 @@ export default function BillitSettingsPage() {
   // Auto-select template toggle
   const [autoSelectTemplate, setAutoSelectTemplate] = useState(false);
 
+  const [gstCalcMode, setGstCalcMode] = useState<'exclusive' | 'inclusive'>('exclusive');
+  const [showCgstSgstSplit, setShowCgstSgstSplit] = useState(false);
+  const [showGstSlabBreakup, setShowGstSlabBreakup] = useState(false);
+  const [showMrpAndSavings, setShowMrpAndSavings] = useState(false);
+  const [enablePaymentMethod, setEnablePaymentMethod] = useState(false);
+
   useEffect(() => {
     async function load() {
       const result = await fetchBillitSettingsAction();
@@ -62,6 +68,11 @@ export default function BillitSettingsPage() {
         setCatalogTemplate(result.settings.whatsapp_catalog_template || "Hi! I'm interested in {item_name}. Is it available?");
         setCatalogViewerEnabled(result.settings.modules_enabled?.quick_tools?.catalog_viewer === true);
         setAutoSelectTemplate(result.settings.billit_auto_select_template ?? false);
+        setGstCalcMode(result.settings.gst_calculation_mode || 'exclusive');
+        setShowCgstSgstSplit(result.settings.bill_settings?.show_cgst_sgst_split === true);
+        setShowGstSlabBreakup(result.settings.bill_settings?.show_gst_slab_breakup === true);
+        setShowMrpAndSavings(result.settings.bill_settings?.show_mrp_and_savings === true);
+        setEnablePaymentMethod(result.settings.bill_settings?.enable_payment_method === true);
       }
       setLoading(false);
     }
@@ -90,6 +101,11 @@ export default function BillitSettingsPage() {
       defaultBillSize,
       posModeEnabled,
       cameraBarcodeEnabled,
+      gstCalculationMode: gstCalcMode,
+      showCgstSgstSplit,
+      showGstSlabBreakup,
+      showMrpAndSavings,
+      enablePaymentMethod,
     });
     if (result.error) setError(result.error);
     else flash();
@@ -179,10 +195,93 @@ export default function BillitSettingsPage() {
         </div>
       )}
 
-      {/* Barcode Section */}
-      <div className="settings-section">
+      {/* Section 1: 📦 Digital Catalog */}
+      {catalogViewerEnabled && (
+        <>
+          {/* Digital Catalog Link Section */}
+          <div className="settings-section">
+            <h3 className="settings-section-title">
+              <LinkIcon size={18} /> Digital Catalog Link
+            </h3>
+            
+            <div style={{ marginBottom: 'var(--space-4)' }}>
+              <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: 'var(--space-2)' }}>Catalog URL</label>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <input 
+                  type="text" 
+                  value={catalogUrl} 
+                  readOnly 
+                  style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }} 
+                />
+                <button className="btn" onClick={copyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
+                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
+                  <ExternalLink size={16} />
+                  Open
+                </a>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', alignItems: 'flex-start' }}>
+              <label style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>Catalog QR Code</label>
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(catalogUrl)}`} 
+                alt="Catalog QR Code" 
+                style={{ width: 120, height: 120, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} 
+              />
+              <button className="btn" onClick={downloadQR}>Download QR</button>
+            </div>
+          </div>
+
+          {/* Catalog WhatsApp Template Section */}
+          <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
+            <h3 className="settings-section-title">
+              <MessageSquare size={18} /> Catalog WhatsApp Template
+            </h3>
+
+            {templateError && (
+              <div
+                style={{
+                  padding: 'var(--space-3)', background: 'var(--color-error-subtle)',
+                  color: 'var(--color-error)', borderRadius: 'var(--radius-md)',
+                  fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)',
+                }}
+                role="alert"
+              >
+                {templateError}
+              </div>
+            )}
+
+            <div style={{ marginBottom: 'var(--space-4)' }}>
+              <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: 'var(--space-2)' }}>Message Template</label>
+              <textarea 
+                value={catalogTemplate}
+                onChange={e => setCatalogTemplate(e.target.value)}
+                placeholder="Hi! I'm interested in {item_name}. Is it available?"
+                style={{ width: '100%', minHeight: 80, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', resize: 'vertical', boxSizing: 'border-box' }}
+              />
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-1)' }}>
+                Must contain <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 4px', borderRadius: '4px' }}>{'{item_name}'}</code>
+              </div>
+            </div>
+
+            <button
+              className="btn btn-primary"
+              onClick={handleSaveTemplate}
+              disabled={savingTemplate}
+            >
+              {savingTemplate ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Template
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Section 2: 📊 Barcode & POS System */}
+      <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
         <h3 className="settings-section-title">
-          <Barcode size={18} /> Barcode System
+          <Barcode size={18} /> Barcode & POS System
         </h3>
 
         <div className="toggle-field">
@@ -233,49 +332,68 @@ export default function BillitSettingsPage() {
           </>
         )}
 
-        <div style={{ marginTop: 'var(--space-6)' }}>
-          <h4 style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', marginBottom: 'var(--space-3)' }}>
-            <Tag size={16} style={{ display: 'inline', verticalAlign: -3, marginRight: 4 }} /> Default Pricing & Taxes
-          </h4>
-          <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
-            <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
-              <label className="input-label">Default GST (%)</label>
-              <input 
-                className="input-field" 
-                type="number" 
-                min={0} 
-                max={100} 
-                value={defaultGst} 
-                onChange={(e) => setDefaultGst(Number(e.target.value))} 
-                placeholder="e.g. 18" 
-              />
+        {/* POS Mode Toggle */}
+        <div className="toggle-field" style={{ marginTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-4)' }}>
+          <div>
+            <div className="toggle-field-label">Enable POS Mode</div>
+            <div className="toggle-field-desc">
+              Surfaces high-contrast running total display, keyboard shortcuts ([Alt+C], [Alt+W], [Alt+P]), and barcode scanning focus on Create Bill screen.
             </div>
-            <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
-              <label className="input-label">Default Discount Type</label>
-              <select 
-                className="input-field" 
-                value={defaultDiscountType} 
-                onChange={(e) => setDefaultDiscountType(e.target.value)}
-              >
-                <option value="₹">Flat ₹ Off</option>
-                <option value="%">% Off</option>
-              </select>
-            </div>
-            <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
-              <label className="input-label">Default Discount Value</label>
-              <input 
-                className="input-field" 
-                type="number" 
-                min={0} 
-                value={defaultDiscountValue} 
-                onChange={(e) => setDefaultDiscountValue(Number(e.target.value))} 
-                placeholder="e.g. 50" 
-              />
-            </div>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={posModeEnabled}
+              onChange={(e) => setPosModeEnabled(e.target.checked)}
+            />
+            <span className="toggle-slider" />
+          </label>
+        </div>
+      </div>
+
+      {/* Section 3: 💰 Default Pricing & Taxes */}
+      <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
+        <h3 className="settings-section-title">
+          <Tag size={18} /> Default Pricing & Taxes
+        </h3>
+        <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
+          <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
+            <label className="input-label">Default GST (%)</label>
+            <input 
+              className="input-field" 
+              type="number" 
+              min={0} 
+              max={100} 
+              value={defaultGst} 
+              onChange={(e) => setDefaultGst(Number(e.target.value))} 
+              placeholder="e.g. 18" 
+            />
+          </div>
+          <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
+            <label className="input-label">Default Discount Type</label>
+            <select 
+              className="input-field" 
+              value={defaultDiscountType} 
+              onChange={(e) => setDefaultDiscountType(e.target.value)}
+            >
+              <option value="₹">Flat ₹ Off</option>
+              <option value="%">% Off</option>
+            </select>
+          </div>
+          <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
+            <label className="input-label">Default Discount Value</label>
+            <input 
+              className="input-field" 
+              type="number" 
+              min={0} 
+              value={defaultDiscountValue} 
+              onChange={(e) => setDefaultDiscountValue(Number(e.target.value))} 
+              placeholder="e.g. 50" 
+            />
           </div>
         </div>
 
-        {/* Default Bill Size (Step 2) */}
+        {/* Default Bill Size */}
         <div style={{ marginTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-4)' }}>
           <label className="input-label" style={{ fontWeight: 'var(--weight-semibold)', marginBottom: 'var(--space-1)' }}>Default Bill Size (Digital Bill Preview)</label>
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-3)' }}>
@@ -296,30 +414,92 @@ export default function BillitSettingsPage() {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* POS Mode Toggle (Step 3) */}
-        <div className="toggle-field" style={{ marginTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-4)' }}>
+      {/* Section 4: 🧾 Digital Bill Features */}
+      <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
+        <h3 className="settings-section-title">
+          <FileText size={18} /> Digital Bill Features
+        </h3>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-4)' }}>
+          Configure how your digital bills display tax information, pricing, and payment details.
+        </p>
+
+        {/* GST Calculation Mode */}
+        <div style={{ background: 'var(--color-bg-secondary)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', marginBottom: 'var(--space-3)' }}>
+          <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-3)' }}>GST Calculation Mode</div>
+          <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', cursor: 'pointer', padding: 'var(--space-3)', background: gstCalcMode === 'exclusive' ? 'var(--color-accent-subtle)' : 'var(--color-bg-primary)', border: `1px solid ${gstCalcMode === 'exclusive' ? 'var(--color-accent)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-md)', flex: '1 1 200px' }}>
+              <input type="radio" name="gstCalcMode" value="exclusive" checked={gstCalcMode === 'exclusive'} onChange={() => setGstCalcMode('exclusive')} style={{ marginTop: 2 }} />
+              <div>
+                <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)' }}>Exclusive (Add GST on top)</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.4 }}>Price entered = base price. GST added on top.<br />Cafes, restaurants, services.<br />Example: ₹100 + 18% GST = ₹118</div>
+              </div>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', cursor: 'pointer', padding: 'var(--space-3)', background: gstCalcMode === 'inclusive' ? 'var(--color-accent-subtle)' : 'var(--color-bg-primary)', border: `1px solid ${gstCalcMode === 'inclusive' ? 'var(--color-accent)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-md)', flex: '1 1 200px' }}>
+              <input type="radio" name="gstCalcMode" value="inclusive" checked={gstCalcMode === 'inclusive'} onChange={() => setGstCalcMode('inclusive')} style={{ marginTop: 2 }} />
+              <div>
+                <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)' }}>Inclusive (GST already in price)</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.4 }}>Price entered = final price including GST. Tax extracted backward.<br />Retail, FMCG, packaged goods.<br />Example: ₹100 with 10% → Taxable ₹90.91 + GST ₹9.09</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Show CGST/SGST Split */}
+        <div className="toggle-field" style={{ marginBottom: 'var(--space-3)' }}>
           <div>
-            <div className="toggle-field-label">Enable POS Mode</div>
-            <div className="toggle-field-desc">
-              Surfaces high-contrast running total display, keyboard shortcuts ([Alt+C], [Alt+W], [Alt+P]), and barcode scanning focus on Create Bill screen.
-            </div>
+            <div className="toggle-field-label">Show CGST/SGST Split</div>
+            <div className="toggle-field-desc">Display CGST + SGST separately instead of combined GST amount on digital bills.</div>
           </div>
           <label className="toggle-switch">
-            <input
-              type="checkbox"
-              checked={posModeEnabled}
-              onChange={(e) => setPosModeEnabled(e.target.checked)}
-            />
+            <input type="checkbox" checked={showCgstSgstSplit} onChange={(e) => setShowCgstSgstSplit(e.target.checked)} />
             <span className="toggle-slider" />
           </label>
         </div>
 
+        {/* Show GST Slab Breakup */}
+        <div className="toggle-field" style={{ marginBottom: 'var(--space-3)' }}>
+          <div>
+            <div className="toggle-field-label">Show GST Slab Breakup Table</div>
+            <div className="toggle-field-desc">Display rate-wise GST breakdown table (grouped by 0%, 5%, 12%, 18%) on digital bills.</div>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={showGstSlabBreakup} onChange={(e) => setShowGstSlabBreakup(e.target.checked)} />
+            <span className="toggle-slider" />
+          </label>
+        </div>
+
+        {/* Enable MRP & Savings */}
+        <div className="toggle-field" style={{ marginBottom: 'var(--space-3)' }}>
+          <div>
+            <div className="toggle-field-label">Enable MRP & Savings</div>
+            <div className="toggle-field-desc">Adds MRP field to catalog items. When MRP exceeds selling price, shows &quot;You Saved ₹X&quot; badge on digital bills. Independent of line-level discounts.</div>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={showMrpAndSavings} onChange={(e) => setShowMrpAndSavings(e.target.checked)} />
+            <span className="toggle-slider" />
+          </label>
+        </div>
+
+        {/* Enable Payment Method */}
+        <div className="toggle-field">
+          <div>
+            <div className="toggle-field-label">Enable Payment Method</div>
+            <div className="toggle-field-desc">Adds payment method selector (Cash / UPI / Credit Card / Debit Card / Other) to Create Bill. Payment method is shown on digital bills.</div>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={enablePaymentMethod} onChange={(e) => setEnablePaymentMethod(e.target.checked)} />
+            <span className="toggle-slider" />
+          </label>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 'var(--space-5)' }}>
         <button
           className="btn btn-primary"
           onClick={handleSave}
           disabled={saving}
-          style={{ marginTop: 'var(--space-5)' }}
         >
           {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Settings
         </button>
@@ -418,88 +598,6 @@ export default function BillitSettingsPage() {
           </p>
         </div>
       </div>
-
-      {catalogViewerEnabled && (
-        <>
-          {/* Digital Catalog Link Section */}
-          <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
-            <h3 className="settings-section-title">
-              <LinkIcon size={18} /> Digital Catalog Link
-            </h3>
-            
-            <div style={{ marginBottom: 'var(--space-4)' }}>
-              <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: 'var(--space-2)' }}>Catalog URL</label>
-              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                <input 
-                  type="text" 
-                  value={catalogUrl} 
-                  readOnly 
-                  style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }} 
-                />
-                <button className="btn" onClick={copyLink} title="Copy link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
-                  {copied ? 'Copied!' : 'Copy'}
-                </button>
-                <a href={catalogUrl} target="_blank" rel="noopener noreferrer" className="btn" title="Open link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', textDecoration: 'none', backgroundColor: 'var(--color-accent)', color: 'var(--color-accent-text, #ffffff)', border: 'none' }}>
-                  <ExternalLink size={16} />
-                  Open
-                </a>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', alignItems: 'flex-start' }}>
-              <label style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>Catalog QR Code</label>
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(catalogUrl)}`} 
-                alt="Catalog QR Code" 
-                style={{ width: 120, height: 120, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} 
-              />
-              <button className="btn" onClick={downloadQR}>Download QR</button>
-            </div>
-          </div>
-
-          {/* Catalog WhatsApp Template Section */}
-          <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
-            <h3 className="settings-section-title">
-              <MessageSquare size={18} /> Catalog WhatsApp Template
-            </h3>
-
-            {templateError && (
-              <div
-                style={{
-                  padding: 'var(--space-3)', background: 'var(--color-error-subtle)',
-                  color: 'var(--color-error)', borderRadius: 'var(--radius-md)',
-                  fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)',
-                }}
-                role="alert"
-              >
-                {templateError}
-              </div>
-            )}
-
-            <div style={{ marginBottom: 'var(--space-4)' }}>
-              <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: 'var(--space-2)' }}>Message Template</label>
-              <textarea 
-                value={catalogTemplate}
-                onChange={e => setCatalogTemplate(e.target.value)}
-                placeholder="Hi! I'm interested in {item_name}. Is it available?"
-                style={{ width: '100%', minHeight: 80, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', resize: 'vertical', boxSizing: 'border-box' }}
-              />
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-1)' }}>
-                Must contain <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 4px', borderRadius: '4px' }}>{'{item_name}'}</code>
-              </div>
-            </div>
-
-            <button
-              className="btn btn-primary"
-              onClick={handleSaveTemplate}
-              disabled={savingTemplate}
-            >
-              {savingTemplate ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Template
-            </button>
-          </div>
-        </>
-      )}
     </div>
   );
 }

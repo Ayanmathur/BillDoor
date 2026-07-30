@@ -59,5 +59,10 @@ export default async function BillSlugPage({ params }: Props) {
     voidReason={bill.void_reason}
     hasGst={client.has_gst}
     gstNumber={client.gst_number}
+    roundOffAmount={bill.round_off_amount || 0}
+    totalMrpSavings={bill.total_mrp_savings || 0}
+    gstCalcMode={bill.gst_calculation_mode || 'exclusive'}
+    paymentMethod={bill.payment_method || null}
+    billSettings={client.bill_settings || {}}
   />;
 }
