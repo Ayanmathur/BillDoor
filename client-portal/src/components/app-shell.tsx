@@ -181,16 +181,20 @@ export default function AppShell({
   const touchStartY = useRef<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
+    if (e.touches && e.touches.length > 0) {
+      touchStartY.current = e.touches[0].clientY;
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartY.current === null) return;
-    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-    if (!mobileOpen && deltaY > 30) {
-      setMobileOpen(true);
-    } else if (mobileOpen && deltaY < -30) {
-      setMobileOpen(false);
+    if (e.changedTouches && e.changedTouches.length > 0) {
+      const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+      if (!mobileOpen && deltaY > 30) {
+        setMobileOpen(true);
+      } else if (mobileOpen && deltaY < -30) {
+        setMobileOpen(false);
+      }
     }
     touchStartY.current = null;
   };
@@ -213,9 +217,7 @@ export default function AppShell({
         <div className="sidebar-header">
           <Link href="/dashboard" className="sidebar-brand">
             <img
-              src={collapsed
-                ? (theme === 'dark' ? "/favicon.png" : "/logo-icon.png")
-                : (theme === 'dark' ? "/logo-dark.png" : "/logo-light.png")}
+              src="/brand-logo.png"
               alt="BillDoor Logo"
               className="sidebar-brand-img"
             />

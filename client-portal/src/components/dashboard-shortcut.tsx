@@ -34,18 +34,23 @@ export default function DashboardShortcut() {
   // Fetch POS Settings and Enabled Modules across all pages
   useEffect(() => {
     async function loadPos() {
-      const res = await fetchSettingsAction();
-      if (res.settings) {
-        if (res.settings.posSettings) {
-          setPosModeEnabled(res.settings.posSettings.posModeEnabled);
-          setPreferredAction(res.settings.posSettings.mobileShortcutAction || 'new_bill');
+      try {
+        const res = await fetchSettingsAction();
+        if (res?.settings) {
+          if (res.settings.posSettings) {
+            setPosModeEnabled(res.settings.posSettings.posModeEnabled);
+            setPreferredAction(res.settings.posSettings.mobileShortcutAction || 'new_bill');
+          } else {
+            setPosModeEnabled(true);
+          }
+          if (res.settings.modulesEnabled) {
+            setModulesEnabled(res.settings.modulesEnabled);
+          }
         } else {
           setPosModeEnabled(true);
         }
-        if (res.settings.modulesEnabled) {
-          setModulesEnabled(res.settings.modulesEnabled);
-        }
-      } else {
+      } catch (err) {
+        console.error('Error loading POS settings:', err);
         setPosModeEnabled(true);
       }
     }
@@ -102,7 +107,7 @@ export default function DashboardShortcut() {
   };
 
   const handleTouchStart = (e: ReactTouchEvent) => {
-    if (e.touches.length > 0) {
+    if (e.touches && e.touches.length > 0) {
       const touch = e.touches[0];
       startDrag(touch.clientX, touch.clientY);
     }
@@ -123,7 +128,7 @@ export default function DashboardShortcut() {
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isDragging || e.touches.length === 0) return;
+      if (!isDragging || !e.touches || e.touches.length === 0) return;
       const touch = e.touches[0];
       const dx = touch.clientX - dragStartRef.current.x;
       const dy = touch.clientY - dragStartRef.current.y;
