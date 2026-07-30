@@ -26,9 +26,14 @@ export async function fetchBusinessCardAction(slug: string) {
   const modules = client.modules_enabled as Record<string, any> || {};
   const quickTools = modules.quick_tools as Record<string, boolean> || {};
 
-  const reviewActive = true;
-  const appointmentActive = !(config && config.public_booking_enabled === false);
-  const catalogActive = quickTools.catalog_viewer === true;
+  const isBillitEnabled = modules.billit !== false;
+  const isAppointerEnabled = modules.appointer !== false;
+  const isReviewEnabled = modules.review_flow !== false;
+
+  const reviewActive = isReviewEnabled;
+  const appointmentActive = isAppointerEnabled && !(config && config.public_booking_enabled === false);
+  // Catalog button is shown if either billit OR appointer is enabled (hidden only if both are disabled)
+  const catalogActive = (isBillitEnabled || isAppointerEnabled) && (quickTools.catalog_viewer !== false);
 
   return {
     client,
