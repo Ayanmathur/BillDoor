@@ -223,7 +223,6 @@ export default function BillPageClient({
                 {submitting ? <Loader2 size={12} className="spinner" /> : null} Submit
               </button>
             </div>
-            <div style={{ fontSize: 10, color: '#999', textAlign: 'center', marginTop: 4 }}>Private feedback — only visible to {client.business_name}</div>
           </div>
         )}
 
