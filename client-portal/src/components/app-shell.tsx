@@ -148,9 +148,27 @@ export default function AppShell({
     return pathname.startsWith(href);
   }
 
-  // Page title from current nav item
+  // Page title from current nav item with sub-route overrides
   const currentNav = visibleNav.find((item) => isActive(item.href));
-  const pageTitle = currentNav?.label || 'Dashboard';
+  let pageTitle = currentNav?.label || 'Dashboard';
+
+  if (pathname.startsWith('/dashboard/billit/catalog')) {
+    pageTitle = 'Catalog';
+  } else if (pathname.startsWith('/dashboard/billit/bills')) {
+    pageTitle = 'Bills';
+  } else if (pathname.startsWith('/dashboard/billit/create')) {
+    pageTitle = 'Create Bill';
+  } else if (pathname.startsWith('/dashboard/billit/customers')) {
+    pageTitle = 'Customers';
+  } else if (pathname.startsWith('/dashboard/billit/expenses')) {
+    pageTitle = 'Expenses';
+  } else if (pathname.startsWith('/dashboard/billit/reports')) {
+    pageTitle = 'Reports';
+  } else if (pathname.startsWith('/dashboard/appointer/create')) {
+    pageTitle = 'Book Appointment';
+  } else if (pathname.startsWith('/dashboard/appointer/resources')) {
+    pageTitle = 'Resources';
+  }
 
   // User initials
   const initials = businessName
