@@ -168,11 +168,6 @@ export default function BillPageClient({
             {voidReason && <div style={{ fontSize: '1.25rem', marginTop: 10, fontWeight: 500, color: 'rgba(220, 38, 38, 0.4)' }}>{voidReason}</div>}
           </div>
         )}
-        {status === 'draft' && (
-          <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%) rotate(-30deg)', color: 'rgba(245, 158, 11, 0.15)', fontSize: '5rem', fontWeight: 900, pointerEvents: 'none', zIndex: 10 }}>
-            DRAFT
-          </div>
-        )}
         {/* Header */}
         <div className="bill-header">
           <div className="bill-logo">
@@ -291,7 +286,7 @@ export default function BillPageClient({
 
             return (
               <div key={i} className="bill-item-row">
-                <span style={{ fontWeight: 500 }}>
+                <span style={{ fontWeight: 500, whiteSpace: 'normal', wordBreak: 'normal', overflowWrap: 'break-word' }}>
                   {item.description}
                   {item.unit && <span style={{ color: '#999', fontWeight: 400 }}> /{item.unit}</span>}
                 </span>

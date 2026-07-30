@@ -776,8 +776,10 @@ export default function CreateBillPage() {
               </thead>
               <tbody>
                 {items.map((item) => {
-                  const lineTotal = item.quantity * item.unitPrice - item.discount;
-                  const gst = lineTotal * (item.gstPercent / 100);
+                  const lineTotal = Math.max(0, item.quantity * item.unitPrice - item.discount);
+                  const rate = item.gstPercent || 0;
+                  const isInc = isInclusive && rate > 0;
+                  const displayTotal = isInc ? lineTotal : lineTotal + (lineTotal * (rate / 100));
                   return (
                     <tr key={item.id} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
                       <td style={{ padding: 'var(--space-1)', minWidth: 160 }}>
@@ -801,7 +803,7 @@ export default function CreateBillPage() {
                           style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1)', textAlign: 'center', width: '100%' }} />
                       </td>
                       <td style={{ padding: 'var(--space-1)', textAlign: 'right', fontWeight: 'var(--weight-medium)' }}>
-                        ₹{(lineTotal + gst).toFixed(2)}
+                        ₹{displayTotal.toFixed(2)}
                       </td>
                       <td>
                         <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', padding: 2 }}>
