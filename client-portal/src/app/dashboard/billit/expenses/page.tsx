@@ -171,8 +171,8 @@ export default function ExpensesPage() {
           <p>No expenses found.</p>
         </div>
       ) : (
-        <div style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-          <table className="table" style={{ width: '100%' }}>
+        <div className="table-responsive" style={{ background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table className="table" style={{ width: '100%', minWidth: 540 }}>
             <thead>
               <tr>
                 <th>Date</th>

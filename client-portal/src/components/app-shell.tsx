@@ -18,7 +18,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Star, Receipt, CalendarClock, MessageSquare,
   Briefcase, Settings, Bell, Moon, Sun, LogOut, PanelLeftClose,
-  PanelLeft, DoorOpen, ChevronRight, Menu, X, ArrowLeft, QrCode
+  PanelLeft, DoorOpen, ChevronRight, Menu, X, ArrowLeft, QrCode, AlertTriangle
 } from 'lucide-react';
 import { fetchUnreadCountAction } from '@/app/dashboard/notifications/actions';
 import DashboardShortcut from '@/components/dashboard-shortcut';
@@ -50,12 +50,18 @@ import { fetchMyShopsAction, setActiveShopAction } from '@/app/dashboard/actions
 interface AppShellProps {
   children: ReactNode;
   businessName: string;
+  clientSlug?: string;
   logoUrl?: string | null;
   modulesEnabled: Record<string, boolean>;
   notificationCount?: number;
+  subscriptionHoldEnabled?: boolean;
+  directoryAccessEnabled?: boolean;
 }
 
-export default function AppShell({ children, businessName, logoUrl, modulesEnabled, notificationCount = 0 }: AppShellProps) {
+export default function AppShell({
+  children, businessName, clientSlug = '', logoUrl, modulesEnabled, notificationCount = 0,
+  subscriptionHoldEnabled = false, directoryAccessEnabled = true
+}: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -128,11 +134,13 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
     router.push('/login');
   }
 
-  // Filter nav by enabled modules
-  const visibleNav = NAV_ITEMS.filter((item) => {
-    if (!item.moduleKey) return true;
-    return modulesEnabled[item.moduleKey] === true;
-  });
+  // Filter nav items by enabled modules (if on hold, hide all feature nav items)
+  const visibleNav = subscriptionHoldEnabled
+    ? []
+    : NAV_ITEMS.filter(item => {
+        if (!item.moduleKey) return true;
+        return modulesEnabled[item.moduleKey] !== false;
+      });
 
   // Determine active nav item
   function isActive(href: string) {
@@ -337,10 +345,51 @@ export default function AppShell({ children, businessName, logoUrl, modulesEnabl
         </div>
       </div>
 
-      {/* Content */}
-      <main className="shell-content">
-        {children}
-      </main>
+        {/* Content */}
+        <main className="shell-content">
+          {subscriptionHoldEnabled ? (
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              minHeight: '70vh', padding: 'var(--space-6)', textAlign: 'center'
+            }}>
+              <div style={{
+                background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-xl, 16px)', padding: 'var(--space-6) var(--space-8)',
+                maxWidth: 520, width: '100%', boxShadow: 'var(--shadow-lg)', boxSizing: 'border-box'
+              }}>
+                <div style={{
+                  width: 64, height: 64, borderRadius: '50%', background: 'var(--color-error-subtle)',
+                  color: 'var(--color-error)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto var(--space-4)'
+                }}>
+                  <AlertTriangle size={32} />
+                </div>
+                <h1 style={{ fontSize: 'var(--text-2xl, 24px)', fontWeight: 'var(--weight-bold, 700)', marginBottom: 'var(--space-2)', color: 'var(--color-text-primary)' }}>
+                  Payment Due, Subscription on Hold
+                </h1>
+                <p style={{ fontSize: 'var(--text-md, 16px)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-6)' }}>
+                  Done with payment? Contact Admin
+                </p>
+                <a
+                  href={`https://wa.me/919422880355?text=${encodeURIComponent(`This is ${businessName}${clientSlug ? ` (${clientSlug})` : ''}\nI am done with the payment`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)',
+                    backgroundColor: '#25D366', borderColor: '#25D366', color: '#ffffff',
+                    padding: 'var(--space-3) var(--space-6)', fontSize: 'var(--text-base, 16px)',
+                    fontWeight: 'var(--weight-bold, 700)', borderRadius: 'var(--radius-lg, 12px)'
+                  }}
+                >
+                  <MessageSquare size={18} /> Contact Admin
+                </a>
+              </div>
+            </div>
+          ) : (
+            children
+          )}
+        </main>
     </div>
   );
 }

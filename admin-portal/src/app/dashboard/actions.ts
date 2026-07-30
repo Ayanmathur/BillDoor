@@ -151,7 +151,7 @@ export async function fetchClientsAction() {
 
   const { data, error } = await supabase
     .from('clients')
-    .select('id, business_name, username, slug, phone, status, modules_enabled, registered_at, valid_till, deleted_at')
+    .select('id, business_name, username, slug, phone, status, modules_enabled, registered_at, valid_till, deleted_at, subscription_hold_enabled, directory_access_enabled')
     .is('deleted_at', null)
     .order('registered_at', { ascending: false })
     .limit(200);
@@ -278,6 +278,60 @@ export async function toggleClientStatusAction(data: { clientId: string; action:
     actorType: 'admin', actorId: user.id,
     action: data.action === 'revoke' ? AUDIT_ACTIONS.CLIENT_REVOKED : AUDIT_ACTIONS.CLIENT_REACTIVATED,
     target: data.clientId,
+  });
+
+  return {};
+}
+
+/**
+ * Toggle pre-revoke subscription hold for a client.
+ */
+export async function toggleSubscriptionHoldAction(data: { clientId: string; hold: boolean }) {
+  const supabase = await createAdminClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.user_metadata?.role || user.user_metadata.role !== 'admin') {
+    return { error: 'Unauthorized.' };
+  }
+
+  const { error } = await supabase
+    .from('clients')
+    .update({ subscription_hold_enabled: data.hold })
+    .eq('id', data.clientId);
+
+  if (error) return { error: 'Failed to update subscription hold status.' };
+
+  await logAuditEvent(supabase, {
+    actorType: 'admin', actorId: user.id,
+    action: AUDIT_ACTIONS.CLIENT_MODULES_TOGGLED,
+    target: data.clientId,
+    metadata: { subscription_hold_enabled: data.hold },
+  });
+
+  return {};
+}
+
+/**
+ * Toggle directory access for a client.
+ */
+export async function toggleDirectoryAccessAction(data: { clientId: string; enabled: boolean }) {
+  const supabase = await createAdminClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.user_metadata?.role || user.user_metadata.role !== 'admin') {
+    return { error: 'Unauthorized.' };
+  }
+
+  const { error } = await supabase
+    .from('clients')
+    .update({ directory_access_enabled: data.enabled })
+    .eq('id', data.clientId);
+
+  if (error) return { error: 'Failed to update directory access status.' };
+
+  await logAuditEvent(supabase, {
+    actorType: 'admin', actorId: user.id,
+    action: AUDIT_ACTIONS.CLIENT_MODULES_TOGGLED,
+    target: data.clientId,
+    metadata: { directory_access_enabled: data.enabled },
   });
 
   return {};

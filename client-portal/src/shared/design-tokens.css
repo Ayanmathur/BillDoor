@@ -1090,4 +1090,35 @@ header {
   table-layout: fixed !important;
 }
 
+/* ============================================================
+   Smooth Toggle Enter/Exit Animations
+   - Smoothly expands and fades in toggle-gated UI boxes
+   ============================================================ */
+.toggle-transition {
+  transition: opacity var(--duration-normal, 0.25s) ease-out,
+              max-height var(--duration-slow, 0.35s) ease-out,
+              transform var(--duration-normal, 0.25s) ease-out,
+              margin var(--duration-normal, 0.25s) ease-out,
+              padding var(--duration-normal, 0.25s) ease-out;
+  overflow: hidden;
+  will-change: opacity, transform, max-height;
+}
+
+.toggle-transition.enter {
+  opacity: 1;
+  max-height: 800px;
+  transform: translateY(0);
+}
+
+.toggle-transition.exit {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-8px);
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  pointer-events: none;
+}
+
 

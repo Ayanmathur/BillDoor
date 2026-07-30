@@ -17,8 +17,8 @@ import {
   KeyRound, Users, Copy, Check, MessageCircle, Shield, ShieldOff,
   Settings, Trash2, UserPen, RotateCcw, Plus, ChevronDown, ChevronUp,
   AlertTriangle, Clock, Activity, Sparkles, LogOut, Inbox, CalendarPlus,
-  Phone, CheckCircle, XCircle, Eye, EyeOff, ScrollText, CreditCard, Link2, X,
-  Image as ImageIcon, SlidersHorizontal, Layers,
+  FileText, CheckCircle, XCircle, ExternalLink, CreditCard, SlidersHorizontal, 
+  Phone, PauseCircle, ScrollText, Image as ImageIcon, Eye, EyeOff, X, Link2,
 } from 'lucide-react';
 import {
   generateLicenseKeyAction,
@@ -27,6 +27,8 @@ import {
   toggleClientStatusAction,
   toggleModulesAction,
   toggleQuickToolsAction,
+  toggleSubscriptionHoldAction,
+  toggleDirectoryAccessAction,
   fetchInquiriesAction,
   updateInquiryStatusAction,
   extendValidityAction,
@@ -47,6 +49,8 @@ type Client = {
   registered_at: string;
   valid_till: string;
   deleted_at: string | null;
+  subscription_hold_enabled?: boolean;
+  directory_access_enabled?: boolean;
 };
 
 type Inquiry = {
@@ -236,6 +240,13 @@ export default function AdminDashboard() {
   function handleMessageClient(phone: string) {
     const cleanPhone = phone.replace(/\D/g, '').replace(/^91/, '');
     window.open(`https://wa.me/91${cleanPhone}`, '_blank');
+  }
+
+  async function handleToggleSubscriptionHold(clientId: string, hold: boolean) {
+    setActionLoading(clientId);
+    await toggleSubscriptionHoldAction({ clientId, hold });
+    await loadData();
+    setActionLoading(null);
   }
 
   async function handleExtendValidity(clientId: string, months: number) {
@@ -556,6 +567,15 @@ export default function AdminDashboard() {
                           setPaymentResult(null); setPaymentError(''); setPaymentMonths(1); setPaymentCopied(false);
                         }}>
                           <CreditCard size={16} />
+                        </button>
+                        <button
+                          className={`action-btn ${client.subscription_hold_enabled ? 'danger' : ''}`}
+                          title={client.subscription_hold_enabled ? 'Remove Subscription Hold' : 'Subscription Hold (Payment Due)'}
+                          onClick={() => handleToggleSubscriptionHold(client.id, !client.subscription_hold_enabled)}
+                          disabled={actionLoading === client.id}
+                          style={client.subscription_hold_enabled ? { background: 'var(--color-error-subtle)', color: 'var(--color-error)' } : undefined}
+                        >
+                          <PauseCircle size={16} />
                         </button>
                         {client.status === 'active' ? (
                           <button className="action-btn danger" title="Revoke"

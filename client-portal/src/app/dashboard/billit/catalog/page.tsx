@@ -485,7 +485,7 @@ export default function CatalogPage() {
                     {item.barcode_value || <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>}
                   </td>
                   <td>
-                    <div className="action-row">
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
                       <button className="action-btn" title="Edit" onClick={() => startEdit(item)}><Edit3 size={14} /></button>
                       {item.barcode_value && (
                         <>
