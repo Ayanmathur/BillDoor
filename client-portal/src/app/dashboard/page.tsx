@@ -43,18 +43,14 @@ export default function DashboardPage() {
   const reviewStats = data?.reviewStats || { total: 0, avgRating: '0.0', positive: 0, negative: 0, unread: 0 };
   const billStats = data?.billStats || { total: 0, todayCount: 0, todayRevenue: 0 };
   const customerCount = data?.customerCount || 0;
-  const modulesEnabled = data?.modulesEnabled || {};
-
-  const isBillitEnabled = modulesEnabled.billit !== false;
-  const isAppointerEnabled = modulesEnabled.appointer !== false;
-  const isReviewEnabled = modulesEnabled.review_flow !== false;
 
   return (
     <div>
       {/* Summary Cards */}
+      {/* Dashboard Cards */}
       <div className="dashboard-grid">
-        {/* Reviews */}
-        {isReviewEnabled && (
+        {/* Reviews Cards (Gated by review_flow module) */}
+        {data?.modulesEnabled?.review_flow !== false && (
           <>
             <div className="dash-card" onClick={() => router.push('/dashboard/reviews')} style={{ cursor: 'pointer' }}>
               <div className="dash-card-header">
@@ -90,8 +86,8 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* Today's Revenue */}
-        {isBillitEnabled && (
+        {/* Today's Revenue (Gated by billit module) */}
+        {data?.modulesEnabled?.billit !== false && (
           <div className="dash-card" onClick={() => router.push('/dashboard/billit/reports?range=today')} style={{ cursor: 'pointer' }}>
             <div className="dash-card-header">
               <span className="dash-card-label">Today&apos;s Revenue</span>
@@ -104,8 +100,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Customers */}
-        {(isBillitEnabled || isAppointerEnabled) && (
+        {/* Total Customers (Visible if billit OR appointer is enabled) */}
+        {(data?.modulesEnabled?.billit !== false || data?.modulesEnabled?.appointer !== false) && (
           <div className="dash-card" onClick={() => router.push('/dashboard/billit/customers')} style={{ cursor: 'pointer' }}>
             <div className="dash-card-header">
               <span className="dash-card-label">Total Customers</span>
@@ -118,8 +114,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Expenses & Reports */}
-        {isBillitEnabled && (
+        {/* Expenses & Reports (Gated by billit module) */}
+        {data?.modulesEnabled?.billit !== false && (
           <div className="dash-card" onClick={() => router.push('/dashboard/billit/reports')} style={{ cursor: 'pointer' }}>
             <div className="dash-card-header">
               <span className="dash-card-label">Expenses & Net</span>
@@ -133,27 +129,27 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions (Module Gated) */}
       <h2 style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 'var(--space-3)' }}>
         Quick Actions
       </h2>
       <div className="quick-actions">
-        {isBillitEnabled && (
+        {data?.modulesEnabled?.billit !== false && (
           <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/create')}>
             <Plus size={16} /> Create Bill
           </button>
         )}
-        {isAppointerEnabled && (
+        {data?.modulesEnabled?.appointer !== false && (
           <button className="quick-action-btn" onClick={() => router.push('/dashboard/appointer/create')}>
             <CalendarPlus size={16} /> New Appointment
           </button>
         )}
-        {isReviewEnabled && (
+        {data?.modulesEnabled?.review_flow !== false && (
           <button className="quick-action-btn" onClick={() => router.push('/dashboard/reviews')}>
             <Eye size={16} /> View Reviews
           </button>
         )}
-        {(isBillitEnabled || isAppointerEnabled) && (
+        {(data?.modulesEnabled?.billit !== false || data?.modulesEnabled?.appointer !== false) && (
           <>
             <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/customers')}>
               <Users size={16} /> Customers
@@ -163,7 +159,7 @@ export default function DashboardPage() {
             </button>
           </>
         )}
-        {isBillitEnabled && (
+        {data?.modulesEnabled?.billit !== false && (
           <>
             <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/expenses')}>
               <Wallet size={16} /> Expense Log

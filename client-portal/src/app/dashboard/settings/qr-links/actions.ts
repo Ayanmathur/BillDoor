@@ -19,9 +19,6 @@ export async function fetchQrLinksDataAction() {
   const appointer = client.appointer_config || {};
   const isRevoked = client.status === 'revoked';
 
-  const isBillitEnabled = modules.billit !== false;
-  const isAppointerEnabled = modules.appointer !== false;
-
   const links = [
     {
       key: 'review',
@@ -34,14 +31,14 @@ export async function fetchQrLinksDataAction() {
       key: 'appointer',
       label: 'Appointer Booking',
       path: `/book/${client.slug}`,
-      active: !isRevoked && isAppointerEnabled && appointer.public_booking_enabled !== false,
+      active: !isRevoked && modules.appointer !== false && appointer.public_booking_enabled !== false,
       suggestion: 'Great for: shop window, social bio'
     },
     {
       key: 'catalog',
       label: 'Digital Catalog',
       path: `/catalog/${client.slug}`,
-      active: !isRevoked && (isBillitEnabled || isAppointerEnabled) && modules.quick_tools?.catalog_viewer !== false,
+      active: !isRevoked && (modules.billit !== false || modules.appointer !== false),
       suggestion: 'Great for: WhatsApp status, menu boards'
     },
     {

@@ -75,7 +75,6 @@ export async function fetchSettingsAction() {
           printBill: 'F8',
         },
       },
-      modulesEnabled: client.modules_enabled || {},
       loyaltyConfig: client.loyalty_config || null,
     },
   };

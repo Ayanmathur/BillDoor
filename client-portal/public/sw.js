@@ -1,21 +1,37 @@
 /*
- * BillDoor Service Worker — PWA Lifecycle & Asset Caching (v4)
+ * BillDoor Service Worker — PWA Caching & Offline Resilience
  * 
- * Satisfies PWA installability requirements while letting Next.js Turbopack
- * and Supabase handle HTTP caching, SSR navigation, and redirects natively.
+ * Strategy:
+ * - Network-First for API routes, Server Actions, & Supabase requests
+ * - Cache-First for static assets (CSS, JS, images, fonts)
+ * - Offline Fallback shell for navigation requests when offline
  */
 
-const CACHE_NAME = 'billdoor-pwa-v4';
+const CACHE_NAME = 'billdoor-pwa-v1';
+const STATIC_ASSETS = [
+  '/',
+  '/favicon.png',
+  '/logo.png',
+  '/logo-icon.png',
+  '/manifest.json'
+];
 
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS);
+    })
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
       );
     })
   );
@@ -23,6 +39,61 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Standard browser network stack handling — prevents SW response pipeline errors on mobile
-  return;
+  const url = new URL(event.request.url);
+
+  // Always use Network-Only for non-GET requests (POST Server Actions, API calls)
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // Network-Only for Supabase DB & Auth endpoints, API routes, and Server Actions
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.hostname.includes('supabase.co') ||
+    url.pathname.includes('_next/action')
+  ) {
+    return;
+  }
+
+  // Network-First strategy for HTML navigation requests
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cached) => {
+            return cached || caches.match('/');
+          });
+        })
+    );
+    return;
+  }
+
+  // Cache-First strategy for static assets (images, fonts, scripts)
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        // Return cached and update cache in background
+        fetch(event.request).then((response) => {
+          if (response.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response));
+          }
+        }).catch(() => {});
+        return cachedResponse;
+      }
+      return fetch(event.request).then((response) => {
+        if (response.status === 200 && response.type === 'basic') {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return response;
+      });
+    })
+  );
 });

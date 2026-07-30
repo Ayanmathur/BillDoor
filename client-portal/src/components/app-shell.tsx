@@ -148,26 +148,13 @@ export default function AppShell({
     return pathname.startsWith(href);
   }
 
-  // Page title from current nav item with sub-route overrides
-  const currentNav = visibleNav.find((item) => isActive(item.href));
-  let pageTitle = currentNav?.label || 'Dashboard';
-
+  // Page title from current nav item (with Catalog override)
+  let pageTitle = 'Dashboard';
   if (pathname.startsWith('/dashboard/billit/catalog')) {
     pageTitle = 'Catalog';
-  } else if (pathname.startsWith('/dashboard/billit/bills')) {
-    pageTitle = 'Bills';
-  } else if (pathname.startsWith('/dashboard/billit/create')) {
-    pageTitle = 'Create Bill';
-  } else if (pathname.startsWith('/dashboard/billit/customers')) {
-    pageTitle = 'Customers';
-  } else if (pathname.startsWith('/dashboard/billit/expenses')) {
-    pageTitle = 'Expenses';
-  } else if (pathname.startsWith('/dashboard/billit/reports')) {
-    pageTitle = 'Reports';
-  } else if (pathname.startsWith('/dashboard/appointer/create')) {
-    pageTitle = 'Book Appointment';
-  } else if (pathname.startsWith('/dashboard/appointer/resources')) {
-    pageTitle = 'Resources';
+  } else {
+    const currentNav = visibleNav.find((item) => isActive(item.href));
+    if (currentNav) pageTitle = currentNav.label;
   }
 
   // User initials
@@ -181,20 +168,16 @@ export default function AppShell({
   const touchStartY = useRef<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches && e.touches.length > 0) {
-      touchStartY.current = e.touches[0].clientY;
-    }
+    touchStartY.current = e.touches[0].clientY;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartY.current === null) return;
-    if (e.changedTouches && e.changedTouches.length > 0) {
-      const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-      if (!mobileOpen && deltaY > 30) {
-        setMobileOpen(true);
-      } else if (mobileOpen && deltaY < -30) {
-        setMobileOpen(false);
-      }
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    if (!mobileOpen && deltaY > 30) {
+      setMobileOpen(true);
+    } else if (mobileOpen && deltaY < -30) {
+      setMobileOpen(false);
     }
     touchStartY.current = null;
   };
@@ -217,7 +200,9 @@ export default function AppShell({
         <div className="sidebar-header">
           <Link href="/dashboard" className="sidebar-brand">
             <img
-              src="/brand-logo.png"
+              src={collapsed
+                ? (theme === 'dark' ? "/favicon.png" : "/logo-icon.png")
+                : (theme === 'dark' ? "/logo-dark.png" : "/logo-light.png")}
               alt="BillDoor Logo"
               className="sidebar-brand-img"
             />
@@ -307,7 +292,7 @@ export default function AppShell({
         </div>
 
         <div id="mobile-sidebar-widget-area">
-          <DashboardShortcut />
+          <DashboardShortcut modulesEnabled={modulesEnabled} />
         </div>
       </nav>
 

@@ -6,13 +6,16 @@ import { Calendar, FileText } from 'lucide-react';
 import { fetchSettingsAction } from '@/app/dashboard/settings/actions';
 import './dashboard-shortcut.css';
 
-export default function DashboardShortcut() {
+interface DashboardShortcutProps {
+  modulesEnabled?: Record<string, boolean>;
+}
+
+export default function DashboardShortcut({ modulesEnabled = {} }: DashboardShortcutProps) {
   const router = useRouter();
   const pathname = usePathname();
 
   const [posModeEnabled, setPosModeEnabled] = useState<boolean | null>(null);
-  const [modulesEnabled, setModulesEnabled] = useState<Record<string, boolean>>({});
-  const [preferredAction, setPreferredAction] = useState<'new_bill' | 'new_appointment'>('new_bill');
+  const [shortcutAction, setShortcutAction] = useState<'new_bill' | 'new_appointment'>('new_bill');
   const [isMobile, setIsMobile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -21,7 +24,7 @@ export default function DashboardShortcut() {
   const dragStartRef = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
   const hasDraggedRef = useRef(false);
 
-  // Check screen size (< 768px)
+  // Check screen size (< 768px for mobile drawer)
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -31,56 +34,43 @@ export default function DashboardShortcut() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch POS Settings and Enabled Modules across all pages
+  // Fetch POS Settings
   useEffect(() => {
     async function loadPos() {
-      try {
-        const res = await fetchSettingsAction();
-        if (res?.settings) {
-          if (res.settings.posSettings) {
-            setPosModeEnabled(res.settings.posSettings.posModeEnabled);
-            setPreferredAction(res.settings.posSettings.mobileShortcutAction || 'new_bill');
-          } else {
-            setPosModeEnabled(true);
-          }
-          if (res.settings.modulesEnabled) {
-            setModulesEnabled(res.settings.modulesEnabled);
-          }
-        } else {
-          setPosModeEnabled(true);
-        }
-      } catch (err) {
-        console.error('Error loading POS settings:', err);
+      const res = await fetchSettingsAction();
+      if (res.settings?.posSettings) {
+        setPosModeEnabled(res.settings.posSettings.posModeEnabled);
+        setShortcutAction(res.settings.posSettings.mobileShortcutAction || 'new_bill');
+      } else {
         setPosModeEnabled(true);
       }
     }
     loadPos();
   }, []);
 
-  // Page Exclusions: Do NOT show on Create Bill page or Book Appointment page
-  const isExcludedPage = pathname === '/dashboard/billit/create' || pathname === '/dashboard/appointer/create';
-  if (!isMobile || isExcludedPage || posModeEnabled === false) return null;
-
-  // Module Gating Fallback Logic:
+  // Module enablement flags
   const isBillitEnabled = modulesEnabled.billit !== false;
   const isAppointerEnabled = modulesEnabled.appointer !== false;
 
-  let activeAction: 'new_bill' | 'new_appointment' | null = null;
+  // Determine active action based on administrative gating & settings
+  let effectiveAction: 'new_bill' | 'new_appointment' | null = null;
 
-  if (preferredAction === 'new_bill') {
-    if (isBillitEnabled) activeAction = 'new_bill';
-    else if (isAppointerEnabled) activeAction = 'new_appointment';
+  if (isBillitEnabled) {
+    if (shortcutAction === 'new_appointment' && isAppointerEnabled) {
+      effectiveAction = 'new_appointment';
+    } else {
+      effectiveAction = 'new_bill';
+    }
+  } else if (isAppointerEnabled) {
+    effectiveAction = 'new_appointment';
   } else {
-    if (isAppointerEnabled) activeAction = 'new_appointment';
-    else if (isBillitEnabled) activeAction = 'new_bill';
+    // Both Billit and Appointer are disabled by admin -> hide shortcut completely
+    effectiveAction = null;
   }
 
-  // If both modules are disabled by admin, hide completely
-  if (!activeAction) return null;
-
-  const targetPath = activeAction === 'new_appointment' ? '/dashboard/appointer/create' : '/dashboard/billit/create';
-  const buttonText = activeAction === 'new_appointment' ? '+ Book' : '+ New Bill';
-  const ActionIcon = activeAction === 'new_appointment' ? Calendar : FileText;
+  const targetPath = effectiveAction === 'new_appointment' ? '/dashboard/appointer/create' : '/dashboard/billit/create';
+  const buttonText = effectiveAction === 'new_appointment' ? '+ Book' : '+ New Bill';
+  const ActionIcon = effectiveAction === 'new_appointment' ? Calendar : FileText;
 
   const handleClick = () => {
     if (hasDraggedRef.current) {
@@ -107,7 +97,7 @@ export default function DashboardShortcut() {
   };
 
   const handleTouchStart = (e: ReactTouchEvent) => {
-    if (e.touches && e.touches.length > 0) {
+    if (e.touches.length > 0) {
       const touch = e.touches[0];
       startDrag(touch.clientX, touch.clientY);
     }
@@ -128,7 +118,7 @@ export default function DashboardShortcut() {
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isDragging || !e.touches || e.touches.length === 0) return;
+      if (!isDragging || e.touches.length === 0) return;
       const touch = e.touches[0];
       const dx = touch.clientX - dragStartRef.current.x;
       const dy = touch.clientY - dragStartRef.current.y;
@@ -162,6 +152,14 @@ export default function DashboardShortcut() {
     };
   }, [isDragging]);
 
+  // Route exceptions: hide on create bill and create appointment screens
+  const isCreationPage = pathname === '/dashboard/billit/create' || pathname === '/dashboard/appointer/create';
+
+  // Do not render if not on mobile, on creation page, POS mode is disabled, or both modules disabled
+  if (!isMobile || isCreationPage || posModeEnabled === false || effectiveAction === null) {
+    return null;
+  }
+
   return (
     <div
       ref={containerRef}
@@ -176,7 +174,7 @@ export default function DashboardShortcut() {
         type="button"
         className="shortcut-pill-btn"
         onClick={handleClick}
-        title={activeAction === 'new_appointment' ? 'Book New Appointment' : 'Create New Bill'}
+        title={effectiveAction === 'new_appointment' ? 'Book New Appointment' : 'Create New Bill'}
       >
         <ActionIcon size={16} />
         <span>{buttonText}</span>
