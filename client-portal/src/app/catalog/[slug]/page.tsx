@@ -4,7 +4,7 @@
 // Want more? "Request from Orbitex Services" footer handles that upsell.
 
 import { useState, useEffect, useMemo, use } from 'react';
-import { Search, MessageCircle, Loader2, Package, Check } from 'lucide-react';
+import { Search, MessageCircle, Loader2, Package, Check, ChevronDown, ChevronRight } from 'lucide-react';
 import PoweredByFooter from '@/components/powered-by-footer';
 import { fuzzyMatch } from '@/shared/fuzzy-search';
 import { fetchCatalogAction } from './actions';
@@ -33,6 +33,7 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function load() {
@@ -92,6 +93,18 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
         next.delete(itemName);
       } else {
         next.add(itemName);
+      }
+      return next;
+    });
+  }
+
+  function toggleCategory(groupName: string) {
+    setCollapsedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(groupName)) {
+        next.delete(groupName);
+      } else {
+        next.add(groupName);
       }
       return next;
     });
@@ -172,24 +185,38 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
         ) : hasCategories ? (
           /* Grouped by category */
           <div className="catalog-grouped">
-            {categoryGroups.map((group) => (
-              <div key={group.name} className="catalog-category-group">
-                <div className="catalog-category-header">
-                  <span className="catalog-category-name">{group.name}</span>
-                  <span className="catalog-category-count">{group.items.length}</span>
+            {categoryGroups.map((group) => {
+              const isCollapsed = collapsedCategories.has(group.name) && !search.trim();
+              return (
+                <div key={group.name} className="catalog-category-group">
+                  <div
+                    className="catalog-category-header"
+                    onClick={() => toggleCategory(group.name)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCategory(group.name); } }}
+                  >
+                    <span className="catalog-category-chevron">
+                      {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                    </span>
+                    <span className="catalog-category-name">{group.name}</span>
+                    <span className="catalog-category-count">{group.items.length}</span>
+                  </div>
+                  {!isCollapsed && (
+                    <div className="catalog-list">
+                      {group.items.map((item, i) => (
+                        <CatalogItemCard
+                          key={`${group.name}-${i}`}
+                          item={item}
+                          isSelected={selected.has(item.name)}
+                          onToggle={() => toggleItem(item.name)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="catalog-list">
-                  {group.items.map((item, i) => (
-                    <CatalogItemCard
-                      key={`${group.name}-${i}`}
-                      item={item}
-                      isSelected={selected.has(item.name)}
-                      onToggle={() => toggleItem(item.name)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           /* Flat list (no categories configured) */
