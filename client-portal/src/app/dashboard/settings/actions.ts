@@ -370,10 +370,10 @@ export async function changeUsernameAction(data: { newUsername: string; currentP
 }
 
 // ============================================================
-// Upload logo (uses Supabase Storage)
+// Upload logo (uses Supabase Storage with Admin Client + Cache Busting)
 // ============================================================
 export async function uploadLogoAction(formData: FormData) {
-  const { supabase, user, error } = await getAuthenticatedClient();
+  const { user, error } = await getAuthenticatedClient();
   if (error || !user) return { error: error || 'Unauthorized.', logoUrl: null };
 
   const file = formData.get('logo') as File;
@@ -388,22 +388,44 @@ export async function uploadLogoAction(formData: FormData) {
     return { error: 'Logo must be under 2MB.', logoUrl: null };
   }
 
-  const ext = file.name.split('.').pop() || 'png';
-  const filePath = `logos/${user.id}/logo.${ext}`;
+  try {
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+    const timestamp = Date.now();
+    const filePath = `logos/${user.id}/logo_${timestamp}.${ext}`;
 
-  const { error: uploadErr } = await supabase.storage
-    .from('public-assets')
-    .upload(filePath, file, { upsert: true, contentType: file.type });
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-  if (uploadErr) return { error: 'Failed to upload. Try again.', logoUrl: null };
+    const supabaseAdmin = await createAdminClient();
 
-  const { data: urlData } = supabase.storage.from('public-assets').getPublicUrl(filePath);
-  const logoUrl = urlData?.publicUrl || '';
+    const { error: uploadErr } = await supabaseAdmin.storage
+      .from('public-assets')
+      .upload(filePath, buffer, { upsert: true, contentType: file.type });
 
-  // Save URL to client record
-  await supabase.from('clients').update({ logo_url: logoUrl }).eq('id', user.id);
+    if (uploadErr) {
+      console.error('Logo upload storage error:', uploadErr);
+      return { error: `Failed to upload logo: ${uploadErr.message}`, logoUrl: null };
+    }
 
-  return { logoUrl };
+    const { data: urlData } = supabaseAdmin.storage.from('public-assets').getPublicUrl(filePath);
+    const logoUrl = urlData?.publicUrl || '';
+
+    // Save URL to client record
+    const { error: updateErr } = await supabaseAdmin
+      .from('clients')
+      .update({ logo_url: logoUrl })
+      .eq('id', user.id);
+
+    if (updateErr) {
+      console.error('Logo upload DB update error:', updateErr);
+      return { error: 'Uploaded file, but failed to save logo URL. Try again.', logoUrl: null };
+    }
+
+    return { logoUrl };
+  } catch (err: any) {
+    console.error('Logo upload exception:', err);
+    return { error: 'Logo upload failed. Try again.', logoUrl: null };
+  }
 }
 
 // ============================================================

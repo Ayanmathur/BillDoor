@@ -230,13 +230,24 @@ export default function SettingsPage() {
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true); setError('');
-    const formData = new FormData();
-    formData.append('logo', file);
-    const result = await uploadLogoAction(formData);
-    if (result.error) setError(result.error);
-    else if (result.logoUrl) { setLogoUrl(result.logoUrl); flash(); }
-    setUploading(false);
+    setUploading(true);
+    setError('');
+    try {
+      const formData = new FormData();
+      formData.append('logo', file);
+      const result = await uploadLogoAction(formData);
+      if (result.error) {
+        setError(result.error);
+      } else if (result.logoUrl) {
+        setLogoUrl(result.logoUrl);
+        flash();
+      }
+    } catch {
+      setError('Logo upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   }
 
   async function handleDeleteAccount() {
