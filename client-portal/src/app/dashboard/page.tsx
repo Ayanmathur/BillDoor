@@ -166,7 +166,7 @@ export default function DashboardPage() {
                 <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-2)' }}>
                   {typeof window !== 'undefined' ? `${window.location.origin}/card/${data.clientSlug}` : `/card/${data.clientSlug}`}
                 </div>
-                <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                <div className="dashboard-quick-buttons">
                   <button
                     className="btn"
                     style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)' }}
@@ -203,7 +203,7 @@ export default function DashboardPage() {
                     className="btn btn-primary"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', textDecoration: 'none' }}
                   >
-                    <User size={14} /> Open Digital Card <ExternalLink size={12} />
+                    <User size={14} /> Open Card <ExternalLink size={12} />
                   </a>
                   <button
                     className="btn"
