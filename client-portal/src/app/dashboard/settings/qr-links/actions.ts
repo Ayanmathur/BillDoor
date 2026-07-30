@@ -41,7 +41,7 @@ export async function fetchQrLinksDataAction() {
       key: 'catalog',
       label: 'Digital Catalog',
       path: `/catalog/${client.slug}`,
-      active: !isRevoked && isBillitEnabled && modules.quick_tools?.catalog_viewer === true,
+      active: !isRevoked && (isBillitEnabled || isAppointerEnabled) && modules.quick_tools?.catalog_viewer !== false,
       suggestion: 'Great for: WhatsApp status, menu boards'
     },
     {

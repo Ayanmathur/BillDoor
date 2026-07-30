@@ -78,14 +78,19 @@ export default function CatalogPage() {
 
   useEffect(() => { loadItems(); }, [loadItems]);
 
-  // Check if catalog_viewer quick tool is enabled
+  // Check if catalog viewer & Build Category feature are enabled (if either billit or appointer is enabled)
   useEffect(() => {
     (async () => {
       const res = await fetchBillitSettingsAction();
       if (res.settings?.modules_enabled) {
         const modules = res.settings.modules_enabled as Record<string, any>;
         const qt = modules.quick_tools as Record<string, boolean> | undefined;
-        setCatalogViewerEnabled(qt?.catalog_viewer === true);
+        const isBillitEnabled = modules.billit !== false;
+        const isAppointerEnabled = modules.appointer !== false;
+        const isEitherEnabled = isBillitEnabled || isAppointerEnabled;
+        setCatalogViewerEnabled(isEitherEnabled && qt?.catalog_viewer !== false);
+      } else {
+        setCatalogViewerEnabled(true);
       }
     })();
   }, []);

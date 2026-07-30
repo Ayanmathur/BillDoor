@@ -154,15 +154,17 @@ export default function DashboardPage() {
           </button>
         )}
         {(isBillitEnabled || isAppointerEnabled) && (
-          <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/customers')}>
-            <Users size={16} /> Customers
-          </button>
-        )}
-        {isBillitEnabled && (
           <>
+            <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/customers')}>
+              <Users size={16} /> Customers
+            </button>
             <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/catalog')}>
               <Receipt size={16} /> Catalog
             </button>
+          </>
+        )}
+        {isBillitEnabled && (
+          <>
             <button className="quick-action-btn" onClick={() => router.push('/dashboard/billit/expenses')}>
               <Wallet size={16} /> Expense Log
             </button>
