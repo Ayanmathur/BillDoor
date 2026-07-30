@@ -283,7 +283,7 @@ export default function BillPageClient({
             const rate = item.gstPercent || 0;
             const itemTaxable = item.taxableValue !== undefined ? item.taxableValue : (isInclusiveMode && rate > 0 ? lineTotal / (1 + rate / 100) : lineTotal);
             const itemGst = item.gstAmount !== undefined ? item.gstAmount : (isInclusiveMode && rate > 0 ? lineTotal - itemTaxable : lineTotal * (rate / 100));
-            const itemTotalDisplay = isInclusiveMode ? lineTotal : lineTotal + itemGst;
+            const itemTotalDisplay = lineTotal;
 
             return (
               <div key={i} className="bill-item-row">

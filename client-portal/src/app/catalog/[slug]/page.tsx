@@ -5,6 +5,7 @@
 import { useState, useEffect, use } from 'react';
 import { Search, MessageCircle, Loader2, Package, ShoppingBag } from 'lucide-react';
 import PoweredByFooter from '@/components/powered-by-footer';
+import { fuzzyMatch } from '@/shared/fuzzy-search';
 import { fetchCatalogAction } from './actions';
 import './catalog.css';
 
@@ -56,7 +57,7 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
   }
 
   const filteredItems = (data.items || []).filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase())
+    fuzzyMatch(search, item.name)
   );
 
   return (

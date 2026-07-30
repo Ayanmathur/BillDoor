@@ -12,6 +12,7 @@ import {
   Plus, Search, Edit3, Trash2, Package, Loader2, X, Save, Barcode, Printer, Download, FileSpreadsheet, Upload
 } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
+import { fuzzyMatch } from '@/shared/fuzzy-search';
 import './../billit.css';
 import {
   fetchCatalogAction,
@@ -317,7 +318,7 @@ export default function CatalogPage() {
   }
 
   const filtered = search
-    ? items.filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
+    ? items.filter(i => fuzzyMatch(search, i.name))
     : items;
 
   return (

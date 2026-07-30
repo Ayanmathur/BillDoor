@@ -10,6 +10,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { calculateBillTotals } from '@/shared/billing-math';
+import { fuzzyMatch } from '@/shared/fuzzy-search';
 import { z } from 'zod';
 import crypto from 'crypto';
 
@@ -157,10 +158,12 @@ export async function searchCatalogAction(query: string) {
     .select('id, name, price, unit, gst_percent, barcode_value, mrp, hsn_sac_code')
     .eq('client_id', user.id)
     .eq('active', true)
-    .ilike('name', `%${query}%`)
-    .limit(10);
+    .limit(100);
 
-  return { items: data || [] };
+  if (!data) return { items: [] };
+
+  const filtered = data.filter((item) => fuzzyMatch(query, item.name)).slice(0, 10);
+  return { items: filtered };
 }
 
 // ============================================================
