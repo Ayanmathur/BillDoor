@@ -192,27 +192,27 @@ export default function AppShell({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <Link href="/dashboard" className="sidebar-brand">
-          <img
-            src={collapsed
-              ? (theme === 'dark' ? "/favicon.png" : "/logo-icon.png")
-              : (theme === 'dark' ? "/logo-dark.png" : "/logo-light.png")}
-            alt="BillDoor Logo"
-            className="sidebar-brand-img"
-          />
-        </Link>
+        <div className="sidebar-header">
+          <Link href="/dashboard" className="sidebar-brand">
+            <img
+              src={collapsed
+                ? (theme === 'dark' ? "/favicon.png" : "/logo-icon.png")
+                : (theme === 'dark' ? "/logo-dark.png" : "/logo-light.png")}
+              alt="BillDoor Logo"
+              className="sidebar-brand-img"
+            />
+          </Link>
 
-        {/* Mobile Business Identity Bar inside Nav Panel */}
-        <div className="mobile-nav-user">
-          <div className="topbar-user-avatar" style={{ width: 36, height: 36, overflow: 'hidden', padding: logoUrl ? 0 : undefined, flexShrink: 0 }}>
-            {logoUrl ? (
-              <img src={logoUrl} alt={businessName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              initials
-            )}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
-            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', color: 'var(--color-sidebar-text-active)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {/* Mobile Business Identity in top right corner of nav panel */}
+          <div className="mobile-nav-user">
+            <div className="topbar-user-avatar" style={{ width: 26, height: 26, overflow: 'hidden', padding: logoUrl ? 0 : undefined, flexShrink: 0 }}>
+              {logoUrl ? (
+                <img src={logoUrl} alt={businessName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                initials
+              )}
+            </div>
+            <span className="mobile-nav-user-name">
               {businessName}
             </span>
           </div>
