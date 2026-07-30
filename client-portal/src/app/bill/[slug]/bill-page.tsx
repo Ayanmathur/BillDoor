@@ -387,7 +387,7 @@ export default function BillPageClient({
               </>
             ) : (
               <div className="bill-summary-row">
-                <span>{(gstCalcMode || bill.gst_calculation_mode) === 'inclusive' ? 'GST (Included)' : 'GST'}</span>
+                <span>{(gstCalcMode || bill.gst_calculation_mode) === 'inclusive' ? 'GST (Inclusive)' : 'GST (Exclusive)'}</span>
                 <span>₹{Number(bill.gst_total || 0).toFixed(2)}</span>
               </div>
             )

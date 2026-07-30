@@ -840,7 +840,7 @@ export default function CreateBillPage() {
           </div>
           {gstTotal > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--color-text-secondary)' }}>{isInclusive ? 'GST (Included)' : 'GST'}</span>
+              <span style={{ color: 'var(--color-text-secondary)' }}>{isInclusive ? 'GST (Inclusive)' : 'GST (Exclusive)'}</span>
               <span>₹{gstTotal.toFixed(2)}</span>
             </div>
           )}
