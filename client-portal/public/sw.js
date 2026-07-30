@@ -1,43 +1,23 @@
 /*
- * BillDoor Service Worker — PWA Caching & iOS Offline Resilience (v2)
+ * BillDoor Service Worker — PWA Static Asset Caching (v3)
  * 
  * Strategy:
- * - Network-First for API routes, Server Actions, Supabase requests & HTML navigation
- * - Cache-First for static assets (CSS, JS, images, fonts)
- * - Safe individual asset precaching to prevent install failures
+ * - Does NOT intercept navigation requests (HTML pages, SSR, redirects pass natively to browser)
+ * - Does NOT intercept API calls, Supabase endpoints, or Server Actions
+ * - Caches static assets (images, icons, fonts, CSS/JS bundles) safely
  */
 
-const CACHE_NAME = 'billdoor-pwa-v2';
-const STATIC_ASSETS = [
-  '/',
-  '/favicon.png',
-  '/brand-logo.png',
-  '/apple-touch-icon.png',
-  '/manifest.json'
-];
+const CACHE_NAME = 'billdoor-static-v3';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return Promise.all(
-        STATIC_ASSETS.map((url) =>
-          cache.add(url).catch((err) => {
-            console.log('PWA cache add skipped:', url, err);
-          })
-        )
-      );
-    })
-  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
     })
   );
@@ -45,14 +25,17 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // 1. Only handle GET requests
+  if (event.request.method !== 'GET') return;
+
   const url = new URL(event.request.url);
 
-  // Always use Network-Only for non-GET requests (POST Server Actions, API calls)
-  if (event.request.method !== 'GET') {
+  // 2. DO NOT intercept navigation requests (HTML pages, SSR, Next.js redirects)
+  if (event.request.mode === 'navigate') {
     return;
   }
 
-  // Network-Only for Supabase DB & Auth endpoints, API routes, and Server Actions
+  // 3. DO NOT intercept API calls, Supabase endpoints, or Server Actions
   if (
     url.pathname.startsWith('/api/') ||
     url.hostname.includes('supabase.co') ||
@@ -61,44 +44,35 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-First strategy for HTML navigation requests
-  if (event.request.mode === 'navigate') {
+  // 4. Cache static assets only (images, icons, fonts, CSS/JS bundles)
+  if (
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.jpeg') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.ico') ||
+    url.pathname.endsWith('.webp') ||
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.js')
+  ) {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(event.request).then((cached) => {
-            return cached || fetch(event.request);
-          });
-        })
-    );
-    return;
-  }
-
-  // Cache-First strategy for static assets (images, fonts, scripts)
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        fetch(event.request).then((response) => {
-          if (response.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response));
-          }
-        }).catch(() => {});
-        return cachedResponse;
-      }
-      return fetch(event.request).then((response) => {
-        if (response.status === 200 && response.type === 'basic') {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
-        return response;
-      });
-    })
-  );
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache).catch(() => {});
+            });
+          }
+          return networkResponse;
+        }).catch(() => {
+          // If network fetch fails, fallback gracefully
+        });
+      })
+    );
+  }
 });
