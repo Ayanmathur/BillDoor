@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Fragment } from 'react';
 import { fetchClientsAction, resetClientPasswordAction, updateClientDetailsAction, fetchClientFinancialsAction, togglePubliclyListedAction } from './actions';
+import { updateWhatsAppQuotaAction } from '../actions';
 import { KeyRound, Check, Loader2, X, UserPen, IndianRupee, Globe } from 'lucide-react';
 import './clients.css';
 
@@ -14,6 +15,7 @@ interface ClientRecord {
   about: string;
   status: string;
   publicly_listed?: boolean;
+  whatsapp_quota?: number;
   created_at: string;
   deleted_at: string | null;
 }
@@ -121,55 +123,65 @@ export default function ClientsPage() {
           <div className="table-responsive">
             <table className="table">
               <thead>
-                <tr>
-                  <th>Username</th>
-                  <th>Business Name</th>
-                  <th>Status</th>
-                  <th>Directory</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredClients.map(client => (
-                  <Fragment key={client.id}>
                   <tr>
-                    <td>
-                      <strong>{client.username}</strong>
-                    </td>
-                    <td>{client.business_name}</td>
-                    <td>
-                      <span className={`badge badge-${client.status === 'active' ? 'success' : client.status === 'revoked' ? 'error' : 'warning'}`}>
-                        {client.status}
-                      </span>
-                      {client.deleted_at && <span className="badge badge-error" style={{ marginLeft: 8 }}>Deleted</span>}
-                    </td>
-                    <td>
-                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 'var(--text-xs)' }}>
-                        <input
-                          type="checkbox"
-                          checked={client.publicly_listed ?? false}
-                          onChange={async (e) => {
-                            const val = e.target.checked;
-                            setClients(prev => prev.map(c => c.id === client.id ? { ...c, publicly_listed: val } : c));
-                            const res = await togglePubliclyListedAction(client.id, val);
-                            if (res.error) {
-                              alert(res.error);
-                              setClients(prev => prev.map(c => c.id === client.id ? { ...c, publicly_listed: !val } : c));
-                            }
-                          }}
-                        />
-                        <span>{client.publicly_listed ? 'Public' : 'Hidden'}</span>
-                      </label>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button
-                          className="btn-icon"
-                          title="Edit Details"
-                          onClick={() => openEditModal(client)}
-                        >
-                          <UserPen size={16} /> Edit
-                        </button>
+                    <th>Username</th>
+                    <th>Business Name</th>
+                    <th>Status</th>
+                    <th>WhatsApp Quota</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredClients.map(client => (
+                    <Fragment key={client.id}>
+                    <tr>
+                      <td>
+                        <strong>{client.username}</strong>
+                      </td>
+                      <td>{client.business_name}</td>
+                      <td>
+                        <span className={`badge badge-${client.status === 'active' ? 'success' : client.status === 'revoked' ? 'error' : 'warning'}`}>
+                          {client.status}
+                        </span>
+                        {client.deleted_at && <span className="badge badge-error" style={{ marginLeft: 8 }}>Deleted</span>}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <input
+                            type="number"
+                            min={0}
+                            step={100}
+                            value={client.whatsapp_quota ?? 500}
+                            onChange={async (e) => {
+                              const val = parseInt(e.target.value) || 0;
+                              setClients(prev => prev.map(c => c.id === client.id ? { ...c, whatsapp_quota: val } : c));
+                              await updateWhatsAppQuotaAction({ clientId: client.id, quota: val });
+                            }}
+                            style={{ width: '80px', padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', fontSize: 'var(--text-xs)' }}
+                          />
+                          <button
+                            className="btn btn-secondary"
+                            title="Increase Quota by +500"
+                            onClick={async () => {
+                              const newQuota = (client.whatsapp_quota ?? 500) + 500;
+                              setClients(prev => prev.map(c => c.id === client.id ? { ...c, whatsapp_quota: newQuota } : c));
+                              await updateWhatsAppQuotaAction({ clientId: client.id, quota: newQuota });
+                            }}
+                            style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 'var(--weight-bold)', color: 'var(--color-accent)' }}
+                          >
+                            +500
+                          </button>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            className="btn-icon"
+                            title="Edit Details"
+                            onClick={() => openEditModal(client)}
+                          >
+                            <UserPen size={16} /> Edit
+                          </button>
                         <button
                           className="btn-icon"
                           title="View Financials"

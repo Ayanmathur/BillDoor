@@ -20,7 +20,7 @@ export async function fetchClientsAction() {
 
   const { data, error } = await supabase
     .from('clients')
-    .select('id, username, business_name, slug, google_place_id, about, status, publicly_listed, created_at, deleted_at')
+    .select('id, username, business_name, slug, google_place_id, about, status, publicly_listed, created_at, deleted_at, whatsapp_quota')
     .order('created_at', { ascending: false });
 
   if (error) {

@@ -151,7 +151,7 @@ export async function fetchClientsAction() {
 
   const { data, error } = await supabase
     .from('clients')
-    .select('id, business_name, username, slug, phone, status, modules_enabled, registered_at, valid_till, deleted_at, subscription_hold_enabled, directory_access_enabled, publicly_listed, whatsapp_quota')
+    .select('id, business_name, username, slug, phone, status, modules_enabled, registered_at, valid_till, deleted_at, subscription_hold_enabled, directory_access_enabled, publicly_listed')
     .is('deleted_at', null)
     .order('registered_at', { ascending: false })
     .limit(200);
@@ -343,35 +343,6 @@ export async function toggleDirectoryAccessAction(data: { clientId: string; enab
 }
 
 // ============================================================
-// Update Client WhatsApp Broadcast Quota
-// ============================================================
-export async function updateWhatsAppQuotaAction(data: { clientId: string; quota: number }) {
-  const supabase = await createAdminClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.user_metadata?.role || user.user_metadata.role !== 'admin') {
-    return { error: 'Unauthorized.' };
-  }
-
-  const quota = Math.max(0, Math.floor(data.quota));
-
-  const { error } = await supabase
-    .from('clients')
-    .update({ whatsapp_quota: quota })
-    .eq('id', data.clientId);
-
-  if (error) return { error: 'Failed to update WhatsApp quota.' };
-
-  await logAuditEvent(supabase, {
-    actorType: 'admin', actorId: user.id,
-    action: AUDIT_ACTIONS.CLIENT_MODULES_TOGGLED,
-    target: data.clientId,
-    metadata: { whatsapp_quota: quota },
-  });
-
-  return { success: true, quota };
-}
-
-// ============================================================
 // Reset / Change Client Username
 // ============================================================
 export async function resetClientUsernameAction(data: { clientId: string; newUsername: string }) {
@@ -476,6 +447,35 @@ export async function deleteClientAction(data: { clientId: string; confirmationT
   });
 
   return {};
+}
+
+// ============================================================
+// Update WhatsApp Quota
+// ============================================================
+export async function updateWhatsAppQuotaAction(data: { clientId: string; quota: number }) {
+  const supabase = await createAdminClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.user_metadata?.role || user.user_metadata.role !== 'admin') {
+    return { error: 'Unauthorized.' };
+  }
+
+  const quota = Math.max(0, Math.floor(data.quota));
+
+  const { error } = await supabase
+    .from('clients')
+    .update({ whatsapp_quota: quota })
+    .eq('id', data.clientId);
+
+  if (error) return { error: 'Failed to update WhatsApp quota.' };
+
+  await logAuditEvent(supabase, {
+    actorType: 'admin', actorId: user.id,
+    action: AUDIT_ACTIONS.CLIENT_MODULES_TOGGLED,
+    target: data.clientId,
+    metadata: { whatsapp_quota: quota },
+  });
+
+  return { success: true, quota };
 }
 
 // ============================================================

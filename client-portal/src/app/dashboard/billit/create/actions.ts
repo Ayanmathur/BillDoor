@@ -258,7 +258,6 @@ export async function createBillAction(data: z.infer<typeof createBillSchema>) {
         client_id: clientId,
         name: d.customerName,
         phone: d.customerPhone.replace(/\D/g, ''),
-        opted_in: true,
         total_visits: 0,
         total_spent: 0,
       })

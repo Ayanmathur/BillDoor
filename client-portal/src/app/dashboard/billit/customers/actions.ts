@@ -70,13 +70,22 @@ export async function fetchCustomersAction(filters?: {
     }
   }
 
-  return {
-    customers: data,
-    total: count || 0,
-    loyaltyMap,
-    loyaltyGoal,
-    loyaltyEnabled,
-  };
+  return { customers: data || [], total: count || 0, loyaltyMap, loyaltyGoal, loyaltyEnabled };
+}
+
+export async function toggleCustomerOptInAction(data: { customerId: string; optedIn: boolean }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized.' };
+
+  const { error } = await supabase
+    .from('customers')
+    .update({ opted_in: data.optedIn })
+    .eq('id', data.customerId)
+    .eq('client_id', user.id);
+
+  if (error) return { error: 'Failed to update broadcast status.' };
+  return { success: true };
 }
 
 export async function fetchCustomerDetailAction(customerId: string) {
@@ -97,19 +106,4 @@ export async function fetchCustomerDetailAction(customerId: string) {
     reviews: reviewsResult.data || [],
     loyaltyProgress: loyaltyResult.data || null,
   };
-}
-
-export async function toggleCustomerOptInAction(data: { customerId: string; optedIn: boolean }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Unauthorized.' };
-
-  const { error } = await supabase
-    .from('customers')
-    .update({ opted_in: data.optedIn })
-    .eq('id', data.customerId)
-    .eq('client_id', user.id);
-
-  if (error) return { error: 'Failed to update broadcast consent.' };
-  return { success: true };
 }

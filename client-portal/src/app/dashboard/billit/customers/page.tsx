@@ -28,7 +28,6 @@ interface Customer {
   total_spent: number;
   last_visit_at: string | null;
   created_at: string;
-  opted_in?: boolean;
 }
 
 export default function CustomersPage() {
@@ -90,11 +89,12 @@ export default function CustomersPage() {
           <ArrowLeft size={14} /> Back to Customers
         </button>
         <div className="settings-section">
-          <h3 className="settings-section-title" style={{ marginBottom: 'var(--space-3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            <h3 className="settings-section-title" style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
               <Users size={18} /> {selectedCustomer.name}
               {/* Customer Value Tag */}
               <span style={{
+                marginLeft: 'var(--space-2)',
                 fontSize: 'var(--text-xs)',
                 padding: '2px 8px',
                 borderRadius: 'var(--radius-full)',
@@ -104,23 +104,36 @@ export default function CustomersPage() {
               }}>
                 {(selectedCustomer.total_visits >= 10 || selectedCustomer.total_spent >= 5000) ? 'Top Customer' : 'Regular'}
               </span>
-            </div>
+            </h3>
 
-            {/* Broadcast Opt-In Toggle in far right */}
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-secondary)', padding: '4px 10px', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border)' }}>
+            {/* Broadcast Opt-In / Opt-Out Checkbox */}
+            <label style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: 'var(--text-xs)',
+              fontWeight: 'var(--weight-semibold)',
+              cursor: 'pointer',
+              background: 'var(--color-bg-secondary)',
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--color-border)',
+              marginLeft: 'auto',
+            }}>
               <input
                 type="checkbox"
                 checked={selectedCustomer.opted_in !== false}
                 onChange={async (e) => {
                   const val = e.target.checked;
-                  setSelectedCustomer((prev: Customer | null) => prev ? { ...prev, opted_in: val } : null);
+                  setSelectedCustomer((prev: any) => ({ ...prev, opted_in: val }));
+                  setCustomers((prev) => prev.map(c => c.id === selectedCustomer.id ? { ...c, opted_in: val } as any : c));
                   await toggleCustomerOptInAction({ customerId: selectedCustomer.id, optedIn: val });
                 }}
                 style={{ accentColor: 'var(--color-accent)' }}
               />
-              <span>Broadcast</span>
+              <MessageSquare size={14} color="var(--color-accent)" /> Broadcast
             </label>
-          </h3>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
             <div className="dash-card" style={{ padding: 'var(--space-3)' }}>
               <div className="dash-card-label"><Phone size={12} /> Phone</div>
