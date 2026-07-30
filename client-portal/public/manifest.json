@@ -2,7 +2,7 @@
   "name": "BillDoor — Smart Billing & Reviews",
   "short_name": "BillDoor",
   "description": "Digital billing, appointment scheduling, review collection, and WhatsApp automation for Indian businesses.",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#111111",
   "theme_color": "#088395",

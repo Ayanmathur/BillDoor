@@ -1,25 +1,31 @@
 /*
- * BillDoor Service Worker — PWA Caching & Offline Resilience
+ * BillDoor Service Worker — PWA Caching & iOS Offline Resilience (v2)
  * 
  * Strategy:
- * - Network-First for API routes, Server Actions, & Supabase requests
+ * - Network-First for API routes, Server Actions, Supabase requests & HTML navigation
  * - Cache-First for static assets (CSS, JS, images, fonts)
- * - Offline Fallback shell for navigation requests when offline
+ * - Safe individual asset precaching to prevent install failures
  */
 
-const CACHE_NAME = 'billdoor-pwa-v1';
+const CACHE_NAME = 'billdoor-pwa-v2';
 const STATIC_ASSETS = [
   '/',
   '/favicon.png',
-  '/logo.png',
-  '/logo-icon.png',
+  '/brand-logo.png',
+  '/apple-touch-icon.png',
   '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return Promise.all(
+        STATIC_ASSETS.map((url) =>
+          cache.add(url).catch((err) => {
+            console.log('PWA cache add skipped:', url, err);
+          })
+        )
+      );
     })
   );
   self.skipWaiting();
@@ -68,7 +74,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           return caches.match(event.request).then((cached) => {
-            return cached || caches.match('/');
+            return cached || fetch(event.request);
           });
         })
     );
@@ -79,7 +85,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Return cached and update cache in background
         fetch(event.request).then((response) => {
           if (response.status === 200) {
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response));
