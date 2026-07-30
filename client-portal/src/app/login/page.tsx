@@ -156,8 +156,7 @@ export default function LoginPage() {
         {/* Header */}
         <div className="login-header">
           <div className="login-logo-container">
-            <img src="/logo-light.png" alt="BillDoor Logo" className="login-logo logo-light-mode" />
-            <img src="/logo-dark.png" alt="BillDoor Logo" className="login-logo logo-dark-mode" />
+            <img src="/brand-logo.png" alt="BillDoor Logo" className="login-logo" style={{ height: 64, width: 'auto', objectFit: 'contain' }} />
           </div>
           <h1 className="login-brand">BillDoor</h1>
           <p className="login-subtitle">Smart billing & reviews for your business</p>

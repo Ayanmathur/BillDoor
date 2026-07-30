@@ -62,7 +62,7 @@ export default function AdminLoginPage() {
       <div className="admin-login-container" style={{ position: 'relative', zIndex: 10 }}>
         <div className="admin-login-header">
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
-            <img src="/logo-light.png" alt="BillDoor Logo" width="180" style={{ objectFit: 'contain' }} className="admin-login-main-logo" />
+            <img src="/brand-logo.png" alt="BillDoor Logo" width="64" height="64" style={{ objectFit: 'contain' }} className="admin-login-main-logo" />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)' }}>
             <Shield size={20} strokeWidth={1.5} color="var(--color-text-tertiary)" />
