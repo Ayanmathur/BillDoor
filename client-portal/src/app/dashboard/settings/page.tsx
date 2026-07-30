@@ -42,6 +42,7 @@ export default function SettingsPage() {
   const [about, setAbout] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [address, setAddress] = useState('');
+  const [addressUrl, setAddressUrl] = useState('');
   const [phone, setPhone] = useState('');
 
   const [hasGst, setHasGst] = useState(false);
@@ -107,6 +108,7 @@ export default function SettingsPage() {
         setAbout(s.about);
         setOwnerName(s.ownerName);
         setAddress(s.address);
+        setAddressUrl(s.addressUrl || '');
         setPhone(s.phone);
         setHasGst(s.hasGst);
         setGstNumber(s.gstNumber);
@@ -165,7 +167,7 @@ export default function SettingsPage() {
 
   async function handleSaveBusiness() {
     setSaving(true); setError('');
-    const result = await updateBusinessInfoAction({ businessName, slug, about, ownerName, address, phone });
+    const result = await updateBusinessInfoAction({ businessName, slug, about, ownerName, address, addressUrl, phone });
     if (result.error) setError(result.error); else flash();
     setSaving(false);
   }
@@ -335,8 +337,18 @@ export default function SettingsPage() {
           </div>
           <div className="settings-row full">
             <div className="input-group">
-              <label className="input-label">Address</label>
-              <textarea className="input-field" rows={2} value={address} onChange={(e) => setAddress(e.target.value)} />
+              <label className="input-label">Display Address</label>
+              <textarea className="input-field" rows={2} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. 123 Main Street, Suite 100, Mumbai" />
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 2 }}>Address displayed to customers on Digital Bills and Digital Business Cards.</span>
+            </div>
+          </div>
+          <div className="settings-row full">
+            <div className="input-group">
+              <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <MapPin size={14} /> Address Link (Map URL)
+              </label>
+              <input type="url" className="input-field" value={addressUrl} onChange={(e) => setAddressUrl(e.target.value)} placeholder="https://maps.app.goo.gl/..." />
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 2 }}>Web link (e.g. Google Maps link) attached to the display address when clicked by customers.</span>
             </div>
           </div>
 

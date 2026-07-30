@@ -45,6 +45,7 @@ export async function fetchSettingsAction() {
       about: client.about || '',
       ownerName: client.owner_name || '',
       address: client.address || '',
+      addressUrl: client.address_url || '',
       phone: client.phone || '',
       email: client.email || '',
       logoUrl: client.logo_url || '',
@@ -117,6 +118,7 @@ const businessInfoSchema = z.object({
   about: z.string().max(500).optional(),
   ownerName: z.string().max(100).optional(),
   address: z.string().max(300).optional(),
+  addressUrl: z.string().max(500).optional(),
   phone: z.string().max(15).optional(),
 });
 
@@ -148,6 +150,7 @@ export async function updateBusinessInfoAction(data: z.infer<typeof businessInfo
       about: parsed.data.about || '',
       owner_name: parsed.data.ownerName || '',
       address: parsed.data.address || '',
+      address_url: parsed.data.addressUrl || '',
       phone: parsed.data.phone || client.phone,
     })
     .eq('id', user.id);

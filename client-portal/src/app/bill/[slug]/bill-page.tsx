@@ -152,7 +152,18 @@ export default function BillPageClient({
             {client.logo_url ? <img src={client.logo_url} alt={client.business_name} /> : initials}
           </div>
           <div className="bill-biz-name">{client.business_name}</div>
-          {client.address && <div className="bill-biz-address">{client.address}</div>}
+          {client.address && (
+            <a
+              href={client.address_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(client.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bill-biz-address"
+              style={{ color: 'inherit', textDecoration: 'none', cursor: 'pointer', display: 'block' }}
+              title="Open location map"
+            >
+              {client.address}
+            </a>
+          )}
           {client.phone && <div className="bill-biz-address">Tel: {client.phone}</div>}
           {hasGst && gstNumber && <div className="bill-gstin">GSTIN: {gstNumber}</div>}
           <div style={{ marginTop: 'var(--space-2)', fontWeight: 'bold', fontSize: 'var(--text-md)', textTransform: 'uppercase', letterSpacing: 1, color: '#333' }}>{docLabel}</div>
