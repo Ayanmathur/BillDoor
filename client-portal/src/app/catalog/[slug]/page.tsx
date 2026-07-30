@@ -54,7 +54,10 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
 
   const filteredItems = useMemo(() => {
     if (!data?.items) return [];
-    return data.items.filter((item) => fuzzyMatch(search, item.name));
+    return data.items.filter((item) => 
+      fuzzyMatch(search, item.name) || 
+      (item.categoryName ? fuzzyMatch(search, item.categoryName) : false)
+    );
   }, [data?.items, search]);
 
   // Group items by category
@@ -153,7 +156,7 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
           <Search size={18} className="catalog-filter-icon" />
           <input
             type="text"
-            placeholder="Search items..."
+            placeholder="Search items or categories..."
             className="catalog-filter"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
