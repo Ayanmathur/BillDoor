@@ -202,6 +202,22 @@ export default function AppShell({
           />
         </Link>
 
+        {/* Mobile Business Identity Bar inside Nav Panel */}
+        <div className="mobile-nav-user">
+          <div className="topbar-user-avatar" style={{ width: 36, height: 36, overflow: 'hidden', padding: logoUrl ? 0 : undefined, flexShrink: 0 }}>
+            {logoUrl ? (
+              <img src={logoUrl} alt={businessName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              initials
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', color: 'var(--color-sidebar-text-active)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {businessName}
+            </span>
+          </div>
+        </div>
+
         <div className="sidebar-divider" />
 
         <div className="sidebar-nav">

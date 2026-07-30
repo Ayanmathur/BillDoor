@@ -286,6 +286,10 @@
   font-weight: var(--weight-bold);
 }
 
+.mobile-nav-user {
+  display: none;
+}
+
 /* ---- Content ---- */
 .shell-content {
   padding: var(--space-5);
@@ -347,6 +351,21 @@
 
   .sidebar-brand-img {
     height: 36px !important;
+  }
+
+  .mobile-nav-user {
+    display: flex !important;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    margin: 0 var(--space-3) var(--space-3) var(--space-3);
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .topbar-user {
+    display: none !important;
   }
 
   .sidebar-divider {
