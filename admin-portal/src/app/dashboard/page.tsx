@@ -18,7 +18,7 @@ import {
   Settings, Trash2, UserPen, RotateCcw, Plus, ChevronDown, ChevronUp,
   AlertTriangle, Clock, Activity, Sparkles, LogOut, Inbox, CalendarPlus,
   FileText, CheckCircle, XCircle, ExternalLink, CreditCard, SlidersHorizontal, 
-  Phone, PauseCircle, ScrollText, Image as ImageIcon, Eye, EyeOff, X, Link2, Search,
+  Phone, PauseCircle, ScrollText, Image as ImageIcon, Eye, EyeOff, X, Link2, Search, BookOpen, BookX,
 } from 'lucide-react';
 import {
   generateLicenseKeyAction,
@@ -301,6 +301,17 @@ export default function AdminDashboard() {
     setActionLoading(clientId);
     await toggleSubscriptionHoldAction({ clientId, hold });
     await loadData();
+    setActionLoading(null);
+  }
+
+  async function handleToggleDirectoryAccess(clientId: string, enabled: boolean) {
+    setActionLoading(clientId);
+    const res = await toggleDirectoryAccessAction({ clientId, enabled });
+    if (res.error) {
+      alert(res.error);
+    } else {
+      setClients(prev => prev.map(c => c.id === clientId ? { ...c, directory_access_enabled: enabled } : c));
+    }
     setActionLoading(null);
   }
 
@@ -658,6 +669,15 @@ export default function AdminDashboard() {
                           style={client.subscription_hold_enabled ? { background: 'var(--color-error-subtle)', color: 'var(--color-error)' } : undefined}
                         >
                           <PauseCircle size={16} />
+                        </button>
+                        <button
+                          className={`action-btn ${client.directory_access_enabled === false ? 'danger' : ''}`}
+                          title={client.directory_access_enabled === false ? 'Enable Directory Access (Allow client to access Directory)' : 'Disable Directory Access (Hide directory from client)'}
+                          onClick={() => handleToggleDirectoryAccess(client.id, client.directory_access_enabled === false)}
+                          disabled={actionLoading === client.id}
+                          style={client.directory_access_enabled === false ? { background: 'var(--color-error-subtle)', color: 'var(--color-error)' } : undefined}
+                        >
+                          {client.directory_access_enabled === false ? <BookX size={16} /> : <BookOpen size={16} />}
                         </button>
                         {client.status === 'active' ? (
                           <button className="action-btn danger" title="Revoke"
