@@ -72,7 +72,21 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js?v=3').then(function(reg) {
+                  navigator.serviceWorker.getRegistrations().then(function(regs) {
+                    for (var i = 0; i < regs.length; i++) {
+                      if (!regs[i].active || !regs[i].active.scriptURL.includes('v=4')) {
+                        regs[i].unregister();
+                      }
+                    }
+                  });
+                  if ('caches' in window) {
+                    caches.keys().then(function(keys) {
+                      keys.forEach(function(key) {
+                        if (key !== 'billdoor-pwa-v4') caches.delete(key);
+                      });
+                    });
+                  }
+                  navigator.serviceWorker.register('/sw.js?v=4').then(function(reg) {
                     reg.update();
                   }).catch(function(err) {
                     console.error('ServiceWorker registration failed: ', err);
