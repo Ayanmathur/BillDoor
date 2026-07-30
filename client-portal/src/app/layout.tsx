@@ -61,7 +61,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="BillDoor" />
         <meta name="format-detection" content="telephone=no" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/logo-icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />
       </head>
       <body>
         {children}
