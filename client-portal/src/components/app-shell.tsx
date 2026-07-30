@@ -201,6 +201,7 @@ export default function AppShell({
               alt="BillDoor Logo"
               className="sidebar-brand-img"
             />
+            <span className="sidebar-brand-text">BillDoor</span>
           </Link>
 
           {/* Mobile Business Identity in top right corner of nav panel */}

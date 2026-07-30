@@ -354,12 +354,27 @@
 
   .sidebar-brand {
     display: flex !important;
+    align-items: center !important;
+    gap: var(--space-2) !important;
     padding: 0 !important;
     margin-bottom: 0 !important;
+    text-decoration: none !important;
   }
 
   .sidebar-brand-img {
-    height: 32px !important;
+    height: 28px !important;
+    width: auto !important;
+  }
+
+  .sidebar-brand-text {
+    font-family: var(--font-heading) !important;
+    font-size: var(--text-base) !important;
+    font-weight: var(--weight-bold) !important;
+    color: var(--color-sidebar-text-active) !important;
+    white-space: nowrap !important;
+    opacity: 1 !important;
+    width: auto !important;
+    display: inline-block !important;
   }
 
   .mobile-nav-user {
