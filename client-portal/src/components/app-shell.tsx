@@ -301,7 +301,7 @@ export default function AppShell({
                   const id = e.target.value;
                   setActiveShopId(id);
                   await setActiveShopAction(id);
-                  window.location.reload();
+                  router.refresh();
                 }}
                 style={{
                   background: 'var(--color-bg-secondary)',

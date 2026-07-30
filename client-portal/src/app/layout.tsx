@@ -1,6 +1,25 @@
 import type { Metadata } from 'next';
+import { Public_Sans, Outfit, Inter } from 'next/font/google';
 import PosShortcuts from '@/components/pos-shortcuts';
 import './globals.css';
+
+const publicSans = Public_Sans({
+  subsets: ['latin'],
+  variable: '--font-sans-google',
+  display: 'swap',
+});
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-heading-google',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-body-google',
+  display: 'swap',
+});
 
 /**
  * BillDoor Client Portal — Root Layout
@@ -31,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${publicSans.variable} ${outfit.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, interactive-widget=resizes-content" />
         <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />

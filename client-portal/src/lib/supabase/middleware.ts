@@ -36,33 +36,29 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: Do NOT use getSession() — it reads from storage
-  // and can be spoofed. getUser() validates against the auth server.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const pathname = request.nextUrl.pathname;
+  const isDashboardPage = pathname.startsWith('/dashboard');
+  const isAuthPage = pathname.startsWith('/login') ||
+    pathname.startsWith('/activate') ||
+    pathname.startsWith('/reset-password');
 
-  // Protected routes: redirect to login if not authenticated
-  const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/activate') ||
-    request.nextUrl.pathname.startsWith('/reset-password');
-  const isPublicPage = request.nextUrl.pathname.startsWith('/bill/') ||
-    request.nextUrl.pathname.startsWith('/review/') ||
-    request.nextUrl.pathname.startsWith('/book/') ||
-    request.nextUrl.pathname.startsWith('/catalog/') ||
-    request.nextUrl.pathname === '/';
-  const isDashboardPage = request.nextUrl.pathname.startsWith('/dashboard');
+  // Only query auth server when route protection actually requires user session verification
+  if (isDashboardPage || isAuthPage) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user && isDashboardPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
-  }
+    if (!user && isDashboardPage) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
 
-  if (user && isAuthPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
-    return NextResponse.redirect(url);
+    if (user && isAuthPage) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

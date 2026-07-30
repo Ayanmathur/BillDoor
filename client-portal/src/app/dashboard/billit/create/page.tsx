@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { calculateBillTotals } from '@/shared/billing-math';
 import StandardCalculatorWidget from '@/components/calculator-widget';
 import { useBarcodeScanner } from '@/hooks/use-barcode-scanner';
 import {
@@ -362,63 +363,44 @@ export default function CreateBillPage() {
     setRewardValid(result.reward);
   }
 
-  // Calculations (mode-aware with slab aggregation)
+  // Calculations via pure decoupled billing math engine
   const isInclusive = gstCalcMode === 'inclusive';
-
-  const itemCalcs = items.map(i => {
-    const lineAmount = Math.max(0, i.quantity * i.unitPrice - i.discount);
-    const rate = i.gstPercent || 0;
-    const taxableValue = rate > 0
-      ? lineAmount / (1 + rate / 100)
-      : lineAmount;
-    const gstAmount = rate > 0
-      ? lineAmount - taxableValue
-      : 0;
-    return { ...i, lineAmount, taxableValue, gstAmount };
-  });
-
-  const slabMap = new Map<number, { taxable: number; gst: number }>();
-  for (const c of itemCalcs) {
-    const rate = c.gstPercent || 0;
-    const slab = slabMap.get(rate) || { taxable: 0, gst: 0 };
-    slab.taxable += c.taxableValue;
-    slab.gst += c.gstAmount;
-    slabMap.set(rate, slab);
-  }
-
-  let subtotal = 0;
-  let gstTotal = 0;
-  for (const [, slab] of slabMap) {
-    subtotal += Math.round(slab.taxable * 100) / 100;
-    gstTotal += Math.round(slab.gst * 100) / 100;
-  }
-
-  const totalMrpSavings = items.reduce((sum, i) => {
-    if (i.mrp && i.mrp > i.unitPrice) {
-      return sum + (i.mrp - i.unitPrice) * i.quantity;
-    }
-    return sum;
-  }, 0);
-
   const totalItemsCount = items.length;
   const totalQtyCount = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
 
-  // For free_item rewards, zero out the matching line item price
-  // For flat/percent discount, apply to bill total
+  // Preliminary subtotal estimation for percentage reward discount
+  const preSubtotal = items.reduce((sum, i) => {
+    const qty = Number(i.quantity) || 0;
+    const price = Number(i.unitPrice) || 0;
+    const disc = Number(i.discount) || 0;
+    const lineAmt = Math.max(0, qty * price - disc);
+    const rate = Number(i.gstPercent) || 0;
+    return sum + (rate > 0 ? lineAmt / (1 + rate / 100) : lineAmt);
+  }, 0);
+
   const rewardDiscount = rewardValid
     ? rewardValid.type === 'free_item'
       ? (() => {
           const match = items.find(i => i.catalogItemId === rewardValid.reward_catalog_item_id);
-          return match ? match.unitPrice * 1 : 0; // Zero one unit of the free item
+          return match ? match.unitPrice * 1 : 0;
         })()
       : rewardValid.type === 'percent_discount'
-        ? subtotal * (rewardValid.value / 100)
+        ? preSubtotal * (rewardValid.value / 100)
         : rewardValid.value
     : 0;
 
-  const rawGrand = Math.max(0, subtotal + gstTotal - rewardDiscount + extraCharges);
-  const grandTotal = Math.ceil(rawGrand);
-  const roundOff = grandTotal - rawGrand;
+  const {
+    subtotal,
+    gstTotal,
+    totalMrpSavings,
+    rawGrand,
+    grandTotal,
+    roundOffAmount: roundOff,
+  } = calculateBillTotals({
+    lineItems: items,
+    extraCharges,
+    rewardDiscount,
+  });
 
   // Create bill
   async function handleCreateBill(asDraft = false) {

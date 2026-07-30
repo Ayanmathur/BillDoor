@@ -9,6 +9,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { calculateBillTotals } from '@/shared/billing-math';
 import { z } from 'zod';
 import crypto from 'crypto';
 
@@ -308,54 +309,20 @@ export async function createBillAction(data: z.infer<typeof createBillSchema>) {
   const gstMode: 'exclusive' | 'inclusive' = (clientMode?.gst_calculation_mode as any) || 'exclusive';
   const isInclusive = gstMode === 'inclusive';
 
-  // 3a. Per-item computation (raw, unrounded)
-  const processedItems = d.lineItems.map((item) => {
-    const lineAmount = Math.max(0, item.quantity * item.unitPrice - (item.discount || 0));
-    const rate = item.gstPercent || 0;
-    const taxableValue = rate > 0
-      ? lineAmount / (1 + rate / 100)
-      : lineAmount;
-    const gstAmount = rate > 0
-      ? lineAmount - taxableValue
-      : 0;
-    return {
-      ...item,
-      lineTotal: lineAmount,
-      taxableValue,      // full float precision — NOT rounded per item
-      gstAmount,         // full float precision — NOT rounded per item
-    };
+  // 3. Compute totals using shared pure billing math engine
+  const {
+    processedItems,
+    subtotal,
+    gstTotal,
+    totalMrpSavings,
+    grandTotal,
+    roundOffAmount,
+  } = calculateBillTotals({
+    lineItems: d.lineItems,
+    extraCharges: d.extraCharges,
+    rewardDiscount: d.rewardDiscount,
+    discountTotal: d.discountTotal,
   });
-
-  // 3b. Slab-aggregate rounding (correctness-critical)
-  //     Group by GST rate, sum raw values, round at slab level only.
-  const slabMap = new Map<number, { taxable: number; gst: number }>();
-  for (const item of processedItems) {
-    const rate = item.gstPercent || 0;
-    const slab = slabMap.get(rate) || { taxable: 0, gst: 0 };
-    slab.taxable += item.taxableValue;
-    slab.gst += item.gstAmount;
-    slabMap.set(rate, slab);
-  }
-
-  let subtotal = 0;
-  let gstTotal = 0;
-  for (const [, slab] of slabMap) {
-    subtotal += Math.round(slab.taxable * 100) / 100;
-    gstTotal += Math.round(slab.gst * 100) / 100;
-  }
-
-  // 3c. MRP savings (frozen at creation time)
-  const totalMrpSavings = processedItems.reduce((sum, item) => {
-    if (item.mrp && item.mrp > item.unitPrice) {
-      return sum + (item.mrp - item.unitPrice) * item.quantity;
-    }
-    return sum;
-  }, 0);
-
-  // 3d. Grand total with ceil round-off to next whole rupee (e.g. 10.40 -> 11)
-  const rawGrand = subtotal + gstTotal - d.rewardDiscount + d.extraCharges - d.discountTotal;
-  const grandTotal = Math.ceil(Math.max(0, rawGrand));
-  const roundOffAmount = grandTotal - Math.max(0, rawGrand);
   const billStatus = d.asDraft ? 'draft' : 'issued';
 
   // 4. Upsert bill
