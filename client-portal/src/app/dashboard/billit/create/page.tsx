@@ -368,12 +368,12 @@ export default function CreateBillPage() {
   const itemCalcs = items.map(i => {
     const lineAmount = Math.max(0, i.quantity * i.unitPrice - i.discount);
     const rate = i.gstPercent || 0;
-    const taxableValue = isInclusive && rate > 0
+    const taxableValue = rate > 0
       ? lineAmount / (1 + rate / 100)
       : lineAmount;
-    const gstAmount = isInclusive && rate > 0
+    const gstAmount = rate > 0
       ? lineAmount - taxableValue
-      : lineAmount * (rate / 100);
+      : 0;
     return { ...i, lineAmount, taxableValue, gstAmount };
   });
 
@@ -417,7 +417,7 @@ export default function CreateBillPage() {
     : 0;
 
   const rawGrand = Math.max(0, subtotal + gstTotal - rewardDiscount + extraCharges);
-  const grandTotal = Math.round(rawGrand);
+  const grandTotal = Math.ceil(rawGrand);
   const roundOff = grandTotal - rawGrand;
 
   // Create bill
@@ -777,9 +777,6 @@ export default function CreateBillPage() {
               <tbody>
                 {items.map((item) => {
                   const lineTotal = Math.max(0, item.quantity * item.unitPrice - item.discount);
-                  const rate = item.gstPercent || 0;
-                  const isInc = isInclusive && rate > 0;
-                  const displayTotal = isInc ? lineTotal : lineTotal + (lineTotal * (rate / 100));
                   return (
                     <tr key={item.id} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
                       <td style={{ padding: 'var(--space-1)', minWidth: 160 }}>
@@ -803,7 +800,7 @@ export default function CreateBillPage() {
                           style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-1)', textAlign: 'center', width: '100%' }} />
                       </td>
                       <td style={{ padding: 'var(--space-1)', textAlign: 'right', fontWeight: 'var(--weight-medium)' }}>
-                        ₹{displayTotal.toFixed(2)}
+                        ₹{lineTotal.toFixed(2)}
                       </td>
                       <td>
                         <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', padding: 2 }}>

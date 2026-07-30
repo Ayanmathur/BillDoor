@@ -312,13 +312,12 @@ export async function createBillAction(data: z.infer<typeof createBillSchema>) {
   const processedItems = d.lineItems.map((item) => {
     const lineAmount = Math.max(0, item.quantity * item.unitPrice - (item.discount || 0));
     const rate = item.gstPercent || 0;
-    // Inclusive: tax extracted backward from price. Exclusive: tax added on top.
-    const taxableValue = isInclusive && rate > 0
+    const taxableValue = rate > 0
       ? lineAmount / (1 + rate / 100)
       : lineAmount;
-    const gstAmount = isInclusive && rate > 0
+    const gstAmount = rate > 0
       ? lineAmount - taxableValue
-      : lineAmount * (rate / 100);
+      : 0;
     return {
       ...item,
       lineTotal: lineAmount,
@@ -353,9 +352,9 @@ export async function createBillAction(data: z.infer<typeof createBillSchema>) {
     return sum;
   }, 0);
 
-  // 3d. Grand total with round-off to nearest whole rupee
+  // 3d. Grand total with ceil round-off to next whole rupee (e.g. 10.40 -> 11)
   const rawGrand = subtotal + gstTotal - d.rewardDiscount + d.extraCharges - d.discountTotal;
-  const grandTotal = Math.round(Math.max(0, rawGrand));
+  const grandTotal = Math.ceil(Math.max(0, rawGrand));
   const roundOffAmount = grandTotal - Math.max(0, rawGrand);
   const billStatus = d.asDraft ? 'draft' : 'issued';
 

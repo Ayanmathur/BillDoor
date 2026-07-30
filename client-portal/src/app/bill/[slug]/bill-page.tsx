@@ -183,7 +183,31 @@ export default function BillPageClient({
         {/* Emoji Rating Row */}
         <div className="bill-rating-row">
           {reviewed ? (
-            <div className="bill-rating-done"><Check size={14} /> Thanks for your feedback!</div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: 'var(--space-2) 0' }}>
+              <div className="bill-rating-done"><Check size={14} /> Thanks for your feedback!</div>
+              <div style={{ fontSize: 11, color: '#666', marginTop: 6, fontWeight: 500 }}>Looking for public assistance options?</div>
+              {googleReviewUrl ? (
+                <a
+                  href={googleReviewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="review-btn primary"
+                  style={{ fontSize: 11, marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
+                >
+                  Leave a Google Review ★★★★★
+                </a>
+              ) : (
+                <a
+                  href={`/review/${client.slug}?bill_id=${bill.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="review-btn primary"
+                  style={{ fontSize: 11, marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
+                >
+                  Leave a Public Review ★★★★★
+                </a>
+              )}
+            </div>
           ) : (
             <>
               <div className="bill-rating-prompt">How was your experience?</div>
