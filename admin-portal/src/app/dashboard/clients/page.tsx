@@ -208,19 +208,36 @@ export default function ClientsPage() {
                         ) : financialsData?.error ? (
                           <div style={{ color: 'var(--color-error)' }}>{financialsData.error}</div>
                         ) : financialsData ? (
-                          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 'var(--text-sm)' }}>
-                            <div>
-                              <div style={{ color: 'var(--color-text-tertiary)', fontSize: 11 }}>Revenue (this month)</div>
-                              <div style={{ fontWeight: 600, color: 'var(--color-success)' }}>₹{financialsData.revenue?.toLocaleString('en-IN')}</div>
-                              <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>{financialsData.billCount} bills</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24, fontSize: 'var(--text-sm)' }}>
+                            {/* Monthly Equations (Left) */}
+                            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                              <div>
+                                <div style={{ color: 'var(--color-text-tertiary)', fontSize: 11 }}>Revenue (this month)</div>
+                                <div style={{ fontWeight: 600, color: 'var(--color-success)' }}>₹{financialsData.revenue?.toLocaleString('en-IN')}</div>
+                                <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>{financialsData.billCount} bills</div>
+                              </div>
+                              <div>
+                                <div style={{ color: 'var(--color-text-tertiary)', fontSize: 11 }}>Expenses (this month)</div>
+                                <div style={{ fontWeight: 600, color: 'var(--color-error)' }}>₹{financialsData.expenses?.toLocaleString('en-IN')}</div>
+                              </div>
+                              <div>
+                                <div style={{ color: 'var(--color-text-tertiary)', fontSize: 11 }}>Estimated Net</div>
+                                <div style={{ fontWeight: 600 }}>₹{financialsData.estimatedNet?.toLocaleString('en-IN')}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div style={{ color: 'var(--color-text-tertiary)', fontSize: 11 }}>Expenses (this month)</div>
-                              <div style={{ fontWeight: 600, color: 'var(--color-error)' }}>₹{financialsData.expenses?.toLocaleString('en-IN')}</div>
-                            </div>
-                            <div>
-                              <div style={{ color: 'var(--color-text-tertiary)', fontSize: 11 }}>Estimated Net</div>
-                              <div style={{ fontWeight: 600 }}>₹{financialsData.estimatedNet?.toLocaleString('en-IN')}</div>
+
+                            {/* Quarterly & Annual Revenue (Right) */}
+                            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', borderLeft: '1px solid var(--color-border)', paddingLeft: 24 }}>
+                              <div>
+                                <div style={{ color: 'var(--color-text-tertiary)', fontSize: 11 }}>Quarterly Revenue</div>
+                                <div style={{ fontWeight: 600, color: 'var(--color-accent, #3b82f6)' }}>₹{financialsData.quarterlyRevenue?.toLocaleString('en-IN')}</div>
+                                <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>Last 90 days</div>
+                              </div>
+                              <div>
+                                <div style={{ color: 'var(--color-text-tertiary)', fontSize: 11 }}>Annual Revenue</div>
+                                <div style={{ fontWeight: 600, color: 'var(--color-accent, #3b82f6)' }}>₹{financialsData.annualRevenue?.toLocaleString('en-IN')}</div>
+                                <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>Last 365 days</div>
+                              </div>
                             </div>
                           </div>
                         ) : null}

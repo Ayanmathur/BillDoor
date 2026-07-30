@@ -85,10 +85,11 @@ export default function AdminDashboard() {
   const [showKeygen, setShowKeygen] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Real-time Search states
+  // Real-time Search & Filter states
   const [clientSearch, setClientSearch] = useState('');
   const [inquirySearch, setInquirySearch] = useState('');
   const [keySearch, setKeySearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expiring' | 'revoked'>('all');
   const [unmaskedKeys, setUnmaskedKeys] = useState<Record<string, string>>({});
 
   // Confirmation modal state
@@ -141,8 +142,25 @@ export default function AdminDashboard() {
     return daysLeft <= 30 && daysLeft > 0;
   }).length;
 
-  // Filtered lists for search bars
+  // Filtered lists for search bars & status cards
   const filteredClients = clients.filter(c => {
+    // 1. Status Filter
+    if (statusFilter === 'active') {
+      if (c.status !== 'active') return false;
+      if (c.valid_till) {
+        const daysLeft = (new Date(c.valid_till).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+        if (daysLeft <= 0) return false;
+      }
+    } else if (statusFilter === 'expiring') {
+      if (c.status !== 'active' || !c.valid_till) return false;
+      const daysLeft = (new Date(c.valid_till).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+      if (daysLeft > 30 || daysLeft <= 0) return false;
+    } else if (statusFilter === 'revoked') {
+      const isExpired = c.valid_till ? (new Date(c.valid_till).getTime() - Date.now()) <= 0 : false;
+      if (c.status !== 'revoked' && !isExpired) return false;
+    }
+
+    // 2. Text Search Filter
     if (!clientSearch.trim()) return true;
     const q = clientSearch.toLowerCase().trim();
     return (
@@ -357,34 +375,50 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats (Clickable Filter Buttons) */}
       <div className="admin-stats">
-        <div className="admin-stat-card">
+        <div
+          className={`admin-stat-card ${statusFilter === 'all' ? 'active-filter' : ''}`}
+          style={{ cursor: 'pointer', border: statusFilter === 'all' ? '2px solid var(--color-accent)' : undefined }}
+          onClick={() => { setActiveTab('clients'); setStatusFilter('all'); }}
+        >
           <div className="admin-stat-icon total"><Users size={20} /></div>
           <div className="admin-stat-content">
             <div className="admin-stat-value">{clients.length}</div>
             <div className="admin-stat-label">Total Clients</div>
           </div>
         </div>
-        <div className="admin-stat-card">
+        <div
+          className={`admin-stat-card ${statusFilter === 'active' ? 'active-filter' : ''}`}
+          style={{ cursor: 'pointer', border: statusFilter === 'active' ? '2px solid var(--color-success)' : undefined }}
+          onClick={() => { setActiveTab('clients'); setStatusFilter(statusFilter === 'active' ? 'all' : 'active'); }}
+        >
           <div className="admin-stat-icon active"><Activity size={20} /></div>
           <div className="admin-stat-content">
             <div className="admin-stat-value">{activeClients}</div>
             <div className="admin-stat-label">Active</div>
           </div>
         </div>
-        <div className="admin-stat-card">
+        <div
+          className={`admin-stat-card ${statusFilter === 'expiring' ? 'active-filter' : ''}`}
+          style={{ cursor: 'pointer', border: statusFilter === 'expiring' ? '2px solid var(--color-warning)' : undefined }}
+          onClick={() => { setActiveTab('clients'); setStatusFilter(statusFilter === 'expiring' ? 'all' : 'expiring'); }}
+        >
           <div className="admin-stat-icon expiring"><Clock size={20} /></div>
           <div className="admin-stat-content">
             <div className="admin-stat-value">{expiringClients}</div>
             <div className="admin-stat-label">Expiring Soon</div>
           </div>
         </div>
-        <div className="admin-stat-card">
+        <div
+          className={`admin-stat-card ${statusFilter === 'revoked' ? 'active-filter' : ''}`}
+          style={{ cursor: 'pointer', border: statusFilter === 'revoked' ? '2px solid var(--color-error)' : undefined }}
+          onClick={() => { setActiveTab('clients'); setStatusFilter(statusFilter === 'revoked' ? 'all' : 'revoked'); }}
+        >
           <div className="admin-stat-icon revoked"><ShieldOff size={20} /></div>
           <div className="admin-stat-content">
             <div className="admin-stat-value">{revokedClients}</div>
-            <div className="admin-stat-label">Revoked</div>
+            <div className="admin-stat-label">Revoked / Expired</div>
           </div>
         </div>
       </div>

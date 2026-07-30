@@ -14,7 +14,7 @@ interface GstRow {
 }
 
 export default function GstSummaryPage() {
-  const [periodType, setPeriodType] = useState<'monthly' | 'quarterly'>('monthly');
+  const [periodType, setPeriodType] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [periodValue, setPeriodValue] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<GstRow[]>([]);
@@ -29,7 +29,7 @@ export default function GstSummaryPage() {
     };
   });
 
-  // Current FY Quarters
+  // Current FY Quarters & Financial Years
   const now = new Date();
   const currentYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
   const quarters = [
@@ -39,15 +39,23 @@ export default function GstSummaryPage() {
     { label: `Q4 (Jan-Mar ${currentYear + 1})`, value: `${currentYear}-Q4` },
   ];
 
+  const financialYears = [
+    { label: `FY ${currentYear}-${(currentYear + 1).toString().slice(-2)} (Apr ${currentYear} - Mar ${currentYear + 1})`, value: `${currentYear}` },
+    { label: `FY ${currentYear - 1}-${currentYear.toString().slice(-2)} (Apr ${currentYear - 1} - Mar ${currentYear})`, value: `${currentYear - 1}` },
+    { label: `FY ${currentYear - 2}-${(currentYear - 1).toString().slice(-2)} (Apr ${currentYear - 2} - Mar ${currentYear - 1})`, value: `${currentYear - 2}` },
+  ];
+
   // Set default period on mount
   useEffect(() => {
     if (periodType === 'monthly') {
       setPeriodValue(months[0].value);
-    } else {
+    } else if (periodType === 'quarterly') {
       // Find current quarter
       const m = now.getMonth();
       const q = m >= 3 && m <= 5 ? 1 : m >= 6 && m <= 8 ? 2 : m >= 9 && m <= 11 ? 3 : 4;
       setPeriodValue(`${currentYear}-Q${q}`);
+    } else {
+      setPeriodValue(`${currentYear}`);
     }
   }, [periodType]);
 
@@ -58,13 +66,16 @@ export default function GstSummaryPage() {
       const lastDay = new Date(Number(y), Number(m), 0).getDate();
       const dateTo = `${y}-${m}-${lastDay}`;
       return { dateFrom, dateTo };
-    } else {
+    } else if (periodType === 'quarterly') {
       const [y, q] = periodValue.split('-');
       const year = Number(y);
       if (q === 'Q1') return { dateFrom: `${year}-04-01`, dateTo: `${year}-06-30` };
       if (q === 'Q2') return { dateFrom: `${year}-07-01`, dateTo: `${year}-09-30` };
       if (q === 'Q3') return { dateFrom: `${year}-10-01`, dateTo: `${year}-12-31` };
       return { dateFrom: `${year + 1}-01-01`, dateTo: `${year + 1}-03-31` };
+    } else {
+      const fyYear = Number(periodValue);
+      return { dateFrom: `${fyYear}-04-01`, dateTo: `${fyYear + 1}-03-31` };
     }
   };
 
@@ -143,20 +154,23 @@ export default function GstSummaryPage() {
           <div className="input-group" style={{ minWidth: 200, flex: 1 }}>
             <label className="input-label">Period Type</label>
             <select className="input-field" value={periodType} onChange={(e) => {
-              setPeriodType(e.target.value as 'monthly' | 'quarterly');
+              setPeriodType(e.target.value as 'monthly' | 'quarterly' | 'yearly');
             }}>
               <option value="monthly">Monthly</option>
               <option value="quarterly">Quarterly</option>
+              <option value="yearly">Yearly (Financial Year)</option>
             </select>
           </div>
           
           <div className="input-group" style={{ minWidth: 200, flex: 1 }}>
-            <label className="input-label">Select {periodType === 'monthly' ? 'Month' : 'Quarter'}</label>
+            <label className="input-label">Select {periodType === 'monthly' ? 'Month' : periodType === 'quarterly' ? 'Quarter' : 'Financial Year'}</label>
             <select className="input-field" value={periodValue} onChange={(e) => setPeriodValue(e.target.value)}>
               {periodType === 'monthly' ? (
                 months.map(m => <option key={m.value} value={m.value}>{m.label}</option>)
-              ) : (
+              ) : periodType === 'quarterly' ? (
                 quarters.map(q => <option key={q.value} value={q.value}>{q.label}</option>)
+              ) : (
+                financialYears.map(fy => <option key={fy.value} value={fy.value}>{fy.label}</option>)
               )}
             </select>
           </div>

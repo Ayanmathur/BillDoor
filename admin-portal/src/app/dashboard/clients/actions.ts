@@ -177,12 +177,34 @@ export async function fetchClientFinancialsAction(clientId: string, from: string
     expensesByCategory[e.category] = (expensesByCategory[e.category] || 0) + Number(e.amount || 0);
   }
 
+  // Quarterly Revenue (last 90 days)
+  const quarterStart = new Date();
+  quarterStart.setDate(quarterStart.getDate() - 90);
+  const { data: qBills } = await admin
+    .from('bills')
+    .select('grand_total')
+    .eq('client_id', clientId)
+    .gte('created_at', quarterStart.toISOString());
+  const quarterlyRevenue = (qBills || []).reduce((sum, b) => sum + Number(b.grand_total || 0), 0);
+
+  // Annual Revenue (last 365 days)
+  const yearStart = new Date();
+  yearStart.setFullYear(yearStart.getFullYear() - 1);
+  const { data: yBills } = await admin
+    .from('bills')
+    .select('grand_total')
+    .eq('client_id', clientId)
+    .gte('created_at', yearStart.toISOString());
+  const annualRevenue = (yBills || []).reduce((sum, b) => sum + Number(b.grand_total || 0), 0);
+
   return {
     revenue: totalRevenue,
     billCount,
     expenses: totalExpenses,
     expensesByCategory,
     estimatedNet: totalRevenue - totalExpenses,
+    quarterlyRevenue,
+    annualRevenue,
   };
 }
 
