@@ -1009,24 +1009,41 @@ header {
 @media (max-width: 768px) {
   html, body, #__next, div[data-reactroot], main, section,
   .shell-content, .main-content, .dashboard-grid, .dash-card,
-  .card, .settings-section, .table-container, .grid, .quick-actions {
+  .card, .settings-section, .grid, .quick-actions {
     max-width: 100% !important;
     width: 100% !important;
     box-sizing: border-box !important;
     overflow-x: hidden !important;
   }
 
+  .settings-section, .dash-card, .card {
+    padding: var(--space-3) !important;
+  }
+
+  .settings-row {
+    flex-direction: column !important;
+    gap: var(--space-2) !important;
+  }
+
+  .settings-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: var(--space-1) !important;
+    max-width: 100% !important;
+    gap: var(--space-2) !important;
+  }
+
+  .settings-tab {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
   /* Force word wrapping on text, headings, and URLs */
   h1, h2, h3, h4, h5, h6, p, span, a, label, div, td, th {
     overflow-wrap: anywhere !important;
     word-break: break-word !important;
-  }
-
-  /* Tables scale to 100% width instead of forcing wide scrolling */
-  table, .table, .data-table {
-    width: 100% !important;
-    max-width: 100% !important;
-    table-layout: fixed !important;
   }
 
   /* Flex containers wrap elements cleanly */

@@ -17,8 +17,11 @@ import {
   updateBillWhatsAppTemplateAction
 } from './actions';
 
+type BillitSettingsTab = 'catalog' | 'barcode_pos' | 'pricing' | 'digital_bill' | 'whatsapp';
+
 export default function BillitSettingsPage() {
   const router = useRouter();
+  const [tab, setTab] = useState<BillitSettingsTab>('catalog');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -155,6 +158,14 @@ export default function BillitSettingsPage() {
 
   const catalogUrl = typeof window !== 'undefined' ? `${window.location.origin}/catalog/${slug}` : '';
 
+  const tabs: { key: BillitSettingsTab; label: string; icon: React.ReactNode }[] = [
+    { key: 'catalog', label: 'Catalog Link', icon: <LinkIcon size={14} /> },
+    { key: 'barcode_pos', label: 'Barcode & POS', icon: <Barcode size={14} /> },
+    { key: 'pricing', label: 'Pricing & Taxes', icon: <Tag size={14} /> },
+    { key: 'digital_bill', label: 'Digital Bill', icon: <FileText size={14} /> },
+    { key: 'whatsapp', label: 'WhatsApp', icon: <Send size={14} /> },
+  ];
+
   return (
     <div className="settings-page">
       {/* Back button */}
@@ -168,6 +179,19 @@ export default function BillitSettingsPage() {
       >
         <ArrowLeft size={16} /> Back to Billit
       </button>
+
+      {/* Settings Navigation Tabs */}
+      <div className="settings-tabs" style={{ marginBottom: 'var(--space-4)' }}>
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            className={`settings-tab ${tab === t.key ? 'active' : ''}`}
+            onClick={() => { setTab(t.key); setError(''); }}
+          >
+            {t.icon} <span style={{ marginLeft: 4 }}>{t.label}</span>
+          </button>
+        ))}
+      </div>
 
       {/* Status Messages */}
       {error && (
@@ -195,10 +219,9 @@ export default function BillitSettingsPage() {
         </div>
       )}
 
-      {/* Section 1: 📦 Digital Catalog */}
-      {catalogViewerEnabled && (
+      {/* Tab 1: 📦 Digital Catalog Link */}
+      {tab === 'catalog' && (
         <>
-          {/* Digital Catalog Link Section */}
           <div className="settings-section">
             <h3 className="settings-section-title">
               <LinkIcon size={18} /> Digital Catalog Link
@@ -278,326 +301,354 @@ export default function BillitSettingsPage() {
         </>
       )}
 
-      {/* Section 2: 📊 Barcode & POS System */}
-      <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
-        <h3 className="settings-section-title">
-          <Barcode size={18} /> Barcode & POS System
-        </h3>
+      {/* Tab 2: 📊 Barcode & POS System */}
+      {tab === 'barcode_pos' && (
+        <div className="settings-section">
+          <h3 className="settings-section-title">
+            <Barcode size={18} /> Barcode & POS System
+          </h3>
 
-        <div className="toggle-field">
-          <div>
-            <div className="toggle-field-label">Enable Barcode System</div>
-            <div className="toggle-field-desc">
-              Auto-generate Code128 barcodes for catalog items
+          <div className="toggle-field">
+            <div>
+              <div className="toggle-field-label">Enable Barcode System</div>
+              <div className="toggle-field-desc">
+                Auto-generate Code128 barcodes for catalog items
+              </div>
+            </div>
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={barcodeEnabled}
+                onChange={(e) => setBarcodeEnabled(e.target.checked)}
+              />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
+          {barcodeEnabled && (
+            <>
+              <div className="toggle-field" style={{ marginTop: 'var(--space-3)' }}>
+                <div>
+                  <div className="toggle-field-label">Enable Camera Barcode Scanning</div>
+                  <div className="toggle-field-desc">
+                    Displays a camera icon inside the barcode box on Create Bill to scan barcodes using device webcam, iPhone, or iPad camera.
+                  </div>
+                </div>
+                <label className="toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={cameraBarcodeEnabled}
+                    onChange={(e) => setCameraBarcodeEnabled(e.target.checked)}
+                  />
+                  <span className="toggle-slider" />
+                </label>
+              </div>
+
+              <div
+                style={{
+                  fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)',
+                  marginTop: 'var(--space-3)', padding: 'var(--space-2)',
+                  background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-sm)',
+                }}
+              >
+                When enabled, catalog items auto-generate Code128 barcodes and a barcode scanner input (with camera support) appears in Bill Creation.
+              </div>
+            </>
+          )}
+
+          {/* POS Mode Toggle */}
+          <div className="toggle-field" style={{ marginTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-4)' }}>
+            <div>
+              <div className="toggle-field-label">Enable POS Mode</div>
+              <div className="toggle-field-desc">
+                Surfaces high-contrast running total display, keyboard shortcuts ([Alt+C], [Alt+W], [Alt+P]), and barcode scanning focus on Create Bill screen.
+              </div>
+            </div>
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={posModeEnabled}
+                onChange={(e) => setPosModeEnabled(e.target.checked)}
+              />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
+          <button
+            className="btn btn-primary"
+            onClick={handleSave}
+            disabled={saving}
+            style={{ marginTop: 'var(--space-5)' }}
+          >
+            {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Settings
+          </button>
+        </div>
+      )}
+
+      {/* Tab 3: 💰 Default Pricing & Taxes */}
+      {tab === 'pricing' && (
+        <div className="settings-section">
+          <h3 className="settings-section-title">
+            <Tag size={18} /> Default Pricing & Taxes
+          </h3>
+          <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
+            <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
+              <label className="input-label">Default GST (%)</label>
+              <input 
+                className="input-field" 
+                type="number" 
+                min={0} 
+                max={100} 
+                value={defaultGst} 
+                onChange={(e) => setDefaultGst(Number(e.target.value))} 
+                placeholder="e.g. 18" 
+              />
+            </div>
+            <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
+              <label className="input-label">Default Discount Type</label>
+              <select 
+                className="input-field" 
+                value={defaultDiscountType} 
+                onChange={(e) => setDefaultDiscountType(e.target.value)}
+              >
+                <option value="₹">Flat ₹ Off</option>
+                <option value="%">% Off</option>
+              </select>
+            </div>
+            <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
+              <label className="input-label">Default Discount Value</label>
+              <input 
+                className="input-field" 
+                type="number" 
+                min={0} 
+                value={defaultDiscountValue} 
+                onChange={(e) => setDefaultDiscountValue(Number(e.target.value))} 
+                placeholder="e.g. 50" 
+              />
             </div>
           </div>
-          <label className="toggle-switch">
-            <input
-              type="checkbox"
-              checked={barcodeEnabled}
-              onChange={(e) => setBarcodeEnabled(e.target.checked)}
-            />
-            <span className="toggle-slider" />
-          </label>
-        </div>
 
-        {barcodeEnabled && (
-          <>
-            <div className="toggle-field" style={{ marginTop: 'var(--space-3)' }}>
+          {/* Default Bill Size */}
+          <div style={{ marginTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-4)' }}>
+            <label className="input-label" style={{ fontWeight: 'var(--weight-semibold)', marginBottom: 'var(--space-1)' }}>Default Bill Size (Digital Bill Preview)</label>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-3)' }}>
+              Controls the presentational preview layout on your Digital Bill page. Actual browser printing remains governed by your native print dialog.
+            </p>
+            <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+              {(['55mm', '80mm', 'A4'] as const).map((size) => (
+                <label key={size} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', padding: 'var(--space-2) var(--space-3)', background: defaultBillSize === size ? 'var(--color-accent-subtle)' : 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }}>
+                  <input
+                    type="radio"
+                    name="defaultBillSize"
+                    value={size}
+                    checked={defaultBillSize === size}
+                    onChange={() => setDefaultBillSize(size)}
+                  />
+                  {size === '55mm' ? '55mm Thermal' : size === '80mm' ? '80mm Receipt' : 'A4 Document'}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <button
+            className="btn btn-primary"
+            onClick={handleSave}
+            disabled={saving}
+            style={{ marginTop: 'var(--space-5)' }}
+          >
+            {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Settings
+          </button>
+        </div>
+      )}
+
+      {/* Tab 4: 🧾 Digital Bill Features */}
+      {tab === 'digital_bill' && (
+        <div className="settings-section">
+          <h3 className="settings-section-title">
+            <FileText size={18} /> Digital Bill Features
+          </h3>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-4)' }}>
+            Configure how your digital bills display tax information, pricing, and payment details.
+          </p>
+
+          {/* GST Calculation Mode */}
+          <div style={{ background: 'var(--color-bg-secondary)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', marginBottom: 'var(--space-3)' }}>
+            <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-3)' }}>GST Calculation Mode</div>
+            <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', cursor: 'pointer', padding: 'var(--space-3)', background: gstCalcMode === 'exclusive' ? 'var(--color-accent-subtle)' : 'var(--color-bg-primary)', border: `1px solid ${gstCalcMode === 'exclusive' ? 'var(--color-accent)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-md)', flex: '1 1 200px' }}>
+                <input type="radio" name="gstCalcMode" value="exclusive" checked={gstCalcMode === 'exclusive'} onChange={() => setGstCalcMode('exclusive')} style={{ marginTop: 2 }} />
+                <div>
+                  <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)' }}>Exclusive (Add GST on top)</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.4 }}>Price entered = base price. GST added on top.<br />Cafes, restaurants, services.<br />Example: ₹100 + 18% GST = ₹118</div>
+                </div>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', cursor: 'pointer', padding: 'var(--space-3)', background: gstCalcMode === 'inclusive' ? 'var(--color-accent-subtle)' : 'var(--color-bg-primary)', border: `1px solid ${gstCalcMode === 'inclusive' ? 'var(--color-accent)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-md)', flex: '1 1 200px' }}>
+                <input type="radio" name="gstCalcMode" value="inclusive" checked={gstCalcMode === 'inclusive'} onChange={() => setGstCalcMode('inclusive')} style={{ marginTop: 2 }} />
+                <div>
+                  <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)' }}>Inclusive (GST already in price)</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.4 }}>Price entered = final price including GST. Tax extracted backward.<br />Retail, FMCG, packaged goods.<br />Example: ₹100 with 10% → Taxable ₹90.91 + GST ₹9.09</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Show CGST/SGST Split */}
+          <div className="toggle-field" style={{ marginBottom: 'var(--space-3)' }}>
+            <div>
+              <div className="toggle-field-label">Show CGST/SGST Split</div>
+              <div className="toggle-field-desc">Display CGST + SGST separately instead of combined GST amount on digital bills.</div>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={showCgstSgstSplit} onChange={(e) => setShowCgstSgstSplit(e.target.checked)} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
+          {/* Show GST Slab Breakup */}
+          <div className="toggle-field" style={{ marginBottom: 'var(--space-3)' }}>
+            <div>
+              <div className="toggle-field-label">Show GST Slab Breakup Table</div>
+              <div className="toggle-field-desc">Display rate-wise GST breakdown table (grouped by 0%, 5%, 12%, 18%) on digital bills.</div>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={showGstSlabBreakup} onChange={(e) => setShowGstSlabBreakup(e.target.checked)} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
+          {/* Enable MRP & Savings */}
+          <div className="toggle-field" style={{ marginBottom: 'var(--space-3)' }}>
+            <div>
+              <div className="toggle-field-label">Enable MRP & Savings</div>
+              <div className="toggle-field-desc">Adds MRP field to catalog items. When MRP exceeds selling price, shows &quot;You Saved ₹X&quot; badge on digital bills. Independent of line-level discounts.</div>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={showMrpAndSavings} onChange={(e) => setShowMrpAndSavings(e.target.checked)} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
+          {/* Enable Payment Method */}
+          <div className="toggle-field">
+            <div>
+              <div className="toggle-field-label">Enable Payment Method</div>
+              <div className="toggle-field-desc">Adds payment method selector (Cash / UPI / Credit Card / Debit Card / Other) to Create Bill. Payment method is shown on digital bills.</div>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={enablePaymentMethod} onChange={(e) => setEnablePaymentMethod(e.target.checked)} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
+          <button
+            className="btn btn-primary"
+            onClick={handleSave}
+            disabled={saving}
+            style={{ marginTop: 'var(--space-5)' }}
+          >
+            {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Settings
+          </button>
+        </div>
+      )}
+
+      {/* Tab 5: 📱 WhatsApp Templates */}
+      {tab === 'whatsapp' && (
+        <>
+          {/* Bill WhatsApp Template Section */}
+          <div className="settings-section">
+            <h3 className="settings-section-title">
+              <Send size={18} /> Bill WhatsApp Template
+            </h3>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-3)' }}>
+              This message is sent when you click &quot;Send on WhatsApp&quot; after creating a bill.
+            </p>
+
+            {billTemplateError && (
+              <div style={{ padding: 'var(--space-3)', background: 'var(--color-error-subtle)', color: 'var(--color-error)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-3)' }} role="alert">
+                {billTemplateError}
+              </div>
+            )}
+
+            <div style={{ marginBottom: 'var(--space-3)' }}>
+              <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: 'var(--space-2)' }}>Message Template</label>
+              <textarea
+                value={billTemplate}
+                onChange={e => setBillTemplate(e.target.value)}
+                placeholder="Hi {customer_name}, here is your bill from {business_name}.\nAmount: ₹{grand_total}.\nView Bill:\n{bill_link}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n{review_link}\n\nThankYou!"
+                style={{ width: '100%', minHeight: 100, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', resize: 'vertical', boxSizing: 'border-box' }}
+              />
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-1)' }}>
+                <p style={{ marginBottom: 4 }}>Use these exact placeholders (single braces only):</p>
+                <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                  <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{customer_name}'}</code>
+                  <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{business_name}'}</code>
+                  <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{bill_link}'}</code>
+                  <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{bill_number}'}</code>
+                  <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{grand_total}'}</code>
+                  <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{review_link}'}</code>
+                </div>
+              </div>
+            </div>
+
+            <button
+              className="btn btn-primary"
+              onClick={async () => {
+                if (!billTemplate.includes('{bill_link}')) {
+                  setBillTemplateError('Template must contain {bill_link}');
+                  return;
+                }
+                setSavingBillTemplate(true);
+                setBillTemplateError('');
+                const res = await updateBillWhatsAppTemplateAction(billTemplate);
+                if (res.error) setBillTemplateError(res.error);
+                else flash();
+                setSavingBillTemplate(false);
+              }}
+              disabled={savingBillTemplate}
+            >
+              {savingBillTemplate ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Template
+            </button>
+          </div>
+
+          {/* Auto-select Template by Visit Type */}
+          <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
+            <h3 className="settings-section-title">
+              <FileText size={18} /> Multi-Template Settings
+            </h3>
+
+            <div className="toggle-field">
               <div>
-                <div className="toggle-field-label">Enable Camera Barcode Scanning</div>
+                <div className="toggle-field-label">Auto-select template by visit type</div>
                 <div className="toggle-field-desc">
-                  Displays a camera icon inside the barcode box on Create Bill to scan barcodes using device webcam, iPhone, or iPad camera.
+                  When enabled, first-visit customers get your &quot;first visit&quot; default template,
+                  repeat customers get your &quot;repeat visit&quot; default. When off, uses the single template above.
                 </div>
               </div>
               <label className="toggle-switch">
                 <input
                   type="checkbox"
-                  checked={cameraBarcodeEnabled}
-                  onChange={(e) => setCameraBarcodeEnabled(e.target.checked)}
+                  checked={autoSelectTemplate}
+                  onChange={(e) => setAutoSelectTemplate(e.target.checked)}
                 />
                 <span className="toggle-slider" />
               </label>
             </div>
 
-            <div
-              style={{
-                fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)',
-                marginTop: 'var(--space-3)', padding: 'var(--space-2)',
-                background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-sm)',
-              }}
-            >
-              When enabled, catalog items auto-generate Code128 barcodes and a barcode scanner input (with camera support) appears in Bill Creation.
-            </div>
-          </>
-        )}
-
-        {/* POS Mode Toggle */}
-        <div className="toggle-field" style={{ marginTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-4)' }}>
-          <div>
-            <div className="toggle-field-label">Enable POS Mode</div>
-            <div className="toggle-field-desc">
-              Surfaces high-contrast running total display, keyboard shortcuts ([Alt+C], [Alt+W], [Alt+P]), and barcode scanning focus on Create Bill screen.
+            <div style={{ marginTop: 'var(--space-3)' }}>
+              <button
+                className="btn"
+                onClick={() => router.push('/dashboard/billit/settings/bill-templates')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)' }}
+              >
+                <Link2 size={16} /> Manage Multiple Templates →
+              </button>
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-2)' }}>
+                Create and manage visit-type templates, set defaults for first-visit and repeat customers.
+              </p>
             </div>
           </div>
-          <label className="toggle-switch">
-            <input
-              type="checkbox"
-              checked={posModeEnabled}
-              onChange={(e) => setPosModeEnabled(e.target.checked)}
-            />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-      </div>
-
-      {/* Section 3: 💰 Default Pricing & Taxes */}
-      <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
-        <h3 className="settings-section-title">
-          <Tag size={18} /> Default Pricing & Taxes
-        </h3>
-        <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
-          <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
-            <label className="input-label">Default GST (%)</label>
-            <input 
-              className="input-field" 
-              type="number" 
-              min={0} 
-              max={100} 
-              value={defaultGst} 
-              onChange={(e) => setDefaultGst(Number(e.target.value))} 
-              placeholder="e.g. 18" 
-            />
-          </div>
-          <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
-            <label className="input-label">Default Discount Type</label>
-            <select 
-              className="input-field" 
-              value={defaultDiscountType} 
-              onChange={(e) => setDefaultDiscountType(e.target.value)}
-            >
-              <option value="₹">Flat ₹ Off</option>
-              <option value="%">% Off</option>
-            </select>
-          </div>
-          <div className="input-group" style={{ flex: 1, minWidth: 200 }}>
-            <label className="input-label">Default Discount Value</label>
-            <input 
-              className="input-field" 
-              type="number" 
-              min={0} 
-              value={defaultDiscountValue} 
-              onChange={(e) => setDefaultDiscountValue(Number(e.target.value))} 
-              placeholder="e.g. 50" 
-            />
-          </div>
-        </div>
-
-        {/* Default Bill Size */}
-        <div style={{ marginTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-4)' }}>
-          <label className="input-label" style={{ fontWeight: 'var(--weight-semibold)', marginBottom: 'var(--space-1)' }}>Default Bill Size (Digital Bill Preview)</label>
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-3)' }}>
-            Controls the presentational preview layout on your Digital Bill page. Actual browser printing remains governed by your native print dialog.
-          </p>
-          <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-            {(['55mm', '80mm', 'A4'] as const).map((size) => (
-              <label key={size} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', padding: 'var(--space-2) var(--space-3)', background: defaultBillSize === size ? 'var(--color-accent-subtle)' : 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }}>
-                <input
-                  type="radio"
-                  name="defaultBillSize"
-                  value={size}
-                  checked={defaultBillSize === size}
-                  onChange={() => setDefaultBillSize(size)}
-                />
-                {size === '55mm' ? '55mm Thermal' : size === '80mm' ? '80mm Receipt' : 'A4 Document'}
-              </label>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Section 4: 🧾 Digital Bill Features */}
-      <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
-        <h3 className="settings-section-title">
-          <FileText size={18} /> Digital Bill Features
-        </h3>
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-4)' }}>
-          Configure how your digital bills display tax information, pricing, and payment details.
-        </p>
-
-        {/* GST Calculation Mode */}
-        <div style={{ background: 'var(--color-bg-secondary)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', marginBottom: 'var(--space-3)' }}>
-          <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-3)' }}>GST Calculation Mode</div>
-          <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', cursor: 'pointer', padding: 'var(--space-3)', background: gstCalcMode === 'exclusive' ? 'var(--color-accent-subtle)' : 'var(--color-bg-primary)', border: `1px solid ${gstCalcMode === 'exclusive' ? 'var(--color-accent)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-md)', flex: '1 1 200px' }}>
-              <input type="radio" name="gstCalcMode" value="exclusive" checked={gstCalcMode === 'exclusive'} onChange={() => setGstCalcMode('exclusive')} style={{ marginTop: 2 }} />
-              <div>
-                <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)' }}>Exclusive (Add GST on top)</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.4 }}>Price entered = base price. GST added on top.<br />Cafes, restaurants, services.<br />Example: ₹100 + 18% GST = ₹118</div>
-              </div>
-            </label>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', cursor: 'pointer', padding: 'var(--space-3)', background: gstCalcMode === 'inclusive' ? 'var(--color-accent-subtle)' : 'var(--color-bg-primary)', border: `1px solid ${gstCalcMode === 'inclusive' ? 'var(--color-accent)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-md)', flex: '1 1 200px' }}>
-              <input type="radio" name="gstCalcMode" value="inclusive" checked={gstCalcMode === 'inclusive'} onChange={() => setGstCalcMode('inclusive')} style={{ marginTop: 2 }} />
-              <div>
-                <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)' }}>Inclusive (GST already in price)</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.4 }}>Price entered = final price including GST. Tax extracted backward.<br />Retail, FMCG, packaged goods.<br />Example: ₹100 with 10% → Taxable ₹90.91 + GST ₹9.09</div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        {/* Show CGST/SGST Split */}
-        <div className="toggle-field" style={{ marginBottom: 'var(--space-3)' }}>
-          <div>
-            <div className="toggle-field-label">Show CGST/SGST Split</div>
-            <div className="toggle-field-desc">Display CGST + SGST separately instead of combined GST amount on digital bills.</div>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={showCgstSgstSplit} onChange={(e) => setShowCgstSgstSplit(e.target.checked)} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-
-        {/* Show GST Slab Breakup */}
-        <div className="toggle-field" style={{ marginBottom: 'var(--space-3)' }}>
-          <div>
-            <div className="toggle-field-label">Show GST Slab Breakup Table</div>
-            <div className="toggle-field-desc">Display rate-wise GST breakdown table (grouped by 0%, 5%, 12%, 18%) on digital bills.</div>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={showGstSlabBreakup} onChange={(e) => setShowGstSlabBreakup(e.target.checked)} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-
-        {/* Enable MRP & Savings */}
-        <div className="toggle-field" style={{ marginBottom: 'var(--space-3)' }}>
-          <div>
-            <div className="toggle-field-label">Enable MRP & Savings</div>
-            <div className="toggle-field-desc">Adds MRP field to catalog items. When MRP exceeds selling price, shows &quot;You Saved ₹X&quot; badge on digital bills. Independent of line-level discounts.</div>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={showMrpAndSavings} onChange={(e) => setShowMrpAndSavings(e.target.checked)} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-
-        {/* Enable Payment Method */}
-        <div className="toggle-field">
-          <div>
-            <div className="toggle-field-label">Enable Payment Method</div>
-            <div className="toggle-field-desc">Adds payment method selector (Cash / UPI / Credit Card / Debit Card / Other) to Create Bill. Payment method is shown on digital bills.</div>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={enablePaymentMethod} onChange={(e) => setEnablePaymentMethod(e.target.checked)} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-      </div>
-
-      <div style={{ marginTop: 'var(--space-5)' }}>
-        <button
-          className="btn btn-primary"
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Settings
-        </button>
-      </div>
-
-      {/* Bill WhatsApp Template Section */}
-      <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
-        <h3 className="settings-section-title">
-          <Send size={18} /> Bill WhatsApp Template
-        </h3>
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-3)' }}>
-          This message is sent when you click &quot;Send on WhatsApp&quot; after creating a bill.
-        </p>
-
-        {billTemplateError && (
-          <div style={{ padding: 'var(--space-3)', background: 'var(--color-error-subtle)', color: 'var(--color-error)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-3)' }} role="alert">
-            {billTemplateError}
-          </div>
-        )}
-
-        <div style={{ marginBottom: 'var(--space-3)' }}>
-          <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: 'var(--space-2)' }}>Message Template</label>
-          <textarea
-            value={billTemplate}
-            onChange={e => setBillTemplate(e.target.value)}
-            placeholder="Hi {customer_name}, here is your bill from {business_name}.\nAmount: ₹{grand_total}.\nView Bill:\n{bill_link}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n{review_link}\n\nThankYou!"
-            style={{ width: '100%', minHeight: 100, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', resize: 'vertical', boxSizing: 'border-box' }}
-          />
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-1)' }}>
-            <p style={{ marginBottom: 4 }}>Use these exact placeholders (single braces only):</p>
-            <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-              <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{customer_name}'}</code>
-              <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{business_name}'}</code>
-              <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{bill_link}'}</code>
-              <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{bill_number}'}</code>
-              <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{grand_total}'}</code>
-              <code style={{ background: 'var(--color-bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>{'{review_link}'}</code>
-            </div>
-          </div>
-        </div>
-
-        <button
-          className="btn btn-primary"
-          onClick={async () => {
-            if (!billTemplate.includes('{bill_link}')) {
-              setBillTemplateError('Template must contain {bill_link}');
-              return;
-            }
-            setSavingBillTemplate(true);
-            setBillTemplateError('');
-            const res = await updateBillWhatsAppTemplateAction(billTemplate);
-            if (res.error) setBillTemplateError(res.error);
-            else flash();
-            setSavingBillTemplate(false);
-          }}
-          disabled={savingBillTemplate}
-        >
-          {savingBillTemplate ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save Template
-        </button>
-      </div>
-
-      {/* Auto-select Template by Visit Type */}
-      <div className="settings-section" style={{ marginTop: 'var(--space-6)' }}>
-        <h3 className="settings-section-title">
-          <FileText size={18} /> Multi-Template Settings
-        </h3>
-
-        <div className="toggle-field">
-          <div>
-            <div className="toggle-field-label">Auto-select template by visit type</div>
-            <div className="toggle-field-desc">
-              When enabled, first-visit customers get your &quot;first visit&quot; default template,
-              repeat customers get your &quot;repeat visit&quot; default. When off, uses the single template above.
-            </div>
-          </div>
-          <label className="toggle-switch">
-            <input
-              type="checkbox"
-              checked={autoSelectTemplate}
-              onChange={(e) => setAutoSelectTemplate(e.target.checked)}
-            />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-
-        <div style={{ marginTop: 'var(--space-3)' }}>
-          <button
-            className="btn"
-            onClick={() => router.push('/dashboard/billit/settings/bill-templates')}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)' }}
-          >
-            <Link2 size={16} /> Manage Multiple Templates →
-          </button>
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-2)' }}>
-            Create and manage visit-type templates, set defaults for first-visit and repeat customers.
-          </p>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
