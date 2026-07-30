@@ -13,6 +13,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Star, Copy, RefreshCw, Check, Loader2, ExternalLink, Heart, MessageCircle,
 } from 'lucide-react';
@@ -41,7 +42,9 @@ type Stage = 'rating' | 'feedback' | 'ai_draft' | 'thank_you';
 export default function ReviewPage({
   clientId, businessName, businessType, about, logoUrl, googlePlaceId, whatsappUrl, rewardSettings,
 }: ReviewPageProps) {
-  const [stage, setStage] = useState<Stage>('rating');
+  const searchParams = useSearchParams();
+  const isSubmitted = searchParams.get('submitted') === '1';
+  const [stage, setStage] = useState<Stage>(isSubmitted ? 'thank_you' : 'rating');
   const [stars, setStars] = useState(0);
   const [hoverStars, setHoverStars] = useState(0);
   const [feedbackText, setFeedbackText] = useState('');

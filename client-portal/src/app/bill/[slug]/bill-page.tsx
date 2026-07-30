@@ -105,46 +105,24 @@ export default function BillPageClient({
     if (rating <= 3) {
       setShowFeedback(true);
     } else {
-      // 4-5★: submit + generate AI draft
+      // 4-5★: submit + redirect to standalone review page with Thank You & Assistance option
       setSubmitting(true);
       await submitInlineReviewAction({ clientId: client.id || bill.client_id, billId: bill.id, stars: rating });
-      setReviewed(true);
-
-      // Generate AI draft
-      setAiLoading(true);
-      const result = await generateAiReviewAction({
-        clientId: bill.client_id,
-        businessName: client.business_name,
-        businessType: '',
-        about: client.about || '',
-        stars: rating,
-        previousDrafts: [],
-        sessionId: bill.id,
-      });
-      if (result.draft) {
-        setAiDraft(result.draft);
-        startCountdown();
-      }
-      setAiLoading(false);
       setSubmitting(false);
+      window.location.href = `/review/${client.slug}?bill_id=${bill.id}&submitted=1`;
     }
   }
 
   async function handleSubmitFeedback() {
     setSubmitting(true);
-    const result = await submitInlineReviewAction({
+    await submitInlineReviewAction({
       clientId: bill.client_id,
       billId: bill.id,
       stars: selectedRating,
       feedbackText,
     });
-    if (result.error === 'already_reviewed') {
-      setReviewed(true);
-    } else {
-      setReviewed(true);
-    }
     setSubmitting(false);
-    setShowFeedback(false);
+    window.location.href = `/review/${client.slug}?bill_id=${bill.id}&submitted=1`;
   }
 
   async function handleCopyDraft() {
