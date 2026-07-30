@@ -151,7 +151,7 @@ export async function fetchClientsAction() {
 
   const { data, error } = await supabase
     .from('clients')
-    .select('id, business_name, username, slug, phone, status, modules_enabled, registered_at, valid_till, deleted_at, subscription_hold_enabled, directory_access_enabled')
+    .select('id, business_name, username, slug, phone, status, modules_enabled, registered_at, valid_till, deleted_at, subscription_hold_enabled, directory_access_enabled, publicly_listed')
     .is('deleted_at', null)
     .order('registered_at', { ascending: false })
     .limit(200);
@@ -313,16 +313,21 @@ export async function toggleSubscriptionHoldAction(data: { clientId: string; hol
 /**
  * Toggle directory access for a client.
  */
-export async function toggleDirectoryAccessAction(data: { clientId: string; enabled: boolean }) {
+export async function toggleDirectoryAccessAction(data: { clientId: string; enabled: boolean; publiclyListed?: boolean }) {
   const supabase = await createAdminClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.user_metadata?.role || user.user_metadata.role !== 'admin') {
     return { error: 'Unauthorized.' };
   }
 
+  const updateData: Record<string, any> = { directory_access_enabled: data.enabled };
+  if (data.publiclyListed !== undefined) {
+    updateData.publicly_listed = data.publiclyListed;
+  }
+
   const { error } = await supabase
     .from('clients')
-    .update({ directory_access_enabled: data.enabled })
+    .update(updateData)
     .eq('id', data.clientId);
 
   if (error) return { error: 'Failed to update directory access status.' };
@@ -331,7 +336,114 @@ export async function toggleDirectoryAccessAction(data: { clientId: string; enab
     actorType: 'admin', actorId: user.id,
     action: AUDIT_ACTIONS.CLIENT_MODULES_TOGGLED,
     target: data.clientId,
-    metadata: { directory_access_enabled: data.enabled },
+    metadata: updateData,
+  });
+
+  return {};
+}
+
+// ============================================================
+// Reset / Change Client Username
+// ============================================================
+export async function resetClientUsernameAction(data: { clientId: string; newUsername: string }) {
+  const supabase = await createAdminClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.user_metadata?.role || user.user_metadata.role !== 'admin') {
+    return { error: 'Unauthorized.' };
+  }
+
+  const clean = data.newUsername.trim().toLowerCase();
+  if (!clean || clean.length < 3) return { error: 'Username must be at least 3 characters.' };
+
+  // Check uniqueness
+  const { data: existing } = await supabase
+    .from('clients')
+    .select('id')
+    .eq('username', clean)
+    .neq('id', data.clientId)
+    .maybeSingle();
+
+  if (existing) return { error: 'Username is already taken by another client.' };
+
+  const { error } = await supabase
+    .from('clients')
+    .update({ username: clean })
+    .eq('id', data.clientId);
+
+  if (error) return { error: 'Failed to update username.' };
+
+  await logAuditEvent(supabase, {
+    actorType: 'admin', actorId: user.id,
+    action: AUDIT_ACTIONS.CLIENT_MODULES_TOGGLED,
+    target: data.clientId,
+    metadata: { action: 'change_username', newUsername: clean },
+  });
+
+  return {};
+}
+
+// ============================================================
+// Reset / Change Client Password (Supabase Auth Admin)
+// ============================================================
+export async function resetClientPasswordAction(data: { clientId: string; newPassword: string }) {
+  const supabase = await createAdminClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.user_metadata?.role || user.user_metadata.role !== 'admin') {
+    return { error: 'Unauthorized.' };
+  }
+
+  if (!data.newPassword || data.newPassword.length < 6) {
+    return { error: 'Password must be at least 6 characters long.' };
+  }
+
+  // Update password in Supabase Auth via admin API
+  const { error } = await supabase.auth.admin.updateUserById(data.clientId, {
+    password: data.newPassword,
+  });
+
+  if (error) return { error: error.message || 'Failed to reset password.' };
+
+  await logAuditEvent(supabase, {
+    actorType: 'admin', actorId: user.id,
+    action: AUDIT_ACTIONS.CLIENT_MODULES_TOGGLED,
+    target: data.clientId,
+    metadata: { action: 'reset_password' },
+  });
+
+  return {};
+}
+
+// ============================================================
+// Delete Client (Soft-delete with confirmation)
+// ============================================================
+export async function deleteClientAction(data: { clientId: string; confirmationText: string }) {
+  const supabase = await createAdminClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.user_metadata?.role || user.user_metadata.role !== 'admin') {
+    return { error: 'Unauthorized.' };
+  }
+
+  if (data.confirmationText.trim() !== 'DELETE') {
+    return { error: 'You must type "DELETE" exactly to confirm client deletion.' };
+  }
+
+  const { error } = await supabase
+    .from('clients')
+    .update({
+      deleted_at: new Date().toISOString(),
+      status: 'revoked',
+      publicly_listed: false,
+      directory_access_enabled: false,
+    })
+    .eq('id', data.clientId);
+
+  if (error) return { error: 'Failed to delete client.' };
+
+  await logAuditEvent(supabase, {
+    actorType: 'admin', actorId: user.id,
+    action: AUDIT_ACTIONS.CLIENT_REVOKED,
+    target: data.clientId,
+    metadata: { action: 'soft_delete' },
   });
 
   return {};

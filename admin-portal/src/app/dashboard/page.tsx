@@ -29,6 +29,9 @@ import {
   toggleQuickToolsAction,
   toggleSubscriptionHoldAction,
   toggleDirectoryAccessAction,
+  resetClientUsernameAction,
+  resetClientPasswordAction,
+  deleteClientAction,
   fetchInquiriesAction,
   updateInquiryStatusAction,
   extendValidityAction,
@@ -51,6 +54,7 @@ type Client = {
   deleted_at: string | null;
   subscription_hold_enabled?: boolean;
   directory_access_enabled?: boolean;
+  publicly_listed?: boolean;
 };
 
 type Inquiry = {
@@ -105,6 +109,13 @@ export default function AdminDashboard() {
 
   // Full Module Selection Table modal state
   const [moduleModal, setModuleModal] = useState<{ clientId: string; clientName: string } | null>(null);
+
+  // 3-field Reset & Delete Modal state
+  const [resetModal, setResetModal] = useState<{ clientId: string; clientName: string; currentUsername: string } | null>(null);
+  const [resetUsername, setResetUsername] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [resetStatusMsg, setResetStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Key generation state
   const [keygenMobile, setKeygenMobile] = useState('');
@@ -304,15 +315,56 @@ export default function AdminDashboard() {
     setActionLoading(null);
   }
 
-  async function handleToggleDirectoryAccess(clientId: string, enabled: boolean) {
+  async function handleToggleDirectoryAccess(clientId: string, enabled: boolean, publiclyListed?: boolean) {
     setActionLoading(clientId);
-    const res = await toggleDirectoryAccessAction({ clientId, enabled });
+    const res = await toggleDirectoryAccessAction({ clientId, enabled, publiclyListed });
     if (res.error) {
       alert(res.error);
     } else {
-      setClients(prev => prev.map(c => c.id === clientId ? { ...c, directory_access_enabled: enabled } : c));
+      setClients(prev => prev.map(c => c.id === clientId ? {
+        ...c,
+        directory_access_enabled: enabled,
+        publicly_listed: publiclyListed !== undefined ? publiclyListed : c.publicly_listed,
+      } : c));
     }
     setActionLoading(null);
+  }
+
+  async function handleUpdateUsername() {
+    if (!resetModal) return;
+    setResetStatusMsg(null);
+    const res = await resetClientUsernameAction({ clientId: resetModal.clientId, newUsername: resetUsername });
+    if (res.error) {
+      setResetStatusMsg({ type: 'error', text: res.error });
+    } else {
+      setResetStatusMsg({ type: 'success', text: 'Username updated successfully!' });
+      loadData();
+    }
+  }
+
+  async function handleUpdatePassword() {
+    if (!resetModal) return;
+    setResetStatusMsg(null);
+    const res = await resetClientPasswordAction({ clientId: resetModal.clientId, newPassword: resetPassword });
+    if (res.error) {
+      setResetStatusMsg({ type: 'error', text: res.error });
+    } else {
+      setResetStatusMsg({ type: 'success', text: 'Password reset successfully!' });
+      setResetPassword('');
+      loadData();
+    }
+  }
+
+  async function handleDeleteClient() {
+    if (!resetModal) return;
+    setResetStatusMsg(null);
+    const res = await deleteClientAction({ clientId: resetModal.clientId, confirmationText: deleteConfirmText });
+    if (res.error) {
+      setResetStatusMsg({ type: 'error', text: res.error });
+    } else {
+      setResetModal(null);
+      loadData();
+    }
   }
 
   async function handleExtendValidity(clientId: string, months: number) {
@@ -562,6 +614,7 @@ export default function AdminDashboard() {
                     <th>Valid Till</th>
                     <th>Status</th>
                     <th>Modules</th>
+                    <th>Directory</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -651,7 +704,42 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td>
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <button
+                          className={`action-btn ${client.directory_access_enabled === false ? 'danger' : ''}`}
+                          title={client.directory_access_enabled === false ? 'Enable Directory View Access' : 'Disable Directory View Access'}
+                          onClick={() => handleToggleDirectoryAccess(client.id, client.directory_access_enabled === false, client.publicly_listed)}
+                          disabled={actionLoading === client.id}
+                          style={client.directory_access_enabled === false ? { background: 'var(--color-error-subtle)', color: 'var(--color-error)' } : undefined}
+                        >
+                          {client.directory_access_enabled === false ? <BookX size={16} /> : <BookOpen size={16} />}
+                        </button>
+                        <button
+                          className={`action-btn ${client.publicly_listed === false ? 'danger' : ''}`}
+                          title={client.publicly_listed === false ? 'Show on Public Directory' : 'Hide from Public Directory'}
+                          onClick={() => handleToggleDirectoryAccess(client.id, client.directory_access_enabled !== false, client.publicly_listed === false)}
+                          disabled={actionLoading === client.id}
+                          style={client.publicly_listed === false ? { background: 'var(--color-warning-subtle)', color: 'var(--color-warning)' } : undefined}
+                        >
+                          {client.publicly_listed === false ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </td>
+                    <td>
                       <div className="action-row">
+                        <button
+                          className="action-btn"
+                          title="Reset Username / Password / Delete Client"
+                          onClick={() => {
+                            setResetModal({ clientId: client.id, clientName: client.business_name, currentUsername: client.username });
+                            setResetUsername(client.username);
+                            setResetPassword('');
+                            setDeleteConfirmText('');
+                            setResetStatusMsg(null);
+                          }}
+                        >
+                          <UserPen size={16} />
+                        </button>
                         <button className="action-btn" title="Message on WhatsApp" onClick={() => handleMessageClient(client.phone)}>
                           <MessageCircle size={16} />
                         </button>
@@ -669,15 +757,6 @@ export default function AdminDashboard() {
                           style={client.subscription_hold_enabled ? { background: 'var(--color-error-subtle)', color: 'var(--color-error)' } : undefined}
                         >
                           <PauseCircle size={16} />
-                        </button>
-                        <button
-                          className={`action-btn ${client.directory_access_enabled === false ? 'danger' : ''}`}
-                          title={client.directory_access_enabled === false ? 'Enable Directory Access (Allow client to access Directory)' : 'Disable Directory Access (Hide directory from client)'}
-                          onClick={() => handleToggleDirectoryAccess(client.id, client.directory_access_enabled === false)}
-                          disabled={actionLoading === client.id}
-                          style={client.directory_access_enabled === false ? { background: 'var(--color-error-subtle)', color: 'var(--color-error)' } : undefined}
-                        >
-                          {client.directory_access_enabled === false ? <BookX size={16} /> : <BookOpen size={16} />}
                         </button>
                         {client.status === 'active' ? (
                           <button className="action-btn danger" title="Revoke"
@@ -980,6 +1059,64 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 3-Field Client Management & Reset Modal */}
+      {resetModal && (
+        <div className="modal-overlay" onClick={() => setResetModal(null)}>
+          <div className="modal-content" style={{ maxWidth: '520px', width: '90%' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                <UserPen size={20} color="var(--color-accent)" />
+                Manage Client — {resetModal.clientName}
+              </h3>
+              <button className="action-btn" onClick={() => setResetModal(null)}><X size={18} /></button>
+            </div>
+
+            {resetStatusMsg && (
+              <div style={{
+                padding: 'var(--space-3)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: 'var(--text-xs)',
+                marginBottom: 'var(--space-3)',
+                background: resetStatusMsg.type === 'error' ? 'var(--color-error-subtle)' : 'var(--color-success-subtle)',
+                color: resetStatusMsg.type === 'error' ? 'var(--color-error)' : 'var(--color-success)',
+                fontWeight: 600,
+              }}>
+                {resetStatusMsg.text}
+              </div>
+            )}
+
+            {/* Field 1: Reset / Change Username */}
+            <div style={{ padding: 'var(--space-3)', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-3)', border: '1px solid var(--color-border)' }}>
+              <label style={{ display: 'block', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-1)' }}>1. Reset / Change Username</label>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 4 }}>
+                <input className="input-field" value={resetUsername} onChange={(e) => setResetUsername(e.target.value)} placeholder="new_username" style={{ flex: 1, fontSize: 'var(--text-xs)' }} />
+                <button className="btn btn-primary" onClick={handleUpdateUsername} style={{ fontSize: 'var(--text-xs)' }}>Update Username</button>
+              </div>
+            </div>
+
+            {/* Field 2: Reset / Change Password */}
+            <div style={{ padding: 'var(--space-3)', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-3)', border: '1px solid var(--color-border)' }}>
+              <label style={{ display: 'block', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-semibold)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-1)' }}>2. Reset / Change Password</label>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 4 }}>
+                <input className="input-field" type="password" value={resetPassword} onChange={(e) => setResetPassword(e.target.value)} placeholder="New password (min 6 chars)" style={{ flex: 1, fontSize: 'var(--text-xs)' }} />
+                <button className="btn btn-primary" onClick={handleUpdatePassword} style={{ fontSize: 'var(--text-xs)' }}>Update Password</button>
+              </div>
+            </div>
+
+            {/* Field 3: Delete Client (Danger Zone) */}
+            <div style={{ padding: 'var(--space-3)', background: 'var(--color-error-subtle)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(220,38,38,0.2)' }}>
+              <label style={{ display: 'block', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)', color: 'var(--color-error)', marginBottom: 'var(--space-1)' }}>3. Delete Client (Danger Zone)</label>
+              <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-2)' }}>Type <strong>DELETE</strong> below to confirm soft-deletion of this client.</div>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <input className="input-field" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)} placeholder='Type "DELETE"' style={{ flex: 1, fontSize: 'var(--text-xs)', borderColor: 'var(--color-error)' }} />
+                <button className="btn btn-danger" onClick={handleDeleteClient} disabled={deleteConfirmText.trim() !== 'DELETE'} style={{ fontSize: 'var(--text-xs)' }}>Delete Client</button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}
