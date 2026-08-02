@@ -599,8 +599,8 @@ export default function CreateBillPage() {
           marginBottom: 'var(--space-4)',
           boxShadow: 'var(--shadow-md)',
           position: 'sticky',
-          top: 0,
-          zIndex: 99,
+          top: 56,
+          zIndex: 15,
         }}>
           <span style={{ fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 'bold', opacity: 0.9 }}>POS Running Total</span>
           <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 900, fontFamily: 'monospace' }}>₹{grandTotal.toFixed(2)}</span>

@@ -195,6 +195,12 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  min-width: 0;
+  flex: 1;
+}
+
+.topbar-btn.back-btn {
+  flex-shrink: 0;
 }
 
 .mobile-menu-btn {
@@ -206,6 +212,7 @@
   cursor: pointer;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .topbar-title {
@@ -213,6 +220,10 @@
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
   color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .topbar-right {
