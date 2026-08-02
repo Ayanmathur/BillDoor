@@ -64,6 +64,7 @@
   object-fit: contain;
   border-radius: var(--radius-md);
   margin-bottom: var(--space-3, 12px);
+  background: #ffffff;
 }
 
 .card-logo-initial {

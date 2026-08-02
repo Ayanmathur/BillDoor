@@ -61,7 +61,7 @@
   width: auto;
   height: auto;
   border-radius: var(--radius-md);
-  background: var(--color-accent-subtle);
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -78,6 +78,7 @@
   height: auto;
   object-fit: contain;
   border-radius: var(--radius-md);
+  background: #ffffff;
 }
 
 .bill-biz-name {
