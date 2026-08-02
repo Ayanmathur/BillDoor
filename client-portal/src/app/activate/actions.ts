@@ -229,6 +229,7 @@ export async function activateAction(data: {
       website_url: null,
       show_barcode_on_bill: false,
       reward_settings: {
+        enabled: false,
         triggers: { feedback: true, bill_created: false, appointment_completed: false },
         reward_type: 'percent_discount',
         reward_value: 10,

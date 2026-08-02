@@ -58,12 +58,13 @@ export async function fetchSettingsAction() {
       linkedinUrl: client.linkedin_url || '',
       xUrl: client.x_url || '',
       whatsappUrl: client.whatsapp_url || '',
-      rewardSettings: client.reward_settings || {
-        triggers: { feedback: true, bill_created: false, appointment_completed: false },
-        reward_type: 'percent_discount',
-        reward_value: 10,
-        review_reward_mode: 'all_feedback',
-        max_per_customer_per_day: 1,
+      rewardSettings: {
+        enabled: client.reward_settings?.enabled === true,
+        triggers: client.reward_settings?.triggers || { feedback: true, bill_created: false, appointment_completed: false },
+        reward_type: client.reward_settings?.reward_type || 'percent_discount',
+        reward_value: client.reward_settings?.reward_value ?? 10,
+        review_reward_mode: client.reward_settings?.review_reward_mode || 'all_feedback',
+        max_per_customer_per_day: client.reward_settings?.max_per_customer_per_day ?? 1,
       },
       posSettings: {
         posModeEnabled: (client.reward_settings as any)?.pos_mode_enabled !== false,

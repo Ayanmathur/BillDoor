@@ -168,8 +168,10 @@ export default function CreateBillPage() {
         setFirstVisitTemplate(settings.first_visit_template ?? null);
         setRepeatVisitTemplate(settings.repeat_visit_template ?? null);
         setAppointerEnabled(settings.appointer_enabled ?? false);
-        if (settings.reward_settings && settings.reward_settings.enabled !== false) {
+        if (settings.reward_settings?.enabled === true) {
           setRewardEnabled(true);
+        } else {
+          setRewardEnabled(false);
         }
       }
     }
