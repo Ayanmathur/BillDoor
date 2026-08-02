@@ -13,6 +13,7 @@ import {
   createServiceRequestAction,
   fetchPortfolioItemsAction
 } from './actions';
+import { formatWhatsAppPhone } from '@/shared/validation';
 import ChatBubble from '@/components/ai-assistant/chat-bubble';
 
 declare global {
@@ -181,7 +182,7 @@ export default function ServicesPage() {
   const handleAction = async (serviceId: string, title: string) => {
     const status = getRequestStatus(serviceId);
     const targetPhone = adminPhone || '919422880355';
-    const cleanPhone = targetPhone.replace(/[^0-9]/g, '');
+    const cleanPhone = formatWhatsAppPhone(targetPhone);
 
     // Priority Support: direct WhatsApp, no service_request record
     if (serviceId === 'support') {

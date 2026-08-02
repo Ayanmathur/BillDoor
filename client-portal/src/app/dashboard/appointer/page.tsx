@@ -17,6 +17,7 @@ import {
   CalendarClock, Plus, Users2, ChevronLeft, ChevronRight, Loader2,
   Check, XCircle, Clock, Send, AlertTriangle, Settings, User,
 } from 'lucide-react';
+import { formatWhatsAppPhone } from '@/shared/validation';
 import {
   fetchTodayAppointmentsAction,
   updateAppointmentStatusAction,
@@ -99,11 +100,11 @@ export default function AppointerPage() {
     setUpdating(null);
   }
 
-  // WhatsApp reminder
   function handleSendReminder(appt: ApptItem) {
     const slotTime = new Date(appt.slotStart).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
     const template = `Hi ${appt.customerName}, reminder: your appointment at ${businessName} is at ${slotTime}. See you soon.`;
-    const waUrl = `https://wa.me/${appt.customerPhone}?text=${encodeURIComponent(template)}`;
+    const phoneNum = formatWhatsAppPhone(appt.customerPhone);
+    const waUrl = `https://wa.me/${phoneNum}?text=${encodeURIComponent(template)}`;
     window.open(waUrl, '_blank');
   }
 

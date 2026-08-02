@@ -8,6 +8,7 @@ import { Search, MessageCircle, Loader2, Package, Check, ChevronDown, ChevronRig
 import PoweredByFooter from '@/components/powered-by-footer';
 import { fuzzyMatch } from '@/shared/fuzzy-search';
 import { fetchCatalogAction } from './actions';
+import { formatWhatsAppPhone } from '@/shared/validation';
 import './catalog.css';
 
 interface CatalogItem {
@@ -131,7 +132,7 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
     }
 
     const waText = encodeURIComponent(messageText);
-    const phone = data.business.phone.replace(/[^0-9]/g, '');
+    const phone = formatWhatsAppPhone(data.business.phone);
     return `https://wa.me/${phone}?text=${waText}`;
   }
 

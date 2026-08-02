@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { fetchBillsAction, voidBillAction, finalizeDraftAction, deleteDraftAction, fetchBillSettingsAction, fetchBillsForBulkDownloadAction, logWhatsAppSendAction } from '../create/actions';
 import { fetchBillWhatsAppTemplateAction } from '../settings/actions';
+import { formatWhatsAppPhone } from '@/shared/validation';
 import './bills.css';
 
 type BulkDateRange = 'today' | 'week' | 'month' | 'year' | 'custom';
@@ -188,8 +189,7 @@ export default function BillsPage() {
       }
     }
 
-    const phone = bill.customerPhone ? bill.customerPhone.replace(/\D/g, '') : '';
-    const phoneNum = phone ? (phone.startsWith('91') ? phone : `91${phone}`) : '';
+    const phoneNum = formatWhatsAppPhone(bill.customerPhone);
     return phoneNum
       ? `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(message)}`
       : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;

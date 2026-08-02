@@ -19,6 +19,7 @@ import {
 import { createPortal } from 'react-dom';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { calculateBillTotals } from '@/shared/billing-math';
+import { formatWhatsAppPhone } from '@/shared/validation';
 import StandardCalculatorWidget from '@/components/calculator-widget';
 import { useBarcodeScanner } from '@/hooks/use-barcode-scanner';
 import {
@@ -532,8 +533,7 @@ export default function CreateBillPage() {
     } else {
       message = `Hi ${billToUse.customerName}, here is your bill from ${businessName}.\nAmount: ₹${Number(billToUse.grandTotal).toLocaleString('en-IN')}.\nView Bill:\n${billToUse.billUrl}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n${reviewLink}\n\nThankYou!`;
     }
-    const cleanPhone = billToUse.customerPhone ? billToUse.customerPhone.replace(/\D/g, '') : '';
-    const phoneNum = cleanPhone ? (cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`) : '';
+    const phoneNum = formatWhatsAppPhone(billToUse.customerPhone);
 
     return phoneNum
       ? `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(message)}`

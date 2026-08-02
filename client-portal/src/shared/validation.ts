@@ -37,6 +37,20 @@ export function isValidPhone(phone: string): boolean {
   return /^(\+?91)?[6-9]\d{9}$/.test(cleaned);
 }
 
+/**
+ * Ensures a phone number is formatted for WhatsApp URLs with the +91 country code prefix.
+ * Handles 10-digit Indian numbers, existing 91 prefixes, and strips non-numeric characters.
+ */
+export function formatWhatsAppPhone(phoneRaw: string | null | undefined): string {
+  if (!phoneRaw) return '';
+  const clean = phoneRaw.replace(/\D/g, '');
+  if (!clean) return '';
+  if (clean.length === 10) return `91${clean}`;
+  if (clean.length === 12 && clean.startsWith('91')) return clean;
+  if (clean.startsWith('91')) return clean;
+  return `91${clean}`;
+}
+
 export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
