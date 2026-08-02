@@ -304,7 +304,163 @@ Reply with ONLY the review text, no quotes, no explanation.`;
     return { draft: cleanedDraft };
   }
 
+  // Tier 4: Pre-Generated 5-Slot Rolling Buffer (Instant 0ms Fallback with Background Overwrite Replenishment)
+  const pregeneratedDraft = await getAndConsumePreGeneratedReview(
+    data.clientId,
+    data.businessName,
+    data.businessType,
+    data.about,
+    data.previousDrafts
+  );
+
+  if (pregeneratedDraft) {
+    return { draft: pregeneratedDraft };
+  }
+
+  // Tier 5: Smart Business-Aware Template Fallback
   return { draft: getFallback() };
+}
+
+/**
+ * Tier 4 Helper: Fetch and consume 1 review from client's 5-slot pregenerated buffer in DB,
+ * and asynchronously trigger background replacement to overwrite the consumed slot.
+ */
+async function getAndConsumePreGeneratedReview(
+  clientId: string,
+  businessName: string,
+  businessType?: string,
+  about?: string,
+  previousDrafts: string[] = []
+): Promise<string | null> {
+  try {
+    const supabase = await createAdminClient();
+    const { data: client } = await supabase
+      .from('clients')
+      .select('reward_settings')
+      .eq('id', clientId)
+      .single();
+
+    if (!client) return null;
+
+    const rs = (client.reward_settings || {}) as Record<string, any>;
+    const buffer: string[] = Array.isArray(rs.pregenerated_buffer) ? rs.pregenerated_buffer : [];
+
+    // Filter out previous drafts to prevent duplicate display
+    const available = buffer.filter(d => d && !previousDrafts.includes(d));
+
+    if (available.length > 0) {
+      const selectedDraft = available[0];
+      const remainingBuffer = buffer.filter(d => d !== selectedDraft);
+
+      // Save updated buffer (4 items)
+      await supabase
+        .from('clients')
+        .update({
+          reward_settings: {
+            ...rs,
+            pregenerated_buffer: remainingBuffer,
+          },
+        })
+        .eq('id', clientId);
+
+      // Asynchronously trigger single slot replacement in background (adds new 6th review to fill the 5th slot)
+      replenishSingleReviewSlot(clientId, businessName, businessType, about, remainingBuffer).catch(console.error);
+
+      return selectedDraft;
+    }
+  } catch (err) {
+    console.error('Tier 4 pregenerated buffer error:', err);
+  }
+
+  return null;
+}
+
+/**
+ * Background Slot Replenishment: Asynchronously generates 1 brand new, unique review
+ * and saves it into the client's 5-slot buffer (capped at 5 items).
+ */
+async function replenishSingleReviewSlot(
+  clientId: string,
+  businessName: string,
+  businessType?: string,
+  about?: string,
+  currentBuffer: string[] = []
+) {
+  try {
+    const supabase = await createAdminClient();
+    const isFoodOrDelivery = /tiffin|food|mess|catering|kitchen|meal|delivery|canteen|restaurant|dhaba|bento/i.test(`${businessName} ${businessType || ''} ${about || ''}`);
+    const isSalonOrSpa = /salon|spa|hair|beauty|parlor|barber/i.test(`${businessName} ${businessType || ''} ${about || ''}`);
+
+    const prompt = `Generate 1 short, highly authentic 5-star Google review (2-3 sentences) for ${businessName} (${businessType || 'business'}).
+${about ? `About: ${about}` : ''}
+${isFoodOrDelivery ? 'Focus on food taste, home-cooked freshness, hygienic packaging, or timely delivery.' : ''}
+${isSalonOrSpa ? 'Focus on skilled staff, clean environment, relaxed atmosphere, and great service.' : ''}
+Do NOT repeat any of these existing reviews: ${currentBuffer.join(' | ')}.
+Reply with ONLY the review text, no quotes or explanation.`;
+
+    let newReview = '';
+
+    // Attempt Gemini / OpenRouter / Groq to create 1 fresh replacement draft
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey) {
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.8, maxOutputTokens: 120 } }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          newReview = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        }
+      } catch (e) {}
+    }
+
+    if (!newReview) {
+      // Smart template fallback if AI is down
+      const templates = isFoodOrDelivery ? [
+        `Always fresh and delicious meals from ${businessName}! Punctual delivery and great quality every single day.`,
+        `Amazing taste and authentic home-style flavors at ${businessName}. Highly recommended for daily meals!`,
+        `Extremely satisfied with ${businessName}. Hygienic packaging, generous portions, and wonderful taste!`,
+        `${businessName} never disappoints. Food is always hot, fresh, and delivered right on time!`,
+        `Best food service in town! ${businessName} offers top-notch quality and fantastic service.`
+      ] : isSalonOrSpa ? [
+        `Wonderful experience at ${businessName}. Skilled professionals, polite behavior, and excellent results!`,
+        `Highly recommend ${businessName}! Super clean, relaxing ambiance, and top-tier customer care.`,
+        `Loved my visit to ${businessName}. Professional staff, reasonable pricing, and amazing attention to detail!`,
+        `Fantastic service at ${businessName}. The staff takes time to understand what you need and delivers perfectly.`,
+        `Great atmosphere and friendly staff at ${businessName}. Will definitely be coming back!`
+      ] : [
+        `Outstanding experience with ${businessName}. Professional, prompt, and top quality service overall!`,
+        `Highly recommend ${businessName}! Very attentive team, seamless execution, and great value.`,
+        `Impressed with the professionalism at ${businessName}. Delivered beyond expectations!`,
+        `Great work by ${businessName}. Friendly staff, quick turnaround, and excellent customer support.`,
+        `Super satisfied with ${businessName}. Would definitely recommend them to friends and family!`
+      ];
+
+      const unused = templates.filter(t => !currentBuffer.includes(t));
+      newReview = unused[Math.floor(Math.random() * (unused.length || 1))] || templates[0];
+    }
+
+    newReview = newReview.replace(/^["']|["']$/g, '').trim();
+
+    // Fetch latest client reward_settings and overwrite buffer, capped at 5
+    const { data: client } = await supabase.from('clients').select('reward_settings').eq('id', clientId).single();
+    if (client) {
+      const rs = (client.reward_settings || {}) as Record<string, any>;
+      const existing = Array.isArray(rs.pregenerated_buffer) ? rs.pregenerated_buffer : [];
+      const updatedBuffer = Array.from(new Set([...existing, newReview])).slice(0, 5);
+
+      await supabase.from('clients').update({
+        reward_settings: {
+          ...rs,
+          pregenerated_buffer: updatedBuffer,
+        }
+      }).eq('id', clientId);
+    }
+  } catch (err) {
+    console.error('Replenish review slot error:', err);
+  }
 }
 
 // ============================================================
