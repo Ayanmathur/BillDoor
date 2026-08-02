@@ -33,6 +33,7 @@ export default function BulkImportPage() {
   const [editPrice, setEditPrice] = useState('');
   const [editGst, setEditGst] = useState('');
   const [editBarcode, setEditBarcode] = useState('');
+  const [editCategory, setEditCategory] = useState('');
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -85,16 +86,17 @@ export default function BulkImportPage() {
     setUploading(false);
   };
 
-  const aiPromptText = `You are an expert menu & catalog parser. Extract all product and service items from the attached image into CSV format.
+  const aiPromptText = `You are an expert menu & catalog parser. Extract all product and service items from the attached image into clean CSV format.
 
-CSV Header Format: Name,Type,Price,GST,Barcode
+CSV Header Format: Name, Price, Category, Type, GST, Barcode
 
 Rules:
 1. Name: Item title (e.g. Masala Chai, Haircut Service, Samosa). If items have variants like Full/Half, create separate entries (e.g. "Tandoori Chicken (Full)", "Tandoori Chicken (Half)").
-2. Type: Must be either "product" or "service".
-3. Price: Numeric price in INR without currency symbols.
-4. GST: Applicable GST percentage (e.g. 5, 12, 18) or leave blank if standard.
-5. Barcode: Leave blank unless a specific barcode/SKU code is printed (e.g. BC-99123).
+2. Price: Numeric price in INR without currency symbols.
+3. Category: Section or category header name (e.g. Beverages, Bakery, Snacks, Main Course, Hair Care, Salon Services).
+4. Type: Must be either "product" or "service".
+5. GST: Applicable GST percentage (e.g. 5, 12, 18) or leave blank if standard.
+6. Barcode: Leave blank unless a specific barcode/SKU code is printed (e.g. BC-99123).
 
 Return ONLY raw CSV text lines. Do not wrap in markdown code blocks or add explanations.`;
 
@@ -106,10 +108,10 @@ Return ONLY raw CSV text lines. Do not wrap in markdown code blocks or add expla
 
   const handleDownloadTemplate = () => {
     const sample = [
-      'Name,Type,Price,GST,Barcode',
-      'Masala Chai,product,20,5,',
-      'Haircut Service,service,150,18,',
-      'Samosa,product,15,,BC-99123',
+      'Name, Price, Category, Type, GST, Barcode',
+      'Masala Chai, 20, Beverages, product, 5,',
+      'Haircut Service, 150, Salon Services, service, 18,',
+      'Samosa, 15, Snacks, product, 5, BC-99123',
     ].join('\n');
 
     const blob = new Blob([sample], { type: 'text/csv' });
@@ -133,6 +135,7 @@ Return ONLY raw CSV text lines. Do not wrap in markdown code blocks or add expla
     setEditPrice(String(r.price));
     setEditGst(String(r.gstPercent));
     setEditBarcode(r.barcode);
+    setEditCategory(r.category || '');
   };
 
   const handleSaveEdit = () => {
@@ -149,6 +152,7 @@ Return ONLY raw CSV text lines. Do not wrap in markdown code blocks or add expla
             price,
             gstPercent: gst,
             barcode: editBarcode.trim(),
+            category: editCategory.trim(),
             hasTypeWarning: false,
           }
         : r
@@ -412,6 +416,7 @@ Return ONLY raw CSV text lines. Do not wrap in markdown code blocks or add expla
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'left' }}>
                   <th style={{ padding: '8px' }}>Name</th>
+                  <th style={{ padding: '8px' }}>Category</th>
                   <th style={{ padding: '8px' }}>Type</th>
                   <th style={{ padding: '8px', textAlign: 'right' }}>Price</th>
                   <th style={{ padding: '8px', textAlign: 'right' }}>GST%</th>
@@ -426,6 +431,9 @@ Return ONLY raw CSV text lines. Do not wrap in markdown code blocks or add expla
                       <>
                         <td style={{ padding: '4px' }}>
                           <input className="input-field" value={editName} onChange={e => setEditName(e.target.value)} style={{ padding: '2px 6px', fontSize: 'var(--text-xs)' }} />
+                        </td>
+                        <td style={{ padding: '4px' }}>
+                          <input className="input-field" value={editCategory} onChange={e => setEditCategory(e.target.value)} placeholder="Category" style={{ padding: '2px 6px', fontSize: 'var(--text-xs)', width: 110 }} />
                         </td>
                         <td style={{ padding: '4px' }}>
                           <select className="input-field" value={editType} onChange={e => setEditType(e.target.value as any)} style={{ padding: '2px 6px', fontSize: 'var(--text-xs)' }}>
@@ -451,6 +459,15 @@ Return ONLY raw CSV text lines. Do not wrap in markdown code blocks or add expla
                     ) : (
                       <>
                         <td style={{ padding: '8px', fontWeight: 'bold' }}>{r.name}</td>
+                        <td style={{ padding: '8px' }}>
+                          {r.category ? (
+                            <span style={{ padding: '2px 6px', borderRadius: 4, background: 'var(--color-accent-subtle)', color: 'var(--color-accent)', fontSize: 11, fontWeight: 600 }}>
+                              {r.category}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--color-text-tertiary)', fontStyle: 'italic', fontSize: 11 }}>General</span>
+                          )}
+                        </td>
                         <td style={{ padding: '8px' }}>
                           <span style={{
                             padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase', fontSize: 10, fontWeight: 'bold',

@@ -28,6 +28,7 @@ import {
 interface StagingItem {
   name: string;
   price: number;
+  category?: string;
 }
 
 export default function MenuImportPage() {
@@ -41,6 +42,7 @@ export default function MenuImportPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [editPrice, setEditPrice] = useState('');
+  const [editCategory, setEditCategory] = useState('');
   const [gstRate, setGstRate] = useState(0);
   const [importedCount, setImportedCount] = useState(0);
 
@@ -177,6 +179,7 @@ export default function MenuImportPage() {
     setEditingIndex(index);
     setEditName(items[index].name);
     setEditPrice(String(items[index].price));
+    setEditCategory(items[index].category || '');
   };
 
   const handleSaveEdit = () => {
@@ -185,7 +188,7 @@ export default function MenuImportPage() {
     if (!editName.trim() || isNaN(price) || price <= 0) return;
 
     setItems(prev => prev.map((item, i) =>
-      i === editingIndex ? { name: editName.trim(), price } : item
+      i === editingIndex ? { name: editName.trim(), price, category: editCategory.trim() } : item
     ));
     setEditingIndex(null);
   };
@@ -398,6 +401,7 @@ export default function MenuImportPage() {
                 <thead>
                   <tr>
                     <th>Item Name</th>
+                    <th>Category</th>
                     <th style={{ textAlign: 'right' }}>Price (₹)</th>
                     <th style={{ width: 100 }}>Actions</th>
                   </tr>
@@ -414,6 +418,16 @@ export default function MenuImportPage() {
                               value={editName}
                               onChange={e => setEditName(e.target.value)}
                               style={{ padding: '4px 8px', fontSize: 'var(--text-sm)' }}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="text"
+                              className="input-field"
+                              value={editCategory}
+                              onChange={e => setEditCategory(e.target.value)}
+                              placeholder="Category"
+                              style={{ padding: '4px 8px', fontSize: 'var(--text-sm)', width: 120 }}
                             />
                           </td>
                           <td style={{ textAlign: 'right' }}>
@@ -437,6 +451,15 @@ export default function MenuImportPage() {
                       ) : (
                         <>
                           <td>{item.name}</td>
+                          <td>
+                            {item.category ? (
+                              <span style={{ padding: '2px 6px', borderRadius: 4, background: 'var(--color-accent-subtle)', color: 'var(--color-accent)', fontSize: 11, fontWeight: 600 }}>
+                                {item.category}
+                              </span>
+                            ) : (
+                              <span style={{ color: 'var(--color-text-tertiary)', fontStyle: 'italic', fontSize: 11 }}>General</span>
+                            )}
+                          </td>
                           <td style={{ textAlign: 'right' }}>₹{item.price.toLocaleString('en-IN')}</td>
                           <td>
                             <button className="btn-icon" onClick={() => handleStartEdit(index)} title="Edit">

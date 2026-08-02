@@ -8,6 +8,7 @@ export interface BulkStagingRow {
   price: number;
   gstPercent: number;
   barcode: string;
+  category: string;
   hasTypeWarning?: boolean;
 }
 
@@ -44,13 +45,38 @@ export async function parseBulkImportFileAction(csvText: string) {
 
   // Check if line 0 is header row
   const firstCols = lines[0].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
-  const firstCol0 = (firstCols[0] || '').toLowerCase();
-  const firstCol1 = (firstCols[1] || '').toLowerCase();
-  const firstCol2 = (firstCols[2] || '').toLowerCase();
+  const headerLowers = firstCols.map(c => c.toLowerCase());
   
-  const isHeader = firstCol0.includes('name') || firstCol1.includes('type') || firstCol2.includes('price');
-  const startIndex = isHeader ? 1 : 0;
+  let nameIdx = -1;
+  let priceIdx = -1;
+  let categoryIdx = -1;
+  let typeIdx = -1;
+  let gstIdx = -1;
+  let barcodeIdx = -1;
 
+  const isHeader = headerLowers.some(h => 
+    h.includes('name') || h.includes('item') || h.includes('product') || h.includes('service') || h.includes('price') || h.includes('category')
+  );
+
+  if (isHeader) {
+    headerLowers.forEach((h, idx) => {
+      if (h.includes('name') || h.includes('item') || h.includes('product')) {
+        if (nameIdx === -1) nameIdx = idx;
+      } else if (h.includes('price') || h.includes('rate') || h.includes('amount') || h.includes('mrp')) {
+        if (priceIdx === -1) priceIdx = idx;
+      } else if (h.includes('cat') || h.includes('group') || h.includes('section')) {
+        if (categoryIdx === -1) categoryIdx = idx;
+      } else if (h === 'type' || h.includes('kind')) {
+        if (typeIdx === -1) typeIdx = idx;
+      } else if (h.includes('gst') || h.includes('tax')) {
+        if (gstIdx === -1) gstIdx = idx;
+      } else if (h.includes('barcode') || h.includes('code') || h.includes('sku')) {
+        if (barcodeIdx === -1) barcodeIdx = idx;
+      }
+    });
+  }
+
+  const startIndex = isHeader ? 1 : 0;
   const rows: BulkStagingRow[] = [];
 
   for (let i = startIndex; i < lines.length; i++) {
@@ -58,25 +84,64 @@ export async function parseBulkImportFileAction(csvText: string) {
     const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
     if (cols.length === 0 || !cols[0]) continue;
 
-    const name = cols[0];
-    const rawType = (cols[1] || 'product').toLowerCase();
+    let name = '';
+    let price = 0;
+    let category = '';
+    let rawType = 'product';
+    let gstInputVal = '';
+    let barcode = '';
+
+    if (isHeader && nameIdx !== -1) {
+      name = cols[nameIdx] || '';
+      price = parseFloat(cols[priceIdx] || '0') || 0;
+      category = categoryIdx !== -1 ? cols[categoryIdx] || '' : '';
+      rawType = (typeIdx !== -1 ? cols[typeIdx] : 'product') || 'product';
+      gstInputVal = gstIdx !== -1 ? cols[gstIdx] || '' : '';
+      barcode = barcodeIdx !== -1 ? cols[barcodeIdx] || '' : '';
+    } else {
+      // Positional fallback:
+      // Col 0: Name
+      // Col 1: Price (or Type if string)
+      // Col 2: Category
+      // Col 3: Type ('product' | 'service')
+      // Col 4: GST%
+      // Col 5: Barcode
+      name = cols[0] || '';
+      const col1IsNum = !isNaN(parseFloat(cols[1]));
+
+      if (col1IsNum) {
+        price = parseFloat(cols[1]) || 0;
+        category = cols[2] || '';
+        rawType = cols[3] || 'product';
+        gstInputVal = cols[4] || '';
+        barcode = cols[5] || '';
+      } else {
+        rawType = cols[1] || 'product';
+        price = parseFloat(cols[2] || '0') || 0;
+        category = cols[3] || '';
+        gstInputVal = cols[4] || '';
+        barcode = cols[5] || '';
+      }
+    }
+
+    if (!name) continue;
+
     let type: 'product' | 'service' = 'product';
     let hasTypeWarning = false;
+    const lowerType = rawType.toLowerCase();
 
-    if (rawType === 'product' || rawType === 'p' || rawType === 'item') {
+    if (lowerType === 'product' || lowerType === 'p' || lowerType === 'item') {
       type = 'product';
-    } else if (rawType === 'service' || rawType === 's') {
+    } else if (lowerType === 'service' || lowerType === 's') {
       type = 'service';
     } else {
       type = 'product';
       hasTypeWarning = true;
     }
 
-    const price = parseFloat(cols[2] || '0') || 0;
-    const gstInput = parseFloat(cols[3] || '');
+    const gstInput = parseFloat(gstInputVal);
     const gstPercent = isNaN(gstInput) ? defaultGst : gstInput;
 
-    let barcode = cols[4] || '';
     if (!barcode && barcodeEnabled) {
       barcode = `BC-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
     }
@@ -87,6 +152,7 @@ export async function parseBulkImportFileAction(csvText: string) {
       price,
       gstPercent,
       barcode: barcodeEnabled ? barcode : '',
+      category: category.trim(),
       hasTypeWarning,
     });
   }
@@ -113,6 +179,42 @@ export async function commitBulkCatalogItemsAction(items: BulkStagingRow[]) {
 
   const barcodeEnabled = client?.barcode_enabled === true;
 
+  // Process and upsert categories
+  const categoryMap = new Map<string, string>(); // name.toLowerCase() -> category_id
+  const uniqueCategories = Array.from(new Set(items.map(i => i.category?.trim()).filter(Boolean) as string[]));
+
+  if (uniqueCategories.length > 0) {
+    const { data: existingCats } = await supabase
+      .from('catalog_categories')
+      .select('id, name, display_order')
+      .eq('client_id', user.id);
+
+    const existingMap = new Map((existingCats || []).map(c => [c.name.toLowerCase(), c.id]));
+    let maxOrder = (existingCats || []).reduce((max, c) => Math.max(max, c.display_order ?? 0), -1);
+
+    for (const catName of uniqueCategories) {
+      const lower = catName.toLowerCase();
+      if (existingMap.has(lower)) {
+        categoryMap.set(lower, existingMap.get(lower)!);
+      } else {
+        maxOrder++;
+        const { data: newCat } = await supabase
+          .from('catalog_categories')
+          .insert({
+            client_id: user.id,
+            name: catName,
+            display_order: maxOrder,
+          })
+          .select('id')
+          .single();
+
+        if (newCat) {
+          categoryMap.set(lower, newCat.id);
+        }
+      }
+    }
+  }
+
   const insertRows = items.map((item, idx) => {
     let barcode = item.barcode;
     if (!barcode && barcodeEnabled) {
@@ -124,6 +226,8 @@ export async function commitBulkCatalogItemsAction(items: BulkStagingRow[]) {
       barcode = `${prefix}${seq}`;
     }
 
+    const catId = item.category?.trim() ? categoryMap.get(item.category.trim().toLowerCase()) || null : null;
+
     return {
       client_id: user.id,
       name: item.name,
@@ -132,6 +236,7 @@ export async function commitBulkCatalogItemsAction(items: BulkStagingRow[]) {
       gst_percent: item.gstPercent,
       barcode_value: barcode || null,
       barcode_auto_generated: !item.barcode && barcodeEnabled,
+      category_id: catId,
       active: true,
     };
   });

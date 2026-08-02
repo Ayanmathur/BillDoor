@@ -38,11 +38,11 @@ export async function extractMenuItemsAction(imageBase64: string, imageMimeType:
   else mime = 'image/webp';
 
   // Call AI with image for menu extraction
-  const prompt = `You are a menu parser. Extract all food/drink/service items and their numeric prices from this menu image.
-Return ONLY a compact JSON array of objects with "name" (string) and "price" (number in INR).
+  const prompt = `You are an expert menu & catalog parser. Extract all food/drink/product/service items, their numeric prices, and their section/category header names from this image.
+Return ONLY a compact JSON array of objects with "name" (string), "price" (number in INR), and "category" (string e.g. "Beverages", "Starters", "Main Course", "Desserts", "Bakery", "Salon Services", "General").
 If an item has multiple sizes/prices (e.g. Full 360 / Half 200), create separate items for each (e.g. "Item Name (Full)" price 360, "Item Name (Half)" price 200).
-Do not add extra whitespace, indentation, or newlines.
-Example: [{"name":"Masala Dosa","price":120},{"name":"Filter Coffee","price":40}]`;
+Do not add extra whitespace, indentation, or markdown codeblocks.
+Example: [{"name":"Masala Dosa","price":120,"category":"South Indian"},{"name":"Filter Coffee","price":40,"category":"Beverages"}]`;
 
   let rawText = '';
   let lastError = '';
@@ -230,7 +230,7 @@ Example: [{"name":"Masala Dosa","price":120},{"name":"Filter Coffee","price":40}
  */
 export async function commitStagingItemsAction(data: {
   stagingId: string;
-  items: Array<{ name: string; price: number }>;
+  items: Array<{ name: string; price: number; category?: string }>;
   gstRate: number;
 }) {
   const supabase = await createClient();
@@ -250,6 +250,42 @@ export async function commitStagingItemsAction(data: {
 
   const barcodeEnabled = client?.barcode_enabled === true;
 
+  // Process and upsert categories
+  const categoryMap = new Map<string, string>(); // name.toLowerCase() -> category_id
+  const uniqueCategories = Array.from(new Set(data.items.map(i => i.category?.trim()).filter(Boolean) as string[]));
+
+  if (uniqueCategories.length > 0) {
+    const { data: existingCats } = await supabase
+      .from('catalog_categories')
+      .select('id, name, display_order')
+      .eq('client_id', user.id);
+
+    const existingMap = new Map((existingCats || []).map(c => [c.name.toLowerCase(), c.id]));
+    let maxOrder = (existingCats || []).reduce((max, c) => Math.max(max, c.display_order ?? 0), -1);
+
+    for (const catName of uniqueCategories) {
+      const lower = catName.toLowerCase();
+      if (existingMap.has(lower)) {
+        categoryMap.set(lower, existingMap.get(lower)!);
+      } else {
+        maxOrder++;
+        const { data: newCat } = await supabase
+          .from('catalog_categories')
+          .insert({
+            client_id: user.id,
+            name: catName,
+            display_order: maxOrder,
+          })
+          .select('id')
+          .single();
+
+        if (newCat) {
+          categoryMap.set(lower, newCat.id);
+        }
+      }
+    }
+  }
+
   // Insert into catalog_items
   const catalogRows = data.items.map((item, idx) => {
     let barcode: string | null = null;
@@ -262,6 +298,8 @@ export async function commitStagingItemsAction(data: {
       barcode = `${prefix}${seq}`;
     }
 
+    const catId = item.category?.trim() ? categoryMap.get(item.category.trim().toLowerCase()) || null : null;
+
     return {
       client_id: user.id,
       name: item.name,
@@ -271,6 +309,7 @@ export async function commitStagingItemsAction(data: {
       gst_percent: data.gstRate,
       barcode_value: barcode,
       barcode_auto_generated: barcodeEnabled,
+      category_id: catId,
       active: true,
     };
   });
