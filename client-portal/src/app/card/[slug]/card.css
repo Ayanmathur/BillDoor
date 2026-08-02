@@ -57,12 +57,13 @@
 }
 
 .card-logo {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
+  max-width: 220px;
+  max-height: 90px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius-md);
   margin-bottom: var(--space-3, 12px);
-  border: 2px solid var(--color-accent, #088395);
 }
 
 .card-logo-initial {

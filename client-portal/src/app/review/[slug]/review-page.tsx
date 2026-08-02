@@ -258,7 +258,7 @@ export default function ReviewPage({
         <div className="review-header">
           <div className="review-logo">
             {logoUrl ? (
-              <img src={logoUrl} alt={businessName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-lg)' }} />
+              <img src={logoUrl} alt={businessName} style={{ maxWidth: '100%', maxHeight: 72, width: 'auto', height: 'auto', objectFit: 'contain', borderRadius: 'var(--radius-md)' }} />
             ) : initials}
           </div>
           <div className="review-biz-name">{businessName}</div>

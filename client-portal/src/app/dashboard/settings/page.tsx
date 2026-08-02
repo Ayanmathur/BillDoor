@@ -382,8 +382,8 @@ export default function SettingsPage() {
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
               {logoUrl ? (
-                <div style={{ width: 64, height: 64, borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', overflow: 'hidden', background: 'var(--color-bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src={logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <div style={{ maxWidth: 160, maxHeight: 64, minWidth: 64, padding: '4px var(--space-2)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', overflow: 'hidden', background: 'var(--color-bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src={logoUrl} alt="Logo" style={{ maxWidth: '100%', maxHeight: 56, width: 'auto', height: 'auto', objectFit: 'contain' }} />
                 </div>
               ) : (
                 <div style={{ width: 64, height: 64, borderRadius: 'var(--radius-md)', border: '1px dashed var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-tertiary)' }}>

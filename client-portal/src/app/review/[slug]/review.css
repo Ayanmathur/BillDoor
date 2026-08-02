@@ -41,9 +41,13 @@
 }
 
 .review-logo {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-lg);
+  max-width: 180px;
+  max-height: 72px;
+  min-width: 56px;
+  min-height: 56px;
+  width: auto;
+  height: auto;
+  border-radius: var(--radius-md);
   background: var(--color-accent-subtle);
   display: flex;
   align-items: center;

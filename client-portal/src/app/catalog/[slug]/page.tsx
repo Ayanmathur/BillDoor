@@ -161,6 +161,22 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
     <div className="catalog-page">
       <div className="catalog-container">
         <div className="catalog-header">
+          {data.business.logo_url && (
+            <img
+              src={data.business.logo_url}
+              alt={data.business.name}
+              style={{
+                maxWidth: 180,
+                maxHeight: 72,
+                width: 'auto',
+                height: 'auto',
+                objectFit: 'contain',
+                margin: '0 auto 12px',
+                display: 'block',
+                borderRadius: 'var(--radius-md)',
+              }}
+            />
+          )}
           <h1>{data.business.name}</h1>
           <p>Digital Catalog</p>
         </div>

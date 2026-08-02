@@ -20,7 +20,7 @@ export async function fetchCatalogAction(slug: string) {
 
   const { data: client } = await supabase
     .from('clients')
-    .select('id, business_name, phone, slug, status, modules_enabled, whatsapp_catalog_template')
+    .select('id, business_name, phone, slug, status, logo_url, modules_enabled, whatsapp_catalog_template')
     .eq('slug', slug)
     .single();
 
