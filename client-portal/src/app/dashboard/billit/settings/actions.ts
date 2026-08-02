@@ -75,7 +75,50 @@ export async function updateBillitSettingsAction(data: {
     console.error('Settings Update Error:', error);
     return { error: `Failed to save settings. (${error.message})` };
   }
+
+  // Auto-assign barcodes to any products missing barcodes when barcode mode is enabled
+  if (data.barcodeEnabled) {
+    await assignBarcodesToMissingCatalogItems(supabase, user.id);
+  }
+
   return {};
+}
+
+export async function assignBarcodesToMissingCatalogItems(supabase: any, clientId: string) {
+  try {
+    const { data: items } = await supabase
+      .from('catalog_items')
+      .select('id, name, barcode_value')
+      .eq('client_id', clientId)
+      .eq('active', true);
+
+    if (!items || items.length === 0) return;
+
+    const missingItems = items.filter((item: any) => !item.barcode_value || item.barcode_value.trim() === '');
+    if (missingItems.length === 0) return;
+
+    for (let i = 0; i < missingItems.length; i++) {
+      const item = missingItems[i];
+      const prefix = (item.name || 'ITM')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .slice(0, 3) || 'ITM';
+      
+      const uniqueNum = String(i + 1).padStart(3, '0');
+      const barcode = `${prefix}${uniqueNum}`;
+
+      await supabase
+        .from('catalog_items')
+        .update({
+          barcode_value: barcode,
+          barcode_auto_generated: true,
+        })
+        .eq('id', item.id)
+        .eq('client_id', clientId);
+    }
+  } catch (err) {
+    console.error('Error auto-assigning barcodes:', err);
+  }
 }
 
 export async function updateCatalogTemplateAction(template: string) {

@@ -105,14 +105,36 @@ export async function commitBulkCatalogItemsAction(items: BulkStagingRow[]) {
 
   if (!items.length) return { error: 'No items to import.' };
 
-  const insertRows = items.map(item => ({
-    client_id: user.id,
-    name: item.name,
-    type: item.type,
-    price: item.price,
-    gst_percent: item.gstPercent,
-    active: true,
-  }));
+  const { data: client } = await supabase
+    .from('clients')
+    .select('barcode_enabled')
+    .eq('id', user.id)
+    .single();
+
+  const barcodeEnabled = client?.barcode_enabled === true;
+
+  const insertRows = items.map((item, idx) => {
+    let barcode = item.barcode;
+    if (!barcode && barcodeEnabled) {
+      const prefix = (item.name || 'ITM')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .slice(0, 3) || 'ITM';
+      const seq = String(idx + 1).padStart(3, '0');
+      barcode = `${prefix}${seq}`;
+    }
+
+    return {
+      client_id: user.id,
+      name: item.name,
+      type: item.type,
+      price: item.price,
+      gst_percent: item.gstPercent,
+      barcode_value: barcode || null,
+      barcode_auto_generated: !item.barcode && barcodeEnabled,
+      active: true,
+    };
+  });
 
   const { error } = await supabase
     .from('catalog_items')

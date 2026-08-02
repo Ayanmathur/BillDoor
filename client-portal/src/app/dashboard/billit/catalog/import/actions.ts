@@ -242,16 +242,38 @@ export async function commitStagingItemsAction(data: {
   const validGstRates = [0, 5, 12, 18, 28];
   if (!validGstRates.includes(data.gstRate)) return { error: 'Invalid GST rate.' };
 
+  const { data: client } = await supabase
+    .from('clients')
+    .select('barcode_enabled')
+    .eq('id', user.id)
+    .single();
+
+  const barcodeEnabled = client?.barcode_enabled === true;
+
   // Insert into catalog_items
-  const catalogRows = data.items.map(item => ({
-    client_id: user.id,
-    name: item.name,
-    type: 'product' as const,
-    price: item.price,
-    unit: 'pc',
-    gst_percent: data.gstRate,
-    active: true,
-  }));
+  const catalogRows = data.items.map((item, idx) => {
+    let barcode: string | null = null;
+    if (barcodeEnabled) {
+      const prefix = (item.name || 'ITM')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .slice(0, 3) || 'ITM';
+      const seq = String(idx + 1).padStart(3, '0');
+      barcode = `${prefix}${seq}`;
+    }
+
+    return {
+      client_id: user.id,
+      name: item.name,
+      type: 'product' as const,
+      price: item.price,
+      unit: 'pc',
+      gst_percent: data.gstRate,
+      barcode_value: barcode,
+      barcode_auto_generated: barcodeEnabled,
+      active: true,
+    };
+  });
 
   const { error: insertError } = await supabase
     .from('catalog_items')

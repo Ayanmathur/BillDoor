@@ -41,7 +41,17 @@ export async function fetchCatalogAction(search?: string) {
     .eq('active', true)
     .order('name');
 
-  if (search) query = query.ilike('name', `%${search}%`);
+  // Auto-assign missing barcodes if barcode mode is enabled
+  const { data: client } = await supabase
+    .from('clients')
+    .select('barcode_enabled')
+    .eq('id', user.id)
+    .single();
+
+  if (client?.barcode_enabled) {
+    const { assignBarcodesToMissingCatalogItems } = await import('../settings/actions');
+    await assignBarcodesToMissingCatalogItems(supabase, user.id);
+  }
 
   const { data, error } = await query;
   if (error) return { error: 'Failed to fetch catalog.', items: null };
