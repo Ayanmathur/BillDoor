@@ -24,8 +24,12 @@ export async function extractMenuItemsAction(imageBase64: string, imageMimeType:
   if (!user) return { error: 'Unauthorized.' };
 
   const geminiKey = process.env.GEMINI_API_KEY;
-  const deepseekKey = process.env.DEEPSEEK_API_KEY;
   const openrouterKey = process.env.OPENROUTER_API_KEY;
+  const groqKey = process.env.GROQ_API_KEY;
+
+  if (!geminiKey && !openrouterKey && !groqKey) {
+    return { error: 'AI service not configured. Please contact admin.' };
+  }
 
   let mime = imageMimeType ? imageMimeType.toLowerCase().trim() : 'image/webp';
   if (mime.includes('webp')) mime = 'image/webp';
@@ -128,17 +132,17 @@ Example: [{"name":"Masala Dosa","price":120},{"name":"Filter Coffee","price":40}
     }
   }
 
-  // Tier 3: DeepSeek API (Fallback 3)
-  if (!rawText && deepseekKey) {
+  // Tier 3: Groq API (Fallback 3)
+  if (!rawText && groqKey) {
     try {
-      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${deepseekKey}`,
+          'Authorization': `Bearer ${groqKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: 'llama-3.3-70b-versatile',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.1,
         }),
@@ -149,10 +153,10 @@ Example: [{"name":"Masala Dosa","price":120},{"name":"Filter Coffee","price":40}
         rawText = result.choices?.[0]?.message?.content?.trim() || '[]';
       } else {
         const errJson = await response.json().catch(() => ({}));
-        lastError = errJson?.error?.message || `DeepSeek HTTP ${response.status}`;
+        lastError = errJson?.error?.message || `Groq HTTP ${response.status}`;
       }
     } catch (e: any) {
-      lastError = e?.message || 'DeepSeek network error';
+      lastError = e?.message || 'Groq network error';
     }
   }
 
