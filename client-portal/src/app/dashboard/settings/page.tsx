@@ -44,6 +44,7 @@ export default function SettingsPage() {
   const [address, setAddress] = useState('');
   const [addressUrl, setAddressUrl] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
 
   const [hasGst, setHasGst] = useState(false);
   const [gstNumber, setGstNumber] = useState('');
@@ -110,6 +111,7 @@ export default function SettingsPage() {
         setAddress(s.address);
         setAddressUrl(s.addressUrl || '');
         setPhone(s.phone);
+        setEmail(s.email || '');
         setHasGst(s.hasGst);
         setGstNumber(s.gstNumber);
         setFssaiNumber(s.fssaiNumber || '');
@@ -167,7 +169,7 @@ export default function SettingsPage() {
 
   async function handleSaveBusiness() {
     setSaving(true); setError('');
-    const result = await updateBusinessInfoAction({ businessName, slug, about, ownerName, address, addressUrl, phone });
+    const result = await updateBusinessInfoAction({ businessName, slug, about, ownerName, address, addressUrl, phone, email });
     if (result.error) setError(result.error); else flash();
     setSaving(false);
   }
@@ -321,29 +323,36 @@ export default function SettingsPage() {
           <div className="settings-row">
             <div className="input-group">
               <label className="input-label">Business Name *</label>
-              <input className="input-field" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+              <input className="input-field" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="e.g. Acme Retail Store" />
             </div>
             <div className="input-group">
               <label className="input-label">URL Slug *</label>
-              <input className="input-field" value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} placeholder="my-business" />
+              <input className="input-field" value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} placeholder="acme-retail" />
               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>billdoor.com/review/{slug}</span>
             </div>
           </div>
           <div className="settings-row full">
             <div className="input-group">
-              <label className="input-label">About</label>
-              <textarea className="input-field" rows={3} value={about} onChange={(e) => setAbout(e.target.value)} maxLength={500} placeholder="A brief description of your business..." />
+              <label className="input-label">About Business</label>
+              <textarea className="input-field" rows={3} value={about} onChange={(e) => setAbout(e.target.value)} maxLength={500} placeholder="A brief description of your business, services, and specialties..." />
               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', textAlign: 'right' }}>{about.length}/500</span>
             </div>
           </div>
           <div className="settings-row">
             <div className="input-group">
-              <label className="input-label">Owner Name</label>
-              <input className="input-field" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} />
+              <label className="input-label">Owner / Contact Person</label>
+              <input className="input-field" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="e.g. John Doe" />
             </div>
             <div className="input-group">
-              <label className="input-label">Phone</label>
-              <input className="input-field" value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" />
+              <label className="input-label">Phone Number</label>
+              <input className="input-field" value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="e.g. 9876543210" />
+            </div>
+          </div>
+          <div className="settings-row full">
+            <div className="input-group">
+              <label className="input-label">Business / Account Email</label>
+              <input className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="e.g. owner@business.com" />
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 2 }}>Primary contact email associated with your business account.</span>
             </div>
           </div>
           <div className="settings-row full">
@@ -740,18 +749,37 @@ export default function SettingsPage() {
             <h3 className="settings-section-title"><Lock size={18} /> Change Password</h3>
             <div className="settings-row full">
               <div className="input-group">
-                <label className="input-label">Current Password</label>
-                <input className="input-field" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+                <label className="input-label">Current Password *</label>
+                <input
+                  className="input-field"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                />
               </div>
             </div>
             <div className="settings-row">
               <div className="input-group">
-                <label className="input-label">New Password</label>
-                <input className="input-field" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={8} />
+                <label className="input-label">Enter New Password *</label>
+                <input
+                  className="input-field"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={8}
+                  placeholder="Enter new password (min 8 chars)"
+                />
               </div>
               <div className="input-group">
-                <label className="input-label">Confirm New Password</label>
-                <input className="input-field" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                <label className="input-label">Re-enter New Password *</label>
+                <input
+                  className="input-field"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter new password to confirm"
+                />
               </div>
             </div>
             <button className="btn btn-primary" onClick={handleChangePassword} disabled={saving} style={{ marginTop: 'var(--space-3)' }}>

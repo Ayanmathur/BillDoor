@@ -120,6 +120,7 @@ const businessInfoSchema = z.object({
   address: z.string().max(300).optional(),
   addressUrl: z.string().max(500).optional(),
   phone: z.string().max(15).optional(),
+  email: z.string().email().optional().or(z.literal('')),
 });
 
 export async function updateBusinessInfoAction(data: z.infer<typeof businessInfoSchema>) {
@@ -152,6 +153,7 @@ export async function updateBusinessInfoAction(data: z.infer<typeof businessInfo
       address: parsed.data.address || '',
       address_url: parsed.data.addressUrl || '',
       phone: parsed.data.phone || client.phone,
+      email: parsed.data.email !== undefined ? parsed.data.email : client.email,
     })
     .eq('id', user.id);
 
