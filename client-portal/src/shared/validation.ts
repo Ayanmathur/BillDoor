@@ -51,6 +51,29 @@ export function formatWhatsAppPhone(phoneRaw: string | null | undefined): string
   return `91${clean}`;
 }
 
+/**
+ * Device-aware WhatsApp URL generator that formats the country code +91
+ * and routes dynamically:
+ * - Desktop: https://web.whatsapp.com/send?phone=91... (opens WhatsApp Web directly in tab)
+ * - Mobile: https://wa.me/91... (launches native mobile WhatsApp app)
+ */
+export function getWhatsAppShareUrl(phoneRaw: string | null | undefined, message: string): string {
+  const cleanPhone = formatWhatsAppPhone(phoneRaw);
+  const encodedText = encodeURIComponent(message);
+
+  if (!cleanPhone) {
+    return `https://wa.me/?text=${encodedText}`;
+  }
+
+  const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent || '');
+
+  if (isMobile) {
+    return `https://wa.me/${cleanPhone}?text=${encodedText}`;
+  } else {
+    return `https://web.whatsapp.com/send?phone=${cleanPhone}&text=${encodedText}`;
+  }
+}
+
 export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }

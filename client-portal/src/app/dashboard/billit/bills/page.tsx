@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { fetchBillsAction, voidBillAction, finalizeDraftAction, deleteDraftAction, fetchBillSettingsAction, fetchBillsForBulkDownloadAction, logWhatsAppSendAction } from '../create/actions';
 import { fetchBillWhatsAppTemplateAction } from '../settings/actions';
-import { formatWhatsAppPhone } from '@/shared/validation';
+import { formatWhatsAppPhone, getWhatsAppShareUrl } from '@/shared/validation';
 import './bills.css';
 
 type BulkDateRange = 'today' | 'week' | 'month' | 'year' | 'custom';
@@ -189,10 +189,7 @@ export default function BillsPage() {
       }
     }
 
-    const phoneNum = formatWhatsAppPhone(bill.customerPhone);
-    return phoneNum
-      ? `https://wa.me/${phoneNum}?text=${encodeURIComponent(message)}`
-      : `https://wa.me/?text=${encodeURIComponent(message)}`;
+    return getWhatsAppShareUrl(bill.customerPhone, message);
   }
 
   const totalPages = Math.ceil(totalCount / limit) || 1;
