@@ -52,10 +52,9 @@ export function formatWhatsAppPhone(phoneRaw: string | null | undefined): string
 }
 
 /**
- * Device-aware WhatsApp URL generator that formats the country code +91
- * and routes dynamically:
- * - Desktop: https://web.whatsapp.com/send?phone=91... (opens WhatsApp Web directly in tab)
- * - Mobile: https://wa.me/91... (launches native mobile WhatsApp app)
+ * Smart WhatsApp URL generator with country code +91 formatting:
+ * - Mobile: https://wa.me/91...
+ * - Desktop: whatsapp://send?phone=91... (Native App 1st choice)
  */
 export function getWhatsAppShareUrl(phoneRaw: string | null | undefined, message: string): string {
   const cleanPhone = formatWhatsAppPhone(phoneRaw);
@@ -70,7 +69,54 @@ export function getWhatsAppShareUrl(phoneRaw: string | null | undefined, message
   if (isMobile) {
     return `https://wa.me/${cleanPhone}?text=${encodedText}`;
   } else {
-    return `https://web.whatsapp.com/send?phone=${cleanPhone}&text=${encodedText}`;
+    return `whatsapp://send?phone=${cleanPhone}&text=${encodedText}`;
+  }
+}
+
+/**
+ * Smart JavaScript launcher for WhatsApp on Desktop PCs & Laptops:
+ * Tier 1: Attempts WhatsApp Desktop App (whatsapp://send?phone=91...)
+ * Tier 2: If app is not installed / focused within 1.2s, falls back to WhatsApp Web tab (web.whatsapp.com/send?phone=91...)
+ */
+export function openWhatsAppSmart(phoneRaw: string | null | undefined, message: string) {
+  const cleanPhone = formatWhatsAppPhone(phoneRaw);
+  const encodedText = encodeURIComponent(message);
+
+  if (!cleanPhone) {
+    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+    return;
+  }
+
+  const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent || '');
+
+  if (isMobile) {
+    window.open(`https://wa.me/${cleanPhone}?text=${encodedText}`, '_blank');
+  } else {
+    const appUrl = `whatsapp://send?phone=${cleanPhone}&text=${encodedText}`;
+    const webUrl = `https://web.whatsapp.com/send?phone=${cleanPhone}&text=${encodedText}`;
+
+    let appOpened = false;
+    const handleBlur = () => {
+      appOpened = true;
+      window.removeEventListener('blur', handleBlur);
+    };
+
+    window.addEventListener('blur', handleBlur);
+
+    // Try Tier 1: WhatsApp Desktop App
+    try {
+      window.location.href = appUrl;
+    } catch (e) {
+      // Ignore
+    }
+
+    // Tier 2 Fallback: If focus didn't leave browser within 1.2s, open WhatsApp Web
+    setTimeout(() => {
+      window.removeEventListener('blur', handleBlur);
+      if (!appOpened) {
+        window.open(webUrl, '_blank');
+      }
+    }, 1200);
   }
 }
 

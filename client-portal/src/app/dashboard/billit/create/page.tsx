@@ -19,7 +19,7 @@ import {
 import { createPortal } from 'react-dom';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { calculateBillTotals } from '@/shared/billing-math';
-import { formatWhatsAppPhone, getWhatsAppShareUrl } from '@/shared/validation';
+import { formatWhatsAppPhone, getWhatsAppShareUrl, openWhatsAppSmart } from '@/shared/validation';
 import StandardCalculatorWidget from '@/components/calculator-widget';
 import { useBarcodeScanner } from '@/hooks/use-barcode-scanner';
 import {
@@ -547,12 +547,9 @@ export default function CreateBillPage() {
       }
     }
 
+    if (newTab && !newTab.closed) newTab.close();
     const waUrl = getWhatsAppUrl(billToUse);
-    if (newTab && !newTab.closed) {
-      newTab.location.href = waUrl;
-    } else {
-      window.open(waUrl, '_blank', 'noopener,noreferrer');
-    }
+    openWhatsAppSmart(billToUse.customerPhone, waUrl);
     logWhatsAppSendAction(billToUse.id, billToUse.customerPhone);
   }
 
