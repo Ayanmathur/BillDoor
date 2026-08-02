@@ -325,6 +325,7 @@ export async function createBillAction(data: z.infer<typeof createBillSchema>) {
     extraCharges: d.extraCharges,
     rewardDiscount: d.rewardDiscount,
     discountTotal: d.discountTotal,
+    gstCalculationMode: gstMode,
   });
   const billStatus = d.asDraft ? 'draft' : 'issued';
 

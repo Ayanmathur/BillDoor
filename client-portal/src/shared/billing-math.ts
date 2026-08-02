@@ -25,6 +25,7 @@ export interface BillTotalsInput {
   extraCharges?: number;
   rewardDiscount?: number;
   discountTotal?: number;
+  gstCalculationMode?: 'exclusive' | 'inclusive';
 }
 
 export interface BillTotalsResult {
@@ -43,17 +44,37 @@ export function calculateBillTotals({
   extraCharges = 0,
   rewardDiscount = 0,
   discountTotal = 0,
+  gstCalculationMode = 'exclusive',
 }: BillTotalsInput): BillTotalsResult {
+  const isInclusive = gstCalculationMode === 'inclusive';
+
   // 1. Per-item computation (unrounded float precision)
   const processedItems: CalculatedLineItem[] = lineItems.map((item) => {
     const qty = Number(item.quantity) || 0;
     const price = Number(item.unitPrice) || 0;
     const disc = Number(item.discount) || 0;
-    const lineAmount = Math.max(0, qty * price - disc);
+    const baseLine = Math.max(0, qty * price - disc);
     const rate = Number(item.gstPercent) || 0;
 
-    const taxableValue = rate > 0 ? lineAmount / (1 + rate / 100) : lineAmount;
-    const gstAmount = rate > 0 ? lineAmount - taxableValue : 0;
+    let taxableValue = baseLine;
+    let gstAmount = 0;
+    let lineAmount = baseLine;
+
+    if (rate > 0) {
+      if (isInclusive) {
+        // Inclusive (GST already in price): Extract tax backward
+        // Example: ₹100 with 10% → Taxable ₹90.91 + GST ₹9.09 = ₹100 Total
+        taxableValue = baseLine / (1 + rate / 100);
+        gstAmount = baseLine - taxableValue;
+        lineAmount = baseLine;
+      } else {
+        // Exclusive (Add GST on top): Base price + GST
+        // Example: ₹100 + 18% GST = Taxable ₹100 + GST ₹18 = ₹118 Total
+        taxableValue = baseLine;
+        gstAmount = baseLine * (rate / 100);
+        lineAmount = taxableValue + gstAmount;
+      }
+    }
 
     return {
       ...item,

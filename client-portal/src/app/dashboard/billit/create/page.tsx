@@ -392,6 +392,7 @@ export default function CreateBillPage() {
     : 0;
 
   const {
+    processedItems,
     subtotal,
     gstTotal,
     totalMrpSavings,
@@ -402,6 +403,7 @@ export default function CreateBillPage() {
     lineItems: items,
     extraCharges,
     rewardDiscount,
+    gstCalculationMode: gstCalcMode,
   });
 
   // Create bill
