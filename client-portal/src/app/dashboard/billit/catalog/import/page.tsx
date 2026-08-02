@@ -63,20 +63,33 @@ export default function MenuImportPage() {
     setError('');
 
     const reader = new FileReader();
-    reader.onload = async () => {
-      const base64 = (reader.result as string).split(',')[1];
-      const result = await extractMenuItemsAction(base64, file.type);
-
-      if (result.error) {
-        setError(result.error);
-        setUploading(false);
-        return;
-      }
-
-      setStagingId(result.stagingId || '');
-      setItems(result.items || []);
-      setStep('review');
+    reader.onerror = () => {
+      setError('Failed to read image file.');
       setUploading(false);
+    };
+    reader.onload = async () => {
+      try {
+        const rawResult = reader.result as string;
+        const base64 = rawResult.includes(',') ? rawResult.split(',')[1] : rawResult;
+        const mimeType = file.type || 'image/webp';
+        
+        const result = await extractMenuItemsAction(base64, mimeType);
+
+        if (result?.error) {
+          setError(result.error);
+          setUploading(false);
+          return;
+        }
+
+        setStagingId(result.stagingId || '');
+        setItems(result.items || []);
+        setStep('review');
+        setUploading(false);
+      } catch (err: any) {
+        console.error('Menu import upload error:', err);
+        setError(err?.message || 'Failed to process image. Please try again.');
+        setUploading(false);
+      }
     };
     reader.readAsDataURL(file);
   };

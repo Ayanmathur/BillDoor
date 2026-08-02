@@ -209,7 +209,7 @@ Reply with ONLY the review text, no quotes, no explanation.`;
     }
 
     let response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -224,9 +224,9 @@ Reply with ONLY the review text, no quotes, no explanation.`;
     );
 
     if (!response.ok) {
-      // Fallback to gemini-1.5-flash if 2.0-flash is unavailable
+      // Fallback to gemini-3.5-flash if gemini-flash-latest is rate-limited
       response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

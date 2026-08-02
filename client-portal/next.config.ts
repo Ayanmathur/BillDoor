@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
   // Disable x-powered-by header (unnecessary exposure)
   poweredByHeader: false,
 
+  // Allow up to 10MB for menu photo uploads via Server Actions
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
+
   // Security headers
   async headers() {
     return [

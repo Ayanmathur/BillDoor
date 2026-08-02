@@ -198,7 +198,7 @@ END:VCARD`;
           {activeLinks.appointmentActive && (
             <a href={`/book/${slug}`} className="card-module-link">
               <Calendar size={18} />
-              Book an appointment
+              + Booking
             </a>
           )}
           {activeLinks.catalogActive && (
