@@ -268,7 +268,7 @@ Return ONLY raw CSV text lines. Do not wrap in markdown code blocks or add expla
                   <Upload size={36} style={{ color: 'var(--color-accent)', marginBottom: 8 }} />
                   <div style={{ fontWeight: 'bold', fontSize: 'var(--text-md)' }}>Click to upload CSV spreadsheet</div>
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 4 }}>
-                    Expected columns: Name, Type, Price, GST, Barcode
+                    Expected columns: Name, Price, Category, Type, GST, Barcode
                   </div>
                 </>
               )}
@@ -284,7 +284,7 @@ Return ONLY raw CSV text lines. Do not wrap in markdown code blocks or add expla
               <textarea
                 value={pastedText}
                 onChange={e => setPastedText(e.target.value)}
-                placeholder={`Name,Type,Price,GST,Barcode\nMasala Chai,product,20,5,\nHaircut Service,service,150,18,\nSamosa,product,15,,BC-99123`}
+                placeholder={`Name, Price, Category, Type, GST, Barcode\nMasala Chai, 20, Beverages, product, 5, \nHaircut Service, 150, Salon Services, service, 18, \nSamosa, 15, Snacks, product, 5, BC-99123`}
                 rows={8}
                 style={{
                   width: '100%', fontFamily: 'monospace', fontSize: 'var(--text-xs)', padding: 'var(--space-3)',
@@ -356,8 +356,9 @@ Return ONLY raw CSV text lines. Do not wrap in markdown code blocks or add expla
                     <thead>
                       <tr style={{ background: 'var(--color-bg-secondary)', borderBottom: '1px solid var(--color-border)', textAlign: 'left' }}>
                         <th style={{ padding: '6px 10px' }}>Name</th>
-                        <th style={{ padding: '6px 10px' }}>Type</th>
                         <th style={{ padding: '6px 10px' }}>Price</th>
+                        <th style={{ padding: '6px 10px' }}>Category</th>
+                        <th style={{ padding: '6px 10px' }}>Type</th>
                         <th style={{ padding: '6px 10px' }}>GST</th>
                         <th style={{ padding: '6px 10px' }}>Barcode</th>
                       </tr>
@@ -365,22 +366,25 @@ Return ONLY raw CSV text lines. Do not wrap in markdown code blocks or add expla
                     <tbody>
                       <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
                         <td style={{ padding: '6px 10px' }}>Masala Chai</td>
-                        <td style={{ padding: '6px 10px' }}>product</td>
                         <td style={{ padding: '6px 10px' }}>20</td>
+                        <td style={{ padding: '6px 10px' }}>Beverages</td>
+                        <td style={{ padding: '6px 10px' }}>product</td>
                         <td style={{ padding: '6px 10px' }}>5</td>
                         <td style={{ padding: '6px 10px', color: 'var(--color-text-tertiary)' }}>(blank)</td>
                       </tr>
                       <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
                         <td style={{ padding: '6px 10px' }}>Haircut Service</td>
-                        <td style={{ padding: '6px 10px' }}>service</td>
                         <td style={{ padding: '6px 10px' }}>150</td>
+                        <td style={{ padding: '6px 10px' }}>Salon Services</td>
+                        <td style={{ padding: '6px 10px' }}>service</td>
                         <td style={{ padding: '6px 10px' }}>18</td>
                         <td style={{ padding: '6px 10px', color: 'var(--color-text-tertiary)' }}>(blank)</td>
                       </tr>
                       <tr>
                         <td style={{ padding: '6px 10px' }}>Samosa</td>
-                        <td style={{ padding: '6px 10px' }}>product</td>
                         <td style={{ padding: '6px 10px' }}>15</td>
+                        <td style={{ padding: '6px 10px' }}>Snacks</td>
+                        <td style={{ padding: '6px 10px' }}>product</td>
                         <td style={{ padding: '6px 10px', color: 'var(--color-text-tertiary)' }}>(blank)</td>
                         <td style={{ padding: '6px 10px' }}>BC-99123</td>
                       </tr>

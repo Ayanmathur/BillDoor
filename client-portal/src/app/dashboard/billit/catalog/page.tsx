@@ -351,11 +351,9 @@ export default function CatalogPage() {
             <input className="input-field" placeholder="Search items..." value={search} onChange={(e) => setSearch(e.target.value)}
               style={{ paddingLeft: 34, fontSize: 'var(--text-sm)' }} />
           </div>
-          {catalogViewerEnabled && (
-            <button className="btn" onClick={() => window.location.href = '/dashboard/billit/catalog/categories'} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)', height: '40px', padding: '0 var(--space-3)', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-              <LayoutGrid size={16} /> Build Category
-            </button>
-          )}
+          <button className="btn" onClick={() => window.location.href = '/dashboard/billit/catalog/categories'} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)', height: '40px', padding: '0 var(--space-3)', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            <LayoutGrid size={16} /> Build Category
+          </button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <button className="btn" onClick={() => window.location.href = '/dashboard/billit/catalog/bulk-import'} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)', height: '40px', padding: '0 var(--space-4)', borderRadius: 'var(--radius-full)' }}>
