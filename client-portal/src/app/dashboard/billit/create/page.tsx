@@ -536,8 +536,8 @@ export default function CreateBillPage() {
     const phoneNum = formatWhatsAppPhone(billToUse.customerPhone);
 
     return phoneNum
-      ? `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(message)}`
-      : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+      ? `https://wa.me/${phoneNum}?text=${encodeURIComponent(message)}`
+      : `https://wa.me/?text=${encodeURIComponent(message)}`;
   }
 
   async function handleWhatsAppDirectly(newTab: Window | null) {

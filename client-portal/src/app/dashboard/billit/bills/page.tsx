@@ -191,8 +191,8 @@ export default function BillsPage() {
 
     const phoneNum = formatWhatsAppPhone(bill.customerPhone);
     return phoneNum
-      ? `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(message)}`
-      : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+      ? `https://wa.me/${phoneNum}?text=${encodeURIComponent(message)}`
+      : `https://wa.me/?text=${encodeURIComponent(message)}`;
   }
 
   const totalPages = Math.ceil(totalCount / limit) || 1;
