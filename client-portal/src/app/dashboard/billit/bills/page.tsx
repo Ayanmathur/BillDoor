@@ -248,11 +248,19 @@ export default function BillsPage() {
                       <span className={bill.status === 'voided' ? 'bill-number-voided' : ''}>
                         {bill.billNumber}
                       </span>
+                      <span className={`bill-status-badge ${bill.status || 'draft'} mobile-only`} style={{ marginLeft: 6 }}>
+                        {bill.status || 'draft'}
+                      </span>
                     </td>
-                    <td className="col-customer">{bill.customerName || 'Walk-in'}</td>
-                    <td className="col-date">{new Date(bill.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    <td className="col-customer">
+                      <span style={{ fontWeight: 500 }}>{bill.customerName || 'Walk-in'}</span>
+                      <span className="mobile-only" style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginLeft: 4 }}>
+                        • {new Date(bill.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short' })}
+                      </span>
+                    </td>
+                    <td className="col-date desktop-only">{new Date(bill.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' })}</td>
                     <td className="col-amount">₹{Number(bill.grandTotal || 0).toFixed(2)}</td>
-                    <td className="col-status">
+                    <td className="col-status desktop-only">
                       <span className={`bill-status-badge ${bill.status || 'draft'}`}>
                         {bill.status || 'draft'}
                       </span>
