@@ -44,7 +44,82 @@ export default function MenuImportPage() {
   const [gstRate, setGstRate] = useState(0);
   const [importedCount, setImportedCount] = useState(0);
 
+  // Live Camera Viewfinder State
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState<'environment' | 'user'>('environment');
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const startCamera = async (facing: 'environment' | 'user' = 'environment') => {
+    setError('');
+    try {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      setCameraFacing(facing);
+      setIsCameraOpen(true);
+      
+      // Delay play to allow video DOM element to mount
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(() => {});
+        }
+      }, 100);
+    } catch (err: any) {
+      console.error('Camera access error:', err);
+      setError('Could not access live camera. Please check browser permissions or select an image file.');
+      setIsCameraOpen(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    setIsCameraOpen(false);
+  };
+
+  const captureCameraPhoto = async () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/webp', 0.9);
+    const base64 = dataUrl.split(',')[1];
+    
+    stopCamera();
+    setUploading(true);
+    setError('');
+
+    try {
+      const result = await extractMenuItemsAction(base64, 'image/webp');
+      if (result?.error) {
+        setError(result.error);
+        setUploading(false);
+        return;
+      }
+      setStagingId(result.stagingId || '');
+      setItems(result.items || []);
+      setStep('review');
+      setUploading(false);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to process camera photo.');
+      setUploading(false);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -196,14 +271,13 @@ export default function MenuImportPage() {
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
               onClick={() => {
                 if (fileRef.current) {
-                  fileRef.current.removeAttribute('capture');
                   fileRef.current.click();
                 }
               }}
               disabled={uploading}
             >
               {uploading ? (
-                <><Loader2 size={16} className="spinner" /> Processing...</>
+                <><Loader2 size={16} className="spinner" /> Processing Image...</>
               ) : (
                 <><Upload size={16} /> Choose Image File</>
               )}
@@ -211,22 +285,95 @@ export default function MenuImportPage() {
 
             <button
               className="btn"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg-elevated)' }}
-              onClick={() => {
-                if (fileRef.current) {
-                  fileRef.current.setAttribute('capture', 'environment');
-                  fileRef.current.click();
-                }
-              }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid var(--color-accent)', color: 'var(--color-accent)', background: 'var(--color-accent-subtle)' }}
+              onClick={() => startCamera('environment')}
               disabled={uploading}
             >
-              <Camera size={16} /> Take Photo with Camera
+              <Camera size={16} /> Open Camera Viewfinder
             </button>
           </div>
 
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-3)' }}>
             Supported formats: JPEG, PNG, WebP · Max size: 10MB
           </p>
+        </div>
+      )}
+
+      {/* Live In-App Camera Viewfinder Modal */}
+      {isCameraOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0, 0, 0, 0.95)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
+          padding: 'var(--space-4)', color: '#ffffff'
+        }}>
+          {/* Header */}
+          <div style={{ width: '100%', maxWidth: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontWeight: 'bold', fontSize: 'var(--text-md)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Camera size={20} color="var(--color-accent)" /> Live Menu Camera
+            </div>
+            <button
+              onClick={stopCamera}
+              style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', padding: 8, borderRadius: '50%', cursor: 'pointer' }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Video Stream Container */}
+          <div style={{
+            position: 'relative', width: '100%', maxWidth: 600, flex: 1, marginTop: 'var(--space-3)', marginBottom: 'var(--space-3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+            borderRadius: 'var(--radius-lg)', background: '#000', border: '2px solid var(--color-border-subtle)'
+          }}>
+            <video
+              ref={videoRef}
+              playsInline
+              muted
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
+            
+            {/* Target Guide Framing */}
+            <div style={{
+              position: 'absolute', inset: '10%', border: '2px dashed rgba(255, 255, 255, 0.5)',
+              borderRadius: 'var(--radius-md)', pointerEvents: 'none', display: 'flex', alignItems: 'flex-start',
+              justifyContent: 'center', padding: 12
+            }}>
+              <span style={{ background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: 4, fontSize: 12 }}>
+                Center Menu Card Here
+              </span>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div style={{ width: '100%', maxWidth: 600, display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginBottom: 12 }}>
+            <button
+              onClick={() => startCamera(cameraFacing === 'environment' ? 'user' : 'environment')}
+              className="btn"
+              style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', fontSize: 'var(--text-xs)' }}
+            >
+              Flip Camera
+            </button>
+
+            <button
+              onClick={captureCameraPhoto}
+              style={{
+                width: 68, height: 68, borderRadius: '50%', background: 'var(--color-accent)',
+                border: '4px solid #ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 0 20px rgba(0,0,0,0.5)', transition: 'transform 0.1s ease'
+              }}
+              title="Snap Menu Photo"
+            >
+              <div style={{ width: 52, height: 52, borderRadius: '50%', border: '2px solid #fff' }} />
+            </button>
+
+            <button
+              onClick={stopCamera}
+              className="btn"
+              style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', fontSize: 'var(--text-xs)' }}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 

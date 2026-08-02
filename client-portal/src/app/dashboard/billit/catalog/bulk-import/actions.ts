@@ -25,16 +25,38 @@ export async function parseBulkImportFileAction(csvText: string) {
   const barcodeEnabled = client?.barcode_enabled === true;
   const defaultGst = Number(client?.bill_settings?.default_gst || 0);
 
-  const lines = csvText.split(/\r?\n/).filter(line => line.trim().length > 0);
-  if (lines.length <= 1) {
-    return { error: 'CSV file is empty or missing data rows.', rows: [], barcodeEnabled, defaultGst };
+  // Clean markdown code blocks if pasted from AI output
+  let cleanText = csvText.trim();
+  if (cleanText.startsWith('```')) {
+    cleanText = cleanText.replace(/^```(?:csv|text)?\s*/i, '').replace(/```\s*$/i, '');
   }
+
+  const lines = cleanText.split(/\r?\n/).filter(line => line.trim().length > 0);
+  if (lines.length === 0) {
+    return { error: 'Data is empty or missing data rows.', rows: [], barcodeEnabled, defaultGst };
+  }
+
+  // Auto-detect delimiter (comma, tab, or pipe)
+  const sample = lines[0];
+  let delimiter = ',';
+  if (sample.includes('\t')) delimiter = '\t';
+  else if (sample.includes('|')) delimiter = '|';
+
+  // Check if line 0 is header row
+  const firstCols = lines[0].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
+  const firstCol0 = (firstCols[0] || '').toLowerCase();
+  const firstCol1 = (firstCols[1] || '').toLowerCase();
+  const firstCol2 = (firstCols[2] || '').toLowerCase();
+  
+  const isHeader = firstCol0.includes('name') || firstCol1.includes('type') || firstCol2.includes('price');
+  const startIndex = isHeader ? 1 : 0;
 
   const rows: BulkStagingRow[] = [];
 
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(c => c.trim().replace(/^"(.*)"$/, '$1'));
-    if (cols.length < 2 || !cols[0]) continue;
+  for (let i = startIndex; i < lines.length; i++) {
+    // Split line respecting delimiter
+    const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
+    if (cols.length === 0 || !cols[0]) continue;
 
     const name = cols[0];
     const rawType = (cols[1] || 'product').toLowerCase();
@@ -69,6 +91,10 @@ export async function parseBulkImportFileAction(csvText: string) {
     });
   }
 
+  if (rows.length === 0) {
+    return { error: 'Could not parse any valid items from data. Please check format.', rows: [], barcodeEnabled, defaultGst };
+  }
+
   return { rows, barcodeEnabled, defaultGst };
 }
 
@@ -84,7 +110,7 @@ export async function commitBulkCatalogItemsAction(items: BulkStagingRow[]) {
     name: item.name,
     type: item.type,
     price: item.price,
-    default_gst_percent: item.gstPercent,
+    gst_percent: item.gstPercent,
     active: true,
   }));
 
