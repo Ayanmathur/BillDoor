@@ -148,6 +148,18 @@ export default function ReviewPage({
     return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
   }, []);
 
+  // Auto-trigger AI review generation & auto-copy if redirected with stars (e.g. from Digital Bill)
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (mountedRef.current) return;
+    const urlStars = parseInt(searchParams.get('stars') || '0', 10);
+    const autoParam = searchParams.get('auto') === '1';
+    if ((autoParam || urlStars > 0) && urlStars >= 1 && urlStars <= 5 && !isSubmitted) {
+      mountedRef.current = true;
+      handleStarSelect(urlStars);
+    }
+  }, [searchParams, isSubmitted]);
+
   // Handle star selection
   async function handleStarSelect(rating: number) {
     setStars(rating);

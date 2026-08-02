@@ -105,11 +105,11 @@ export default function BillPageClient({
     if (rating <= 3) {
       setShowFeedback(true);
     } else {
-      // 4-5★: submit + redirect to standalone review page with Thank You & Assistance option
+      // 4-5★: submit + redirect to review page with stars & auto=1 to trigger AI draft, auto-copy & Google redirect
       setSubmitting(true);
       await submitInlineReviewAction({ clientId: client.id || bill.client_id, billId: bill.id, stars: rating });
       setSubmitting(false);
-      window.location.href = `/review/${client.slug}?bill_id=${bill.id}&submitted=1`;
+      window.location.href = `/review/${client.slug}?bill_id=${bill.id}&stars=${rating}&auto=1`;
     }
   }
 

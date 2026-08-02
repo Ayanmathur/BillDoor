@@ -201,61 +201,110 @@ Reply with ONLY the review text, no quotes, no explanation.`;
     return list[Math.floor(Math.random() * list.length)];
   };
 
-  try {
-    const apiKey = process.env.GEMINI_API_KEY;
+  let draftText = '';
 
-    if (!apiKey) {
-      return { draft: getFallback() };
-    }
-
-    let response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 200,
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      // Fallback to gemini-3.5-flash if gemini-flash-latest is rate-limited
-      response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.8,
-              maxOutputTokens: 200,
-            },
-          }),
+  // Tier 1: Gemini API (gemini-2.0-flash, gemini-1.5-flash, gemini-flash-latest)
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+    for (const model of geminiModels) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 120,
+              },
+            }),
+          }
+        );
+        if (response.ok) {
+          const resJson = await response.json();
+          const text = resJson.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+          if (text) {
+            draftText = text;
+            break;
+          }
         }
-      );
+      } catch (e) {
+        // Continue to next model or tier
+      }
     }
-
-    if (!response.ok) {
-      console.error('Gemini API error status:', response.status);
-      return { draft: getFallback() };
-    }
-
-    const result = await response.json();
-    const draft = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-
-    if (!draft) return { draft: getFallback() };
-
-    return { draft };
-  } catch (error) {
-    console.error('AI generation exception:', error);
-    return { draft: getFallback() };
   }
+
+  // Tier 2: OpenRouter API (openai/gpt-4o-mini)
+  const openrouterKey = process.env.OPENROUTER_API_KEY;
+  if (!draftText && openrouterKey) {
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openrouterKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://billdoor.com',
+          'X-Title': 'BillDoor Review Flow',
+        },
+        body: JSON.stringify({
+          model: 'openai/gpt-4o-mini',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 120,
+        }),
+      });
+      if (response.ok) {
+        const resJson = await response.json();
+        draftText = resJson.choices?.[0]?.message?.content?.trim() || '';
+      }
+    } catch (e) {
+      // Continue to next tier
+    }
+  }
+
+  // Tier 3: Groq API (llama-3.3-70b-versatile, llama-3.1-8b-instant)
+  const groqKey = process.env.GROQ_API_KEY;
+  if (!draftText && groqKey) {
+    const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    for (const model of groqModels) {
+      try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${groqKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.7,
+            max_tokens: 120,
+          }),
+        });
+        if (response.ok) {
+          const resJson = await response.json();
+          const text = resJson.choices?.[0]?.message?.content?.trim() || '';
+          if (text) {
+            draftText = text;
+            break;
+          }
+        }
+      } catch (e) {
+        // Continue
+      }
+    }
+  }
+
+  if (draftText) {
+    // Clean up surrounding quotes
+    const cleanedDraft = draftText.replace(/^["']|["']$/g, '').trim();
+    return { draft: cleanedDraft };
+  }
+
+  return { draft: getFallback() };
 }
 
 // ============================================================
