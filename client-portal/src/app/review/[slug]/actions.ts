@@ -159,39 +159,41 @@ export async function generateAiReviewAction(data: {
     ? `\n\nIMPORTANT: Do NOT repeat or closely rephrase any of these previous drafts:\n${data.previousDrafts.map((d, i) => `${i + 1}. "${d}"`).join('\n')}`
     : '';
 
-  const prompt = `You are helping a satisfied customer write a genuine Google review for a business.
+  const prompt = `You are helping a satisfied customer write a genuine 5-star Google review for a business.
 
 Business Name: ${data.businessName}
 ${data.businessType ? `Business Type: ${data.businessType}` : ''}
 ${data.about ? `About Business & Offerings: ${data.about}` : ''}
 Rating: ${data.stars} out of 5 stars
 
-Write a short, natural-sounding Google review (2-3 sentences). It MUST specifically reflect the actual business concept (${data.businessName} - ${data.businessType || ''} ${data.about || ''}).
-${isFoodOrDelivery ? '- CRITICAL: This is a food/tiffin/delivery service! Mention delicious taste, home-cooked feel, fresh ingredients, or punctual delivery. NEVER mention visiting a physical shop!' : ''}
-- Sound like an authentic happy customer, not a marketer.
-- Be warm and specific.
+Write a full, natural-sounding Google review consisting of 2 to 3 full sentences. It MUST specifically incorporate details about the business concept and offerings (${data.businessName}${data.about ? ` - ${data.about}` : ''}).
+${isFoodOrDelivery ? '- CRITICAL: This is a food/tiffin/delivery service! Mention delicious taste, home-cooked feel, fresh ingredients, hygienic packaging, or punctual delivery. NEVER mention visiting a physical shop!' : ''}
+${isSalonOrSpa ? '- Focus on skilled staff, clean environment, relaxed atmosphere, and excellent care.' : ''}
+- Sound like an authentic happy customer who actually used their products/services.
+- Write 2-3 complete sentences with specific details.
 - Do NOT mention star rating numbers.${previousText}
 
 Reply with ONLY the review text, no quotes, no explanation.`;
 
-  // Smart business-aware fallback templates
+  // Smart business-aware fallback templates (full 2-3 line reviews incorporating about/type)
+  const aboutStr = data.about ? ` Their specialization in ${data.about} really stands out.` : '';
   let fallbacks = [
-    `I had a fantastic experience with ${data.businessName}. Highly recommended!`,
-    `Excellent service from ${data.businessName}. Very professional and top quality!`,
-    `Really impressed with ${data.businessName}. Great experience overall!`
+    `I had an absolutely fantastic experience with ${data.businessName}. The quality of service and attention to detail exceeded my expectations.${aboutStr} Highly recommend them to anyone looking for top-notch quality and professional care!`,
+    `Extremely impressed with the service at ${data.businessName}. The team is incredibly professional, polite, and prompt.${aboutStr} Will definitely be a returning customer!`,
+    `Hands down one of the best experiences I have had with ${data.businessName}. Fantastic quality, warm customer care, and seamless execution.${aboutStr} Five stars all the way!`
   ];
 
   if (isFoodOrDelivery) {
     fallbacks = [
-      `Delicious, fresh home-style food from ${data.businessName}! Timely delivery and amazing taste every single time.`,
-      `Super satisfied with ${data.businessName}. The food quality is fresh, hygienic, and delivered right on time!`,
-      `Hands down the best food service! ${data.businessName} serves meals that taste just like home. Highly recommended!`
+      `Delicious, fresh home-style food from ${data.businessName}!${aboutStr} Punctual delivery, hygienic packaging, and amazing taste every single time.`,
+      `Super satisfied with ${data.businessName}. The food quality is fresh, wholesome, and delivered right on time.${aboutStr} Definitely the best meal service around!`,
+      `Hands down the best food service! ${data.businessName} serves meals that taste just like home.${aboutStr} Generous portions, fantastic flavor, and super reliable delivery.`
     ];
   } else if (isSalonOrSpa) {
     fallbacks = [
-      `Wonderful experience at ${data.businessName}. The staff is skilled, gentle, and very professional!`,
-      `Highly recommend ${data.businessName}! Great hygiene, relaxed atmosphere, and excellent service.`,
-      `Loved the service at ${data.businessName}. Very attentive staff and great results!`
+      `Wonderful experience at ${data.businessName}. The staff is highly skilled, gentle, and very professional.${aboutStr} Left feeling completely relaxed and refreshed!`,
+      `Highly recommend ${data.businessName}! Clean and serene ambiance, polite staff, and top-tier service.${aboutStr} Truly worth every rupee!`,
+      `Loved my visit to ${data.businessName}. Professional team, great hygienic standards, and amazing attention to detail.${aboutStr} Will definitely be coming back!`
     ];
   }
 

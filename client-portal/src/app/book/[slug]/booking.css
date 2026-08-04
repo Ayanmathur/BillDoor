@@ -2,7 +2,7 @@
 
 .booking-page {
   min-height: 100dvh;
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-primary);
   font-family: var(--font-body);
 }
 
