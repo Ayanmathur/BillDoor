@@ -232,3 +232,22 @@ a.card-info-row:hover {
   gap: 8px;
   font-size: 14px;
 }
+
+/* Wood Frame Border Treatment for Digital Business Card (/card/[slug]) */
+.card-container.framed-wood {
+  border: 11px solid #8B6544; /* Flat warm walnut/tan border */
+  border-radius: var(--radius-xl, 20px);
+  position: relative;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.2), 0 4px 10px -2px rgba(0, 0, 0, 0.08);
+}
+
+/* Subtle flat corner accents (picture-frame miter effect) */
+.card-container.framed-wood::before {
+  content: '';
+  position: absolute;
+  inset: -11px;
+  border: 1px solid #5C4033; /* Darker walnut inner miter accent */
+  border-radius: var(--radius-xl, 20px);
+  pointer-events: none;
+  z-index: 2;
+}

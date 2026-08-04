@@ -77,6 +77,8 @@ export async function fetchSettingsAction() {
         },
       },
       loyaltyConfig: client.loyalty_config || null,
+      framedCardEnabled: client.framed_card_enabled === true,
+      cardFrameStyle: ((client.bill_settings as any)?.card_frame_style as string) || 'plain',
     },
   };
 }
@@ -479,5 +481,36 @@ export async function deleteAccountAction(data: { confirmText: string; password:
   await supabase.auth.signOut();
 
   return { deleted: true };
+}
+
+// ============================================================
+// Update Card Frame Style (plain | framed)
+// ============================================================
+export async function updateCardFrameStyleAction(style: 'plain' | 'framed') {
+  const { supabase, client, user, error } = await getAuthenticatedClient();
+  if (error || !client || !user) return { error: error || 'Unauthorized.' };
+
+  if (style !== 'plain' && style !== 'framed') {
+    return { error: 'Invalid frame style.' };
+  }
+
+  // Only allow if admin has granted framed_card_enabled
+  if (style === 'framed' && !client.framed_card_enabled) {
+    return { error: 'Framed card access not enabled. Contact admin.' };
+  }
+
+  const currentBillSettings = (client.bill_settings as Record<string, any>) || {};
+  const updatedBillSettings = {
+    ...currentBillSettings,
+    card_frame_style: style,
+  };
+
+  const { error: updateErr } = await supabase
+    .from('clients')
+    .update({ bill_settings: updatedBillSettings })
+    .eq('id', user.id);
+
+  if (updateErr) return { error: 'Failed to update card frame style.' };
+  return { success: true };
 }
 

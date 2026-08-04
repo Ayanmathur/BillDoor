@@ -25,6 +25,7 @@ import {
   uploadLogoAction,
   deleteAccountAction,
   updatePosSettingsAction,
+  updateCardFrameStyleAction,
 } from './actions';
 
 type SettingsTab = 'business' | 'gst' | 'socials' | 'rewards' | 'pos' | 'account';
@@ -99,6 +100,10 @@ export default function SettingsPage() {
     printBill: 'F8',
   });
 
+  // Card Frame Style
+  const [framedCardEnabled, setFramedCardEnabled] = useState(false);
+  const [cardFrameStyle, setCardFrameStyle] = useState<'plain' | 'framed'>('plain');
+
   useEffect(() => {
     async function load() {
       const result = await fetchSettingsAction();
@@ -148,6 +153,8 @@ export default function SettingsPage() {
         setUsername(s.username || '');
         setNewUsername(s.username || '');
         setLogoUrl(s.logoUrl || '');
+        setFramedCardEnabled(s.framedCardEnabled ?? false);
+        setCardFrameStyle((s.cardFrameStyle as 'plain' | 'framed') || 'plain');
       }
       setLoading(false);
     }
@@ -401,6 +408,48 @@ export default function SettingsPage() {
           <button className="btn btn-primary" onClick={handleSaveBusiness} disabled={saving} style={{ marginTop: 'var(--space-3)' }}>
             {saving ? <Loader2 size={16} className="spinner" /> : <Save size={16} />} Save
           </button>
+
+          {/* Card Frame Style — visible only when admin has enabled access */}
+          {framedCardEnabled && (
+            <div style={{ marginTop: 'var(--space-5)', padding: 'var(--space-4)', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }}>
+              <h4 style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', marginBottom: 'var(--space-2)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Image size={16} /> Digital Business Card Style
+              </h4>
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-3)' }}>
+                Choose the frame style for your public digital business card.
+              </p>
+              <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                <button
+                  className={`btn ${cardFrameStyle === 'plain' ? 'btn-primary' : ''}`}
+                  onClick={async () => {
+                    setCardFrameStyle('plain');
+                    setSaving(true);
+                    const res = await updateCardFrameStyleAction('plain');
+                    if (res.error) setError(res.error); else flash();
+                    setSaving(false);
+                  }}
+                  disabled={saving}
+                  style={{ flex: 1 }}
+                >
+                  Plain
+                </button>
+                <button
+                  className={`btn ${cardFrameStyle === 'framed' ? 'btn-primary' : ''}`}
+                  onClick={async () => {
+                    setCardFrameStyle('framed');
+                    setSaving(true);
+                    const res = await updateCardFrameStyleAction('framed');
+                    if (res.error) setError(res.error); else flash();
+                    setSaving(false);
+                  }}
+                  disabled={saving}
+                  style={{ flex: 1 }}
+                >
+                  Warm Wood Frame
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

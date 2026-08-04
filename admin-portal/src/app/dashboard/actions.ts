@@ -151,7 +151,7 @@ export async function fetchClientsAction() {
 
   const { data, error } = await supabase
     .from('clients')
-    .select('id, business_name, username, slug, phone, status, modules_enabled, registered_at, valid_till, deleted_at, subscription_hold_enabled, directory_access_enabled, publicly_listed')
+    .select('id, business_name, username, slug, phone, status, modules_enabled, registered_at, valid_till, deleted_at, subscription_hold_enabled, directory_access_enabled, publicly_listed, framed_card_enabled')
     .is('deleted_at', null)
     .order('registered_at', { ascending: false })
     .limit(200);
@@ -342,6 +342,21 @@ export async function toggleDirectoryAccessAction(data: { clientId: string; enab
   return {};
 }
 
+/**
+ * Toggle framed wood business card access for a client.
+ */
+export async function toggleFramedCardAction(data: { clientId: string; enabled: boolean }) {
+  const supabase = await createAdminClient();
+
+  const { error } = await supabase
+    .from('clients')
+    .update({ framed_card_enabled: data.enabled })
+    .eq('id', data.clientId);
+
+  if (error) return { error: 'Failed to update framed card access.' };
+  return { success: true };
+}
+
 // ============================================================
 // Reset / Change Client Username
 // ============================================================
@@ -434,6 +449,7 @@ export async function deleteClientAction(data: { clientId: string; confirmationT
       status: 'revoked',
       publicly_listed: false,
       directory_access_enabled: false,
+      framed_card_enabled: false,
     })
     .eq('id', data.clientId);
 

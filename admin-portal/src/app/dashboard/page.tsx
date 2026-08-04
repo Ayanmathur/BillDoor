@@ -29,6 +29,7 @@ import {
   toggleQuickToolsAction,
   toggleSubscriptionHoldAction,
   toggleDirectoryAccessAction,
+  toggleFramedCardAction,
   resetClientUsernameAction,
   resetClientPasswordAction,
   deleteClientAction,
@@ -55,6 +56,7 @@ type Client = {
   subscription_hold_enabled?: boolean;
   directory_access_enabled?: boolean;
   publicly_listed?: boolean;
+  framed_card_enabled?: boolean;
 };
 
 type Inquiry = {
@@ -326,6 +328,15 @@ export default function AdminDashboard() {
         directory_access_enabled: enabled,
         publicly_listed: publiclyListed !== undefined ? publiclyListed : c.publicly_listed,
       } : c));
+    }
+    setActionLoading(null);
+  }
+
+  async function handleToggleFramedCard(clientId: string, enabled: boolean) {
+    setActionLoading(clientId);
+    const res = await toggleFramedCardAction({ clientId, enabled });
+    if (!res.error) {
+      setClients(prev => prev.map(c => c.id === clientId ? { ...c, framed_card_enabled: enabled } : c));
     }
     setActionLoading(null);
   }
@@ -722,6 +733,15 @@ export default function AdminDashboard() {
                           style={client.publicly_listed === false ? { background: 'var(--color-warning-subtle)', color: 'var(--color-warning)' } : undefined}
                         >
                           {client.publicly_listed === false ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                        <button
+                          className={`action-btn ${client.framed_card_enabled ? '' : 'danger'}`}
+                          title={client.framed_card_enabled ? 'Revoke Framed Card Access' : 'Grant Framed Card Access'}
+                          onClick={() => handleToggleFramedCard(client.id, !client.framed_card_enabled)}
+                          disabled={actionLoading === client.id}
+                          style={!client.framed_card_enabled ? { background: 'var(--color-error-subtle)', color: 'var(--color-error)' } : undefined}
+                        >
+                          <ImageIcon size={16} />
                         </button>
                       </div>
                     </td>
