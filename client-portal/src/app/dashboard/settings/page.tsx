@@ -242,8 +242,15 @@ export default function SettingsPage() {
     setUploading(true);
     setError('');
     try {
+      let fileToUpload: File = file;
+
+      // Client-side compression for raster images (not SVG)
+      if (file.type !== 'image/svg+xml') {
+        fileToUpload = await compressImage(file, 200 * 1024, 800);
+      }
+
       const formData = new FormData();
-      formData.append('logo', file);
+      formData.append('logo', fileToUpload);
       const result = await uploadLogoAction(formData);
       if (result.error) {
         setError(result.error);
@@ -257,6 +264,63 @@ export default function SettingsPage() {
       setUploading(false);
       e.target.value = '';
     }
+  }
+
+  /**
+   * Compress a raster image to fit within maxBytes using Canvas.
+   * Resizes to maxDimension px, then iteratively reduces JPEG quality.
+   */
+  async function compressImage(file: File, maxBytes: number, maxDimension: number): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => {
+        // Calculate scaled dimensions preserving aspect ratio
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          const scale = maxDimension / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { resolve(file); return; }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Try WebP first (best compression), fall back to JPEG
+        const outputType = 'image/webp';
+        let quality = 0.85;
+        const minQuality = 0.3;
+
+        function tryCompress() {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) { resolve(file); return; }
+
+              if (blob.size <= maxBytes || quality <= minQuality) {
+                // Done — either under limit or at minimum quality
+                const ext = outputType === 'image/webp' ? 'webp' : 'jpg';
+                const compressed = new File([blob], `logo.${ext}`, { type: outputType });
+                resolve(compressed);
+              } else {
+                // Reduce quality and retry
+                quality -= 0.1;
+                tryCompress();
+              }
+            },
+            outputType,
+            quality
+          );
+        }
+
+        tryCompress();
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
   }
 
   async function handleDeleteAccount() {
