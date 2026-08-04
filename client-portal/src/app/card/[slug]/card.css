@@ -77,22 +77,29 @@
 /* Mobile View: Enclose into physical card ratio with elegant border & shadow */
 @media (max-width: 640px) {
   .card-page {
-    padding: var(--space-3) var(--space-2);
+    padding: var(--space-4) var(--space-4);
+    overflow-x: hidden;
   }
 
   .card-container {
-    width: calc(100% - 16px);
-    max-width: 380px;
+    width: calc(100% - 28px);
+    max-width: 360px;
     margin: var(--space-2) auto var(--space-6);
     padding: var(--space-5, 20px) var(--space-4, 16px) var(--space-6, 24px);
     background: var(--color-bg-elevated, #ffffff);
     flex: initial;
+    box-sizing: border-box;
   }
 
   .card-container:not(.framed-wood) {
     border: 1px solid var(--color-border, #e5e7eb);
     border-radius: var(--radius-xl, 20px);
     box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .card-container.framed-wood {
+    margin-top: 14px;
+    margin-bottom: 36px;
   }
 }
 
