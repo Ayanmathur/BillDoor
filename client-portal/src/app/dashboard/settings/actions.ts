@@ -78,7 +78,7 @@ export async function fetchSettingsAction() {
       },
       loyaltyConfig: client.loyalty_config || null,
       framedCardEnabled: client.framed_card_enabled === true,
-      cardFrameStyle: ((client.bill_settings as any)?.card_frame_style as string) || 'plain',
+      cardFrameStyle: ((client.bill_settings as any)?.card_frame_style as string) || (client.framed_card_enabled ? 'framed' : 'plain'),
     },
   };
 }

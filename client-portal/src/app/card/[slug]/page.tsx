@@ -103,7 +103,7 @@ END:VCARD`;
   };
 
   const billSettings = (client as any).bill_settings as Record<string, any> | null;
-  const isFramed = (client as any).framed_card_enabled === true && billSettings?.card_frame_style === 'framed';
+  const isFramed = (client as any).framed_card_enabled === true && billSettings?.card_frame_style !== 'plain';
 
   return (
     <div className="card-page" style={{ position: 'relative' }}>

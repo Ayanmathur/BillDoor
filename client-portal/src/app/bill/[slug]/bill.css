@@ -42,7 +42,8 @@
   max-width: 440px; /* 80mm receipt preview width */
 }
 
-.bill-container.size-a4 {
+.bill-container.size-a4,
+.bill-container.size-A4 {
   max-width: 780px; /* A4 document preview width */
 }
 

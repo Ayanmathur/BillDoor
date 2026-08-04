@@ -139,7 +139,7 @@ export default function BillPageClient({
 
   return (
     <div className="bill-page">
-      <div className={`bill-container size-${client.default_bill_size || '55mm'}`} style={{ position: 'relative', overflow: 'hidden' }}>
+      <div className={`bill-container size-${billSettings.default_bill_size || '55mm'}`} style={{ position: 'relative', overflow: 'hidden' }}>
         {status === 'voided' && (
           <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%) rotate(-30deg)', color: 'rgba(220, 38, 38, 0.15)', fontSize: '5rem', fontWeight: 900, pointerEvents: 'none', zIndex: 10, textAlign: 'center', lineHeight: 1 }}>
             VOIDED
