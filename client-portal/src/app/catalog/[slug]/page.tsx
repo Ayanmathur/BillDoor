@@ -4,12 +4,41 @@
 // Want more? "Request from Orbitex Services" footer handles that upsell.
 
 import { useState, useEffect, useMemo, use } from 'react';
-import { Search, MessageCircle, Loader2, Package, Check, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  Search, MessageCircle, Loader2, Package, Check, ChevronDown, ChevronRight,
+  Receipt, Star as StarIcon, CalendarClock, Store, Cake, Scissors, Stethoscope, GraduationCap, Building2, Utensils, Heart
+} from 'lucide-react';
 import PoweredByFooter from '@/components/powered-by-footer';
 import { fuzzyMatch } from '@/shared/fuzzy-search';
 import { fetchCatalogAction } from './actions';
 import { formatWhatsAppPhone } from '@/shared/validation';
 import './catalog.css';
+
+function CatalogBackground() {
+  const icons = [Receipt, StarIcon, CalendarClock, Store, Cake, Scissors, Stethoscope, GraduationCap, Building2, Utensils, Heart];
+  const pattern = Array.from({ length: 40 }).map((_, i) => {
+    const Icon = icons[i % icons.length];
+    const top = `${((i * 17) % 100)}%`;
+    const left = `${((i * 23) % 100)}%`;
+    const size = 24 + ((i * 7) % 24);
+    const opacity = 0.03 + (((i * 3) % 5) * 0.01);
+    const rotation = ((i * 45) % 360);
+    return (
+      <div key={i} style={{ position: 'absolute', top, left, opacity, transform: `rotate(${rotation}deg)` }}>
+        <Icon size={size} color="currentColor" />
+      </div>
+    );
+  });
+
+  return (
+    <div className="login-background-pattern" style={{
+      position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0,
+      color: 'var(--color-text-primary)'
+    }}>
+      {pattern}
+    </div>
+  );
+}
 
 interface CatalogItem {
   name: string;
@@ -159,8 +188,9 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
   }
 
   return (
-    <div className="catalog-page">
-      <div className="catalog-container">
+    <div className="catalog-page" style={{ position: 'relative' }}>
+      <CatalogBackground />
+      <div className="catalog-container" style={{ position: 'relative', zIndex: 10 }}>
         <div className="catalog-header">
           {data.business.logo_url && (
             <img

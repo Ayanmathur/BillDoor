@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import {
   Building2, Hash, Globe, Gift, Lock, AlertTriangle, Save, Loader2,
   Instagram, Facebook, ExternalLink, MapPin, Check, Trophy,
-  Upload, User, Trash2, Image, Linkedin, Twitter, MessageCircle, Monitor
+  Upload, User, Trash2, Image, Linkedin, Twitter, MessageCircle, Monitor, SlidersHorizontal
 } from 'lucide-react';
 import {
   fetchSettingsAction,
@@ -25,6 +25,7 @@ import {
   uploadLogoAction,
   deleteAccountAction,
   updatePosSettingsAction,
+  updateCardFrameStyleAction,
 } from './actions';
 
 type SettingsTab = 'business' | 'gst' | 'socials' | 'rewards' | 'pos' | 'account';
@@ -35,6 +36,9 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+
+  const [framedCardEnabled, setFramedCardEnabled] = useState(false);
+  const [cardFrameStyle, setCardFrameStyle] = useState<'plain' | 'framed'>('plain');
 
   // Settings state
   const [businessName, setBusinessName] = useState('');
@@ -148,6 +152,8 @@ export default function SettingsPage() {
         setUsername(s.username || '');
         setNewUsername(s.username || '');
         setLogoUrl(s.logoUrl || '');
+        setFramedCardEnabled(s.framedCardEnabled ?? false);
+        setCardFrameStyle(s.cardFrameStyle || 'plain');
       }
       setLoading(false);
     }
@@ -371,6 +377,65 @@ export default function SettingsPage() {
               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 2 }}>Web link (e.g. Google Maps link) attached to the display address when clicked by customers.</span>
             </div>
           </div>
+
+          {/* Digital Business Card Frame Style */}
+          {framedCardEnabled && (
+            <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)' }}>
+              <label className="input-label" style={{ marginBottom: 'var(--space-2)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                <SlidersHorizontal size={14} /> Digital Business Card Frame Style
+              </label>
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-3)' }}>
+                Choose how your Digital Business Card container appears to customers (`/card/${slug}`).
+              </p>
+              <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+                <label style={{
+                  display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer',
+                  padding: 'var(--space-3)', background: cardFrameStyle === 'plain' ? 'var(--color-accent-subtle)' : 'var(--color-bg-primary)',
+                  border: `1px solid ${cardFrameStyle === 'plain' ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                  borderRadius: 'var(--radius-md)', flex: '1 1 180px'
+                }}>
+                  <input
+                    type="radio"
+                    name="cardFrameStyle"
+                    value="plain"
+                    checked={cardFrameStyle === 'plain'}
+                    onChange={async () => {
+                      setCardFrameStyle('plain');
+                      await updateCardFrameStyleAction('plain');
+                      flash();
+                    }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-sm)' }}>Plain (Default)</div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2 }}>Minimalist container with subtle border.</div>
+                  </div>
+                </label>
+
+                <label style={{
+                  display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer',
+                  padding: 'var(--space-3)', background: cardFrameStyle === 'framed' ? 'var(--color-accent-subtle)' : 'var(--color-bg-primary)',
+                  border: `1px solid ${cardFrameStyle === 'framed' ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                  borderRadius: 'var(--radius-md)', flex: '1 1 180px'
+                }}>
+                  <input
+                    type="radio"
+                    name="cardFrameStyle"
+                    value="framed"
+                    checked={cardFrameStyle === 'framed'}
+                    onChange={async () => {
+                      setCardFrameStyle('framed');
+                      await updateCardFrameStyleAction('framed');
+                      flash();
+                    }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-sm)' }}>Warm Wood Frame</div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2 }}>Flat warm walnut border with miter corner accents.</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
 
           {/* Logo Upload */}
           <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)' }}>

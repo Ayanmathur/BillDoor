@@ -116,10 +116,12 @@ END:VCARD`;
     URL.revokeObjectURL(url);
   };
 
+  const isFramed = client.framed_card_enabled === true && (client.bill_settings as any)?.card_frame_style === 'framed';
+
   return (
     <div className="card-page" style={{ position: 'relative' }}>
       <CardBackground />
-      <div className="card-container" style={{ position: 'relative', zIndex: 10 }}>
+      <div className={`card-container ${isFramed ? 'framed-wood' : ''}`} style={{ position: 'relative', zIndex: 10 }}>
         <div className="card-header">
           {client.logo_url ? (
             <img src={client.logo_url} alt={client.business_name} className="card-logo" />

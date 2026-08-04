@@ -25,6 +25,24 @@
   box-sizing: border-box;
 }
 
+/* Warm Wood Frame Option for Business Card */
+.card-container.framed-wood {
+  border: 11px solid #8B6544; /* Flat warm walnut/tan border */
+  border-radius: var(--radius-xl, 20px);
+  position: relative;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.22), 0 4px 10px -2px rgba(0, 0, 0, 0.08);
+}
+
+.card-container.framed-wood::before {
+  content: '';
+  position: absolute;
+  inset: -11px;
+  border: 1px solid #5C4033; /* Darker walnut inner miter accent line */
+  border-radius: var(--radius-xl, 20px);
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* Mobile View: Enclose into physical card ratio with elegant border & shadow */
 @media (max-width: 640px) {
   .card-page {

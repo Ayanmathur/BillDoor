@@ -27,6 +27,7 @@ import {
   toggleClientStatusAction,
   toggleModulesAction,
   toggleQuickToolsAction,
+  toggleFramedCardAccessAction,
   toggleSubscriptionHoldAction,
   toggleDirectoryAccessAction,
   resetClientUsernameAction,
@@ -55,6 +56,7 @@ type Client = {
   subscription_hold_enabled?: boolean;
   directory_access_enabled?: boolean;
   publicly_listed?: boolean;
+  framed_card_enabled?: boolean;
 };
 
 type Inquiry = {
@@ -1212,6 +1214,47 @@ export default function AdminDashboard() {
                         </tr>
                       );
                     })}
+                    <tr style={{ background: 'var(--color-bg-secondary)' }}>
+                      <td>
+                        <span className="badge" style={{
+                          background: client.framed_card_enabled ? 'var(--color-accent-subtle)' : 'var(--color-bg-tertiary)',
+                          color: client.framed_card_enabled ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+                          fontWeight: 'var(--weight-bold)',
+                          padding: '2px 6px',
+                        }}>
+                          FWC
+                        </span>
+                      </td>
+                      <td>
+                        <strong>Framed Wood Business Card Access</strong>
+                      </td>
+                      <td>
+                        <span className="badge" style={{ background: 'var(--color-accent-subtle)', color: 'var(--color-accent)', fontSize: '10px' }}>
+                          Card Style
+                        </span>
+                      </td>
+                      <td style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+                        Grants permission to use flat wood-frame border treatment on Digital Business Card
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <label className="module-toggle" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <input
+                            type="checkbox"
+                            checked={client.framed_card_enabled === true}
+                            disabled={actionLoading === client.id}
+                            onChange={async () => {
+                              setActionLoading(client.id);
+                              await toggleFramedCardAccessAction({ clientId: client.id, enabled: !client.framed_card_enabled });
+                              await loadData();
+                              setActionLoading(null);
+                            }}
+                          />
+                          <span style={{ fontSize: 'var(--text-xs)', fontWeight: client.framed_card_enabled ? 600 : 400, color: client.framed_card_enabled ? 'var(--color-success)' : 'var(--color-text-tertiary)' }}>
+                            {client.framed_card_enabled ? 'Granted' : 'Disabled'}
+                          </span>
+                        </label>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
