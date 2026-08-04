@@ -203,9 +203,22 @@ Reply with ONLY the review text, no quotes, no explanation.`;
     return list[Math.floor(Math.random() * list.length)];
   };
 
+  // Tier 1: Pre-Generated 5-Slot Rolling Buffer (Instant 0ms Response with Background Replenishment)
+  const pregeneratedDraft = await getAndConsumePreGeneratedReview(
+    data.clientId,
+    data.businessName,
+    data.businessType,
+    data.about,
+    data.previousDrafts
+  );
+
+  if (pregeneratedDraft) {
+    return { draft: pregeneratedDraft };
+  }
+
   let draftText = '';
 
-  // Tier 1: Gemini API (gemini-2.0-flash, gemini-1.5-flash, gemini-flash-latest)
+  // Tier 2: Gemini API (gemini-2.0-flash, gemini-1.5-flash, gemini-flash-latest)
   const geminiKey = process.env.GEMINI_API_KEY;
   if (geminiKey) {
     const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
@@ -239,7 +252,7 @@ Reply with ONLY the review text, no quotes, no explanation.`;
     }
   }
 
-  // Tier 2: OpenRouter API (openai/gpt-4o-mini)
+  // Tier 3: OpenRouter API (openai/gpt-4o-mini)
   const openrouterKey = process.env.OPENROUTER_API_KEY;
   if (!draftText && openrouterKey) {
     try {
@@ -267,7 +280,7 @@ Reply with ONLY the review text, no quotes, no explanation.`;
     }
   }
 
-  // Tier 3: Groq API (llama-3.3-70b-versatile, llama-3.1-8b-instant)
+  // Tier 4: Groq API (llama-3.3-70b-versatile, llama-3.1-8b-instant)
   const groqKey = process.env.GROQ_API_KEY;
   if (!draftText && groqKey) {
     const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
@@ -306,25 +319,12 @@ Reply with ONLY the review text, no quotes, no explanation.`;
     return { draft: cleanedDraft };
   }
 
-  // Tier 4: Pre-Generated 5-Slot Rolling Buffer (Instant 0ms Fallback with Background Overwrite Replenishment)
-  const pregeneratedDraft = await getAndConsumePreGeneratedReview(
-    data.clientId,
-    data.businessName,
-    data.businessType,
-    data.about,
-    data.previousDrafts
-  );
-
-  if (pregeneratedDraft) {
-    return { draft: pregeneratedDraft };
-  }
-
   // Tier 5: Smart Business-Aware Template Fallback
   return { draft: getFallback() };
 }
 
 /**
- * Tier 4 Helper: Fetch and consume 1 review from client's 5-slot pregenerated buffer in DB,
+ * Tier 1 Helper: Fetch and consume 1 review from client's 5-slot pregenerated buffer in DB,
  * and asynchronously trigger background replacement to overwrite the consumed slot.
  */
 async function getAndConsumePreGeneratedReview(
@@ -371,7 +371,7 @@ async function getAndConsumePreGeneratedReview(
       return selectedDraft;
     }
   } catch (err) {
-    console.error('Tier 4 pregenerated buffer error:', err);
+    console.error('Tier 1 pregenerated buffer error:', err);
   }
 
   return null;
@@ -393,10 +393,11 @@ async function replenishSingleReviewSlot(
     const isFoodOrDelivery = /tiffin|food|mess|catering|kitchen|meal|delivery|canteen|restaurant|dhaba|bento/i.test(`${businessName} ${businessType || ''} ${about || ''}`);
     const isSalonOrSpa = /salon|spa|hair|beauty|parlor|barber/i.test(`${businessName} ${businessType || ''} ${about || ''}`);
 
-    const prompt = `Generate 1 short, highly authentic 5-star Google review (2-3 sentences) for ${businessName} (${businessType || 'business'}).
-${about ? `About: ${about}` : ''}
-${isFoodOrDelivery ? 'Focus on food taste, home-cooked freshness, hygienic packaging, or timely delivery.' : ''}
+    const prompt = `Write a full, detailed, and highly authentic 5-star Google review (at least 3 complete sentences and 40 words) for ${businessName} (${businessType || 'business'}).
+${about ? `About Business Offerings: ${about}` : ''}
+${isFoodOrDelivery ? 'Focus on delicious food taste, home-cooked freshness, hygienic packaging, and timely delivery.' : ''}
 ${isSalonOrSpa ? 'Focus on skilled staff, clean environment, relaxed atmosphere, and great service.' : ''}
+Make it sound like a real, enthusiastic customer.
 Do NOT repeat any of these existing reviews: ${currentBuffer.join(' | ')}.
 Reply with ONLY the review text, no quotes or explanation.`;
 
