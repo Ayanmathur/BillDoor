@@ -11,6 +11,18 @@ import { fetchCatalogAction } from './actions';
 import { formatWhatsAppPhone } from '@/shared/validation';
 import './catalog.css';
 
+function BackgroundPattern() {
+  return (
+    <div className="login-background-pattern" style={{
+      position: 'absolute', inset: 0, zIndex: 0,
+      backgroundImage: 'radial-gradient(var(--color-border) 1px, transparent 1px)',
+      backgroundSize: '24px 24px',
+      opacity: 0.5,
+      pointerEvents: 'none'
+    }} />
+  );
+}
+
 interface CatalogItem {
   name: string;
   price: number;
@@ -159,8 +171,9 @@ export default function CatalogPage({ params }: { params: Promise<{ slug: string
   }
 
   return (
-    <div className="catalog-page">
-      <div className="catalog-container">
+    <div className="catalog-page" style={{ position: 'relative' }}>
+      <BackgroundPattern />
+      <div className="catalog-container" style={{ position: 'relative', zIndex: 10 }}>
         <div className="catalog-header">
           {data.business.logo_url && (
             <img

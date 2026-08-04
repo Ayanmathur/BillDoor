@@ -162,3 +162,42 @@ export async function clearDefaultTemplateAction(
   if (error) return { error: 'Failed to clear default.' };
   return { success: true };
 }
+
+// ---- Seed 4 Default Templates ----
+export async function seedDefaultBillTemplatesAction() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized.' };
+
+  const defaultTemplates = [
+    {
+      name: 'Bill + Feedback (Recommended)',
+      content: 'Hello {customer_name},\n\nThank you for visiting {business_name}!\nYour total bill amount is ₹{grand_total}.\nBill Number: {bill_number}\n\nView your detailed digital bill here:\n{bill_link}\n\nWe would love to hear your feedback:\n{review_link}\n\nHave a great day!'
+    },
+    {
+      name: 'Bill + Digital Business Card',
+      content: 'Hello {customer_name},\n\nThank you for visiting {business_name}!\nYour total bill amount is ₹{grand_total}.\nBill Number: {bill_number}\n\nView your detailed digital bill here:\n{bill_link}\n\nSave our Digital Business Card for future reference:\n{business_card_link}\n\nHave a great day!'
+    },
+    {
+      name: 'Bill + Digital Catalog',
+      content: 'Hello {customer_name},\n\nThank you for visiting {business_name}!\nYour total bill amount is ₹{grand_total}.\nBill Number: {bill_number}\n\nView your detailed digital bill here:\n{bill_link}\n\nCheck out our latest offerings in our Digital Catalog:\n{catalog_link}\n\nHave a great day!'
+    },
+    {
+      name: 'Bill + Appointment Booking',
+      content: 'Hello {customer_name},\n\nThank you for visiting {business_name}!\nYour total bill amount is ₹{grand_total}.\nBill Number: {bill_number}\n\nView your detailed digital bill here:\n{bill_link}\n\nBook your next appointment with us easily online:\n{appointment_link}\n\nHave a great day!'
+    }
+  ];
+
+  const inserts = defaultTemplates.map(t => ({
+    client_id: user.id,
+    name: t.name,
+    content: t.content
+  }));
+
+  const { error } = await supabase
+    .from('whatsapp_bill_templates')
+    .insert(inserts);
+
+  if (error) return { error: 'Failed to seed default templates.' };
+  return { success: true };
+}

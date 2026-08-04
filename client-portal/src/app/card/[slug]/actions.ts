@@ -15,7 +15,7 @@ export async function fetchBusinessCardAction(slug: string) {
 
   const { data: client } = await supabase
     .from('clients')
-    .select('id, business_name, slug, owner_name, about, address, address_url, phone, logo_url, status, modules_enabled, appointer_config, instagram_url, facebook_url, website_url, linkedin_url, x_url, whatsapp_url, bill_settings, framed_card_enabled')
+    .select('id, business_name, slug, owner_name, about, address, address_url, phone, logo_url, status, modules_enabled, appointer_config, instagram_url, facebook_url, website_url, linkedin_url, x_url, whatsapp_url')
     .eq('slug', slug)
     .single();
 

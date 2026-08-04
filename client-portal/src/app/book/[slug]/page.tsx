@@ -20,6 +20,18 @@ import {
 import PoweredByFooter from '@/components/powered-by-footer';
 import './booking.css';
 
+function BackgroundPattern() {
+  return (
+    <div className="login-background-pattern" style={{
+      position: 'absolute', inset: 0, zIndex: 0,
+      backgroundImage: 'radial-gradient(var(--color-border) 1px, transparent 1px)',
+      backgroundSize: '24px 24px',
+      opacity: 0.5,
+      pointerEvents: 'none'
+    }} />
+  );
+}
+
 interface Service {
   id: string;
   name: string;
@@ -189,8 +201,9 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
   // Loading state
   if (loading) {
     return (
-      <div className="booking-page">
-        <div className="booking-container">
+      <div className="booking-page" style={{ position: 'relative' }}>
+        <BackgroundPattern />
+        <div className="booking-container" style={{ position: 'relative', zIndex: 10 }}>
           <div className="booking-loading">
             <Loader2 size={20} className="spin" />
             Loading...
@@ -203,8 +216,9 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
   // Not found
   if (notFound) {
     return (
-      <div className="booking-page">
-        <div className="booking-container">
+      <div className="booking-page" style={{ position: 'relative' }}>
+        <BackgroundPattern />
+        <div className="booking-container" style={{ position: 'relative', zIndex: 10 }}>
           <div className="booking-not-found">
             <MapPin size={40} />
             <h2>Business Not Found</h2>
@@ -218,8 +232,9 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
   // Success state
   if (success) {
     return (
-      <div className="booking-page">
-        <div className="booking-container">
+      <div className="booking-page" style={{ position: 'relative' }}>
+        <BackgroundPattern />
+        <div className="booking-container" style={{ position: 'relative', zIndex: 10 }}>
           <div className="booking-header">
             <h1>{businessName}</h1>
           </div>
@@ -252,8 +267,9 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
   const maxDate = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
 
   return (
-    <div className="booking-page">
-      <div className="booking-container">
+    <div className="booking-page" style={{ position: 'relative' }}>
+      <BackgroundPattern />
+      <div className="booking-container" style={{ position: 'relative', zIndex: 10 }}>
         {/* Header */}
         <div className="booking-header">
           {logoUrl && (

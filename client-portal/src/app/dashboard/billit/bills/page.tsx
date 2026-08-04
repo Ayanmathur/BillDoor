@@ -165,6 +165,8 @@ export default function BillsPage() {
     const billUrl = `${origin}/bill/${bill.billSlug}`;
     const reviewLink = clientSlug ? `${origin}/review/${clientSlug}` : '';
     const appointmentLink = (appointerEnabled && clientSlug) ? `${origin}/book/${clientSlug}` : '';
+    const catalogLink = clientSlug ? `${origin}/catalog/${clientSlug}` : '';
+    const cardLink = clientSlug ? `${origin}/card/${clientSlug}` : '';
 
     let message = clientTemplate || `Hi {customer_name}, here is your bill from {business_name}.\nAmount: ₹{grand_total}.\nView Bill:\n{bill_link}.\n\nYour support means the world to us! ❤️\n\nWe'd love your feedback\nPlease review us here:\n{review_link}\n\nThankYou!`;
 
@@ -174,7 +176,9 @@ export default function BillsPage() {
       .replace(/\{bill_link\}/g, billUrl)
       .replace(/\{bill_number\}/g, bill.billNumber || '')
       .replace(/\{grand_total\}/g, Number(bill.grandTotal || 0).toLocaleString('en-IN'))
-      .replace(/\{review_link\}/g, reviewLink);
+      .replace(/\{review_link\}/g, reviewLink)
+      .replace(/\{catalog_link\}/g, catalogLink)
+      .replace(/\{business_card_link\}/g, cardLink);
 
     if (appointmentLink) {
       message = message.replace(/\{appointment_link\}/g, appointmentLink);

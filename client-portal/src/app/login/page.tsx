@@ -19,31 +19,15 @@ import { loginAction } from './actions';
 import { submitInquiryAction, getAdminWhatsAppUrlAction } from './inquiry-action';
 import './login.css';
 
-// Minimal, elegant background pattern of abstract business icons
 function LoginBackground() {
-  const icons = [Receipt, Star, CalendarClock, Store, Cake, Scissors, Stethoscope, GraduationCap, Building2, Utensils, Heart];
-  // Generate a fixed pattern so it doesn't flicker on rehydration
-  const pattern = Array.from({ length: 40 }).map((_, i) => {
-    const Icon = icons[i % icons.length];
-    const top = `${((i * 17) % 100)}%`;
-    const left = `${((i * 23) % 100)}%`;
-    const size = 24 + ((i * 7) % 24);
-    const opacity = 0.03 + (((i * 3) % 5) * 0.01);
-    const rotation = ((i * 45) % 360);
-    return (
-      <div key={i} style={{ position: 'absolute', top, left, opacity, transform: `rotate(${rotation}deg)` }}>
-        <Icon size={size} color="currentColor" />
-      </div>
-    );
-  });
-
   return (
     <div className="login-background-pattern" style={{
-      position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0,
-      color: 'var(--color-text-primary)'
-    }}>
-      {pattern}
-    </div>
+      position: 'absolute', inset: 0, zIndex: 0,
+      backgroundImage: 'radial-gradient(var(--color-border) 1px, transparent 1px)',
+      backgroundSize: '24px 24px',
+      opacity: 0.5,
+      pointerEvents: 'none'
+    }} />
   );
 }
 

@@ -77,32 +77,8 @@ export async function fetchSettingsAction() {
         },
       },
       loyaltyConfig: client.loyalty_config || null,
-      framedCardEnabled: client.framed_card_enabled === true,
-      cardFrameStyle: (client.bill_settings as any)?.card_frame_style || 'plain',
     },
   };
-}
-
-// ============================================================
-// Update Card Frame Style (Plain vs Framed Wood)
-// ============================================================
-export async function updateCardFrameStyleAction(cardFrameStyle: 'plain' | 'framed') {
-  const { supabase, client, user, error } = await getAuthenticatedClient();
-  if (error || !client || !user) return { error: error || 'Unauthorized.' };
-
-  const currentBillSettings = (client.bill_settings || {}) as Record<string, any>;
-  const updatedBillSettings = {
-    ...currentBillSettings,
-    card_frame_style: cardFrameStyle,
-  };
-
-  const { error: updateErr } = await supabase
-    .from('clients')
-    .update({ bill_settings: updatedBillSettings })
-    .eq('id', user.id);
-
-  if (updateErr) return { error: 'Failed to update card frame style.' };
-  return { success: true };
 }
 
 // ============================================================

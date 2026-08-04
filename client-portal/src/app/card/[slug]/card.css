@@ -25,81 +25,22 @@
   box-sizing: border-box;
 }
 
-/* Authentic Warm Wood Frame Option for Business Card */
-.card-container.framed-wood {
-  position: relative;
-  border-radius: var(--radius-xl, 20px);
-  border: 14px solid #85532b; /* Warm rich teak/walnut core */
-  box-shadow:
-    0 0 0 2px #4a2d15, /* Outer dark wood edge */
-    inset 0 0 0 2px #b07a48, /* Light inner wood bevel highlight */
-    inset 0 0 0 4px #3d230e, /* Dark inner rabbet groove shadow */
-    0 16px 38px -8px rgba(35, 18, 5, 0.38), 0 6px 14px -2px rgba(0, 0, 0, 0.12); /* Deep warm frame drop shadow */
-}
-
-/* 45-Degree Corner Miter Joinery Cut Lines */
-.card-container.framed-wood::before {
-  content: '';
-  position: absolute;
-  inset: -14px;
-  border-radius: calc(var(--radius-xl, 20px) + 2px);
-  pointer-events: none;
-  z-index: 12;
-  background:
-    linear-gradient(135deg, transparent 47%, rgba(40, 20, 5, 0.45) 50%, transparent 53%) 0 0 / 30px 30px no-repeat,
-    linear-gradient(45deg, transparent 47%, rgba(40, 20, 5, 0.45) 50%, transparent 53%) 100% 0 / 30px 30px no-repeat,
-    linear-gradient(45deg, transparent 47%, rgba(40, 20, 5, 0.45) 50%, transparent 53%) 0 100% / 30px 30px no-repeat,
-    linear-gradient(135deg, transparent 47%, rgba(40, 20, 5, 0.45) 50%, transparent 53%) 100% 100% / 30px 30px no-repeat;
-}
-
-/* Subtle Natural Wood Grain Micro-Pattern */
-.card-container.framed-wood::after {
-  content: '';
-  position: absolute;
-  inset: -14px;
-  border-radius: calc(var(--radius-xl, 20px) + 2px);
-  pointer-events: none;
-  z-index: 11;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: repeating-linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.04) 0px,
-    rgba(255, 255, 255, 0.04) 2px,
-    transparent 2px,
-    transparent 6px,
-    rgba(40, 20, 5, 0.06) 6px,
-    rgba(40, 20, 5, 0.06) 8px,
-    transparent 8px,
-    transparent 14px
-  );
-}
-
 /* Mobile View: Enclose into physical card ratio with elegant border & shadow */
 @media (max-width: 640px) {
   .card-page {
-    padding: var(--space-4) var(--space-4);
-    overflow-x: hidden;
+    padding: var(--space-3) var(--space-2);
   }
 
   .card-container {
-    width: calc(100% - 28px);
-    max-width: 360px;
+    width: calc(100% - 16px);
+    max-width: 380px;
     margin: var(--space-2) auto var(--space-6);
     padding: var(--space-5, 20px) var(--space-4, 16px) var(--space-6, 24px);
-    background: var(--color-bg-elevated, #ffffff);
-    flex: initial;
-    box-sizing: border-box;
-  }
-
-  .card-container:not(.framed-wood) {
     border: 1px solid var(--color-border, #e5e7eb);
     border-radius: var(--radius-xl, 20px);
+    background: var(--color-bg-elevated, #ffffff);
     box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.05);
-  }
-
-  .card-container.framed-wood {
-    margin-top: 14px;
-    margin-bottom: 36px;
+    flex: initial;
   }
 }
 

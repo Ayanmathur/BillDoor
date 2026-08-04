@@ -12,6 +12,7 @@ import {
   updateBillTemplateAction,
   deleteBillTemplateAction,
   setDefaultTemplateAction,
+  seedDefaultBillTemplatesAction,
 } from './actions';
 import '../../../whatsapp/whatsapp.css';
 
@@ -32,6 +33,8 @@ const AVAILABLE_VARS = [
   { key: '{grand_total}', desc: 'Total bill amount' },
   { key: '{review_link}', desc: 'Link to leave a review' },
   { key: '{appointment_link}', desc: 'Link to book an appointment' },
+  { key: '{catalog_link}', desc: 'Link to your digital catalog' },
+  { key: '{business_card_link}', desc: 'Link to your digital business card' },
 ];
 
 export default function BillTemplatesPage() {
@@ -103,6 +106,13 @@ export default function BillTemplatesPage() {
     await loadTemplates();
   }
 
+  async function handleSeedDefaults() {
+    setSaving(true);
+    await seedDefaultBillTemplatesAction();
+    await loadTemplates();
+    setSaving(false);
+  }
+
   return (
     <div style={{ maxWidth: 700 }}>
       {/* Back */}
@@ -128,9 +138,15 @@ export default function BillTemplatesPage() {
             Manage templates for bill WhatsApp messages. Set defaults for first-visit and repeat customers.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => { resetForm(); setShowForm(true); }}>
-          <Plus size={16} /> New Template
-        </button>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <button className="btn btn-secondary" onClick={handleSeedDefaults} disabled={saving}>
+            {saving ? <Loader2 size={16} className="spin" /> : <Plus size={16} />}
+            Add 4 Default Templates
+          </button>
+          <button className="btn btn-primary" onClick={() => { resetForm(); setShowForm(true); }}>
+            <Plus size={16} /> New Template
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -209,6 +225,8 @@ export default function BillTemplatesPage() {
                   .replace(/\{grand_total\}/g, '1,500')
                   .replace(/\{review_link\}/g, 'https://example.com/review/...')
                   .replace(/\{appointment_link\}/g, 'https://example.com/book/...')
+                  .replace(/\{catalog_link\}/g, 'https://example.com/catalog/...')
+                  .replace(/\{business_card_link\}/g, 'https://example.com/card/...')
                 }
               </div>
             </div>

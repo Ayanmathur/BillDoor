@@ -151,43 +151,13 @@ export async function fetchClientsAction() {
 
   const { data, error } = await supabase
     .from('clients')
-    .select('id, business_name, username, slug, phone, status, modules_enabled, registered_at, valid_till, deleted_at, subscription_hold_enabled, directory_access_enabled, publicly_listed, framed_card_enabled')
+    .select('id, business_name, username, slug, phone, status, modules_enabled, registered_at, valid_till, deleted_at, subscription_hold_enabled, directory_access_enabled, publicly_listed')
     .is('deleted_at', null)
     .order('registered_at', { ascending: false })
     .limit(200);
 
   if (error) return { error: 'Failed to fetch clients.', clients: [] };
   return { clients: data || [] };
-}
-
-/**
- * Toggle Framed Business Card Access for a client.
- */
-export async function toggleFramedCardAccessAction(data: {
-  clientId: string;
-  enabled: boolean;
-}) {
-  const supabase = await createAdminClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.user_metadata?.role || user.user_metadata.role !== 'admin') {
-    return { error: 'Unauthorized.' };
-  }
-
-  const { error } = await supabase
-    .from('clients')
-    .update({ framed_card_enabled: data.enabled })
-    .eq('id', data.clientId);
-
-  if (error) return { error: 'Failed to update framed card access.' };
-
-  await logAuditEvent(supabase, {
-    actorType: 'admin', actorId: user.id,
-    action: AUDIT_ACTIONS.CLIENT_MODULES_TOGGLED,
-    target: data.clientId,
-    metadata: { framed_card_enabled: data.enabled },
-  });
-
-  return {};
 }
 
 /**
