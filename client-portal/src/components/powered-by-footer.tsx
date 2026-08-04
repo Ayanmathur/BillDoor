@@ -13,7 +13,7 @@ export default function PoweredByFooter() {
       <p className="powered-footer-text">
         Powered by{' '}
         <a
-          href="https://orbitex.in"
+          href="https://orbitex-orbitex.vercel.app/"
           target="_blank"
           rel="noopener noreferrer"
           className="powered-footer-link"

@@ -389,7 +389,7 @@ export default function ServicesPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <a href="https://orbitex.in" target="_blank" rel="noopener noreferrer" className="btn" style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <a href="https://orbitex-orbitex.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn" style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <Globe size={14} /> orbitex.in <ExternalLink size={12} />
           </a>
           {directoryAccessEnabled && (
