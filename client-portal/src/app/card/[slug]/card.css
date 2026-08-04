@@ -85,11 +85,14 @@
     max-width: 380px;
     margin: var(--space-2) auto var(--space-6);
     padding: var(--space-5, 20px) var(--space-4, 16px) var(--space-6, 24px);
+    background: var(--color-bg-elevated, #ffffff);
+    flex: initial;
+  }
+
+  .card-container:not(.framed-wood) {
     border: 1px solid var(--color-border, #e5e7eb);
     border-radius: var(--radius-xl, 20px);
-    background: var(--color-bg-elevated, #ffffff);
     box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.05);
-    flex: initial;
   }
 }
 

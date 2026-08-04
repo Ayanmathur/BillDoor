@@ -116,7 +116,7 @@ END:VCARD`;
     URL.revokeObjectURL(url);
   };
 
-  const isFramed = client.framed_card_enabled === true && (client.bill_settings as any)?.card_frame_style === 'framed';
+  const isFramed = (client.bill_settings as any)?.card_frame_style === 'framed';
 
   return (
     <div className="card-page" style={{ position: 'relative' }}>
