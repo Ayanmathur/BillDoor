@@ -177,6 +177,7 @@ export async function fetchReviewFlowSettingsAction() {
     settings: {
       connectWithClient: rs.connect_with_client_enabled !== false, // default true
       whatsappContact: rs.whatsapp_contact_enabled !== false, // default true
+      directGoogleReview: rs.direct_google_review_enabled === true, // default false
       customResolutionText: rs.custom_resolution_text || '',
       hasWhatsappUrl: !!client.whatsapp_url,
     },
@@ -189,6 +190,7 @@ export async function fetchReviewFlowSettingsAction() {
 export async function updateReviewFlowSettingsAction(data: {
   connectWithClient: boolean;
   whatsappContact: boolean;
+  directGoogleReview?: boolean;
   customResolutionText: string;
 }) {
   const supabase = await createClient();
@@ -208,6 +210,7 @@ export async function updateReviewFlowSettingsAction(data: {
     ...currentRs,
     connect_with_client_enabled: data.connectWithClient,
     whatsapp_contact_enabled: data.whatsappContact,
+    direct_google_review_enabled: data.directGoogleReview === true,
     custom_resolution_text: data.customResolutionText.trim(),
   };
 

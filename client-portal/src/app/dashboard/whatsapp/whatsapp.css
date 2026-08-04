@@ -424,4 +424,14 @@
   .wa-step-line {
     width: 20px;
   }
+
+  .wa-template-header {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .wa-template-preview {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
 }

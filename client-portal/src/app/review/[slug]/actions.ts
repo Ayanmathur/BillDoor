@@ -203,58 +203,11 @@ Reply with ONLY the review text, no quotes, no explanation.`;
     return list[Math.floor(Math.random() * list.length)];
   };
 
-  // Tier 1: Pre-Generated 5-Slot Rolling Buffer (Instant 0ms Response with Background Replenishment)
-  const pregeneratedDraft = await getAndConsumePreGeneratedReview(
-    data.clientId,
-    data.businessName,
-    data.businessType,
-    data.about,
-    data.previousDrafts
-  );
-
-  if (pregeneratedDraft) {
-    return { draft: pregeneratedDraft };
-  }
-
   let draftText = '';
 
-  // Tier 2: Gemini API (gemini-2.0-flash, gemini-1.5-flash, gemini-flash-latest)
-  const geminiKey = process.env.GEMINI_API_KEY;
-  if (geminiKey) {
-    const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
-    for (const model of geminiModels) {
-      try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 400,
-              },
-            }),
-          }
-        );
-        if (response.ok) {
-          const resJson = await response.json();
-          const text = resJson.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-          if (text) {
-            draftText = text;
-            break;
-          }
-        }
-      } catch (e) {
-        // Continue to next model or tier
-      }
-    }
-  }
-
-  // Tier 3: OpenRouter API (openai/gpt-4o-mini)
+  // Tier 1: OpenRouter API (openai/gpt-4o-mini)
   const openrouterKey = process.env.OPENROUTER_API_KEY;
-  if (!draftText && openrouterKey) {
+  if (openrouterKey) {
     try {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -280,7 +233,7 @@ Reply with ONLY the review text, no quotes, no explanation.`;
     }
   }
 
-  // Tier 4: Groq API (llama-3.3-70b-versatile, llama-3.1-8b-instant)
+  // Tier 2: Groq API (llama-3.3-70b-versatile, llama-3.1-8b-instant)
   const groqKey = process.env.GROQ_API_KEY;
   if (!draftText && groqKey) {
     const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
@@ -314,7 +267,58 @@ Reply with ONLY the review text, no quotes, no explanation.`;
   }
 
   if (draftText) {
-    // Clean up surrounding quotes
+    const cleanedDraft = draftText.replace(/^["']|["']$/g, '').trim();
+    return { draft: cleanedDraft };
+  }
+
+  // Tier 3: Pre-Generated 5-Slot Rolling Buffer (Saved 5 Reviews)
+  const pregeneratedDraft = await getAndConsumePreGeneratedReview(
+    data.clientId,
+    data.businessName,
+    data.businessType,
+    data.about,
+    data.previousDrafts
+  );
+
+  if (pregeneratedDraft) {
+    return { draft: pregeneratedDraft };
+  }
+
+  // Tier 4: Gemini API (gemini-2.0-flash, gemini-1.5-flash, gemini-flash-latest)
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+    for (const model of geminiModels) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 400,
+              },
+            }),
+          }
+        );
+        if (response.ok) {
+          const resJson = await response.json();
+          const text = resJson.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+          if (text) {
+            draftText = text;
+            break;
+          }
+        }
+      } catch (e) {
+        // Continue to next model or tier
+      }
+    }
+  }
+
+  if (draftText) {
     const cleanedDraft = draftText.replace(/^["']|["']$/g, '').trim();
     return { draft: cleanedDraft };
   }

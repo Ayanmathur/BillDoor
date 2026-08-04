@@ -117,18 +117,19 @@ export default function WhatsAppTemplatesPage() {
       <button
         onClick={() => router.push('/dashboard/whatsapp')}
         style={{
-          display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
+          display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)',
           background: 'none', border: 'none', cursor: 'pointer',
           color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)',
           marginBottom: 'var(--space-4)', fontFamily: 'inherit',
+          flexShrink: 0, width: 'fit-content',
         }}
       >
         <ArrowLeft size={16} /> Back to WhatsApp Auto
       </button>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
-        <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+        <div style={{ flex: '1 1 220px' }}>
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--text-lg)', fontWeight: 'var(--weight-semibold)' }}>
             Broadcast Templates
           </h2>

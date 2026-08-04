@@ -25,6 +25,7 @@ export default function ReviewFlowSettingsPage() {
 
   const [connectWithClient, setConnectWithClient] = useState(true);
   const [whatsappContact, setWhatsappContact] = useState(true);
+  const [directGoogleReview, setDirectGoogleReview] = useState(false);
   const [customResolutionText, setCustomResolutionText] = useState('');
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function ReviewFlowSettingsPage() {
       if (res.settings) {
         setConnectWithClient(res.settings.connectWithClient);
         setWhatsappContact(res.settings.whatsappContact);
+        setDirectGoogleReview(res.settings.directGoogleReview || false);
         setCustomResolutionText(res.settings.customResolutionText);
       }
       setLoading(false);
@@ -46,6 +48,7 @@ export default function ReviewFlowSettingsPage() {
     const res = await updateReviewFlowSettingsAction({
       connectWithClient,
       whatsappContact,
+      directGoogleReview,
       customResolutionText,
     });
     setSaving(false);
@@ -135,6 +138,26 @@ export default function ReviewFlowSettingsPage() {
                 type="checkbox"
                 checked={whatsappContact}
                 onChange={(e) => setWhatsappContact(e.target.checked)}
+                style={{ width: 20, height: 20, cursor: 'pointer', accentColor: 'var(--color-accent)', marginLeft: 16 }}
+              />
+            </div>
+          </div>
+
+          {/* Toggle 3: Direct Google Review Redirect (Fast Track) */}
+          <div style={{ background: 'var(--color-bg-secondary)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+              <div>
+                <span style={{ fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)' }}>
+                  Direct Google Review Redirect (Fast Track 4–5 Stars)
+                </span>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.4 }}>
+                  Skip AI review draft generation and immediately redirect 4–5 star ratings directly to your Google Place review page. Maximize review collection speed.
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={directGoogleReview}
+                onChange={(e) => setDirectGoogleReview(e.target.checked)}
                 style={{ width: 20, height: 20, cursor: 'pointer', accentColor: 'var(--color-accent)', marginLeft: 16 }}
               />
             </div>

@@ -69,6 +69,7 @@ export default function ReviewPage({
   const [showResolutionBox, setShowResolutionBox] = useState(false);
   const connectWithClientEnabled = rewardSettings?.connect_with_client_enabled !== false;
   const whatsappContactEnabled = rewardSettings?.whatsapp_contact_enabled !== false;
+  const directGoogleReviewEnabled = rewardSettings?.direct_google_review_enabled === true;
   const customResolutionText = rewardSettings?.custom_resolution_text || '';
 
   const initials = businessName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -177,8 +178,15 @@ export default function ReviewPage({
         if (submitResult.sessionId) setSessionId(submitResult.sessionId);
         setLoading(false);
         setStage('thank_you');
+      } else if (directGoogleReviewEnabled) {
+        // Mode 3 (Direct Fast Track — Skip AI Draft, Direct Google Redirect):
+        setLoading(true);
+        const submitResult = await submitReviewAction({ clientId, stars: rating, sessionId: sessionId || undefined });
+        if (submitResult.sessionId) setSessionId(submitResult.sessionId);
+        await logGoogleReviewClickAction({ sessionId: submitResult.sessionId || '', event: 'direct_redirect' });
+        window.location.href = googleReviewUrl;
       } else {
-        // Mode 1 (Toggle ON — Public Google Booster):
+        // Mode 1 (Toggle ON — Public Google Booster with AI draft):
         // Generate AI draft, auto-copy to clipboard, and start 3s countdown redirect
         setAiLoading(true);
         setStage('ai_draft');
