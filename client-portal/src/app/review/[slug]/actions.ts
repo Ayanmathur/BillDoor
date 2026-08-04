@@ -220,7 +220,7 @@ Reply with ONLY the review text, no quotes, no explanation.`;
               contents: [{ parts: [{ text: prompt }] }],
               generationConfig: {
                 temperature: 0.7,
-                maxOutputTokens: 120,
+                maxOutputTokens: 400,
               },
             }),
           }
@@ -255,7 +255,7 @@ Reply with ONLY the review text, no quotes, no explanation.`;
           model: 'openai/gpt-4o-mini',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
-          max_tokens: 120,
+          max_tokens: 400,
         }),
       });
       if (response.ok) {
@@ -283,7 +283,7 @@ Reply with ONLY the review text, no quotes, no explanation.`;
             model,
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.7,
-            max_tokens: 120,
+            max_tokens: 400,
           }),
         });
         if (response.ok) {
@@ -409,7 +409,7 @@ Reply with ONLY the review text, no quotes or explanation.`;
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.8, maxOutputTokens: 120 } }),
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.8, maxOutputTokens: 400 } }),
         });
         if (res.ok) {
           const json = await res.json();
